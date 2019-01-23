@@ -376,8 +376,8 @@ namespace BBC.BSC.Tool
                         exeFile.Write(VncExeBytes, 0, VncExeBytes.Length);
                     }
 
-                    startInfo.Arguments = string.Format(@"{1} username={0} ", textBox_ere.Text, textbox_host.Text.Trim());
-                    startInfo.FileName = VncExeToRun;
+                    startInfo.Arguments = string.Format(@"/c runas /user:national\{0} /savecred ""{2} {1}""", textBox_ere.Text, textbox_host.Text.Trim(), VncExeToRun);
+                    startInfo.FileName = "cmd";
                     startInfo.WorkingDirectory = directory;
                     break;
 
