@@ -34,7 +34,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>17</ApplicationRevision>
+    <ApplicationRevision>23</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -70,6 +70,9 @@
   </PropertyGroup>
   <PropertyGroup>
     <SignManifests>true</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>bsctoolicon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Google.Protobuf, Version=3.5.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
@@ -162,13 +165,14 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="tools\mstscax.dll" />
+    <Resource Include="bsctoolicon.ico" />
+    <None Include="tools\mstscax.dll" />
     <Content Include="tools\putty.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="tools\rc.exe" />
-    <Content Include="tools\rdpencom.dll" />
-    <Content Include="tools\VNC-Viewer-6.19.107-Windows-64bit.exe" />
+    <None Include="tools\rc.exe" />
+    <None Include="tools\rdpencom.dll" />
+    <None Include="tools\VNC-Viewer-6.19.107-Windows-64bit.exe" />
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="MSTSCLib">

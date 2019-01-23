@@ -1,25 +1,18 @@
-﻿using System;
+﻿using MySql.Data.MySqlClient;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.DirectoryServices;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Net.Sockets;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.DirectoryServices;
-using System.ComponentModel;
-using System.Runtime.Caching;
-using System.Timers;
-using System.Diagnostics;
-using System.Net.Sockets;
-using MySql;
-using MySql.Data.MySqlClient;
+//using System.Threading;
 
 namespace BBC.BSC.Tool
 {
@@ -28,16 +21,14 @@ namespace BBC.BSC.Tool
     /// </summary>
     public partial class MainWindow : Window
     {
-
-
-
-     
-        SearchResultCollection latestRestults;
+        private SearchResultCollection latestRestults;
         private List<BackgroundWorker> workers = new List<BackgroundWorker>();
         private List<BackgroundWorker> connectionWorkers = new List<BackgroundWorker>();
         private DateTime LastConnectionResult;
         private DateTime lastResultTimestamp;
 
+        private Timer searchTimer = new Timer(400);
+        private Timer hostTimer = new Timer(400);
 
         public MainWindow()
         {
@@ -48,42 +39,65 @@ namespace BBC.BSC.Tool
             };
             watcher.Elapsed += Do_Watcher;
             watcher.Enabled = true;
-           
+            // Get the numbers of minimum
+
+
+            int w;
+            int c;
+            System.Threading.ThreadPool.GetMinThreads(out w, out c);
+
+            // Write the numbers of minimum threads
+            Console.WriteLine("{0}, {1}",
+                w,
+                c);
+
+            System.Threading.ThreadPool.SetMinThreads(20, 10);
+
+
+            hostTimer.Elapsed += Host_Timer_Elapsed;
+            searchTimer.Elapsed += Search_Timer_Elapsed;
+
+            DataContext = this;
+            searchResults.ItemsSource = Results;
 
         }
 
-      
+
+        /// <summary>Updates the status box if running searches are still happening.</summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Do_Watcher(object sender, ElapsedEventArgs e)
         {
             Console.WriteLine(workers.Count);
-
-            Dispatcher.Invoke((Action)delegate () {
-
-             if (workers.Count > 0)
+            Dispatcher.Invoke(delegate ()
             {
-                    this.status.Fill = new SolidColorBrush(Colors.Red);
-               // this.Title = "Busy";
-            }
-            else
-            {
-                    this.status.Fill = new SolidColorBrush(Colors.Green);
-                //this.Title = "Finished";
-            }
-
+                if (workers.Count > 0)
+                {
+                    status.Fill = new SolidColorBrush(Colors.Red);
+                    // this.Title = "Busy";
+                }
+                else
+                {
+                    status.Fill = new SolidColorBrush(Colors.Green);
+                    //this.Title = "Finished";
+                }
             });
 
-      
-
-
-            
         }
-
-        void DoSearch(object sender, DoWorkEventArgs e)
+        MySqlConnection conn = new MySqlConnection("server=bbcws3001;port=3306;uid=catread;pwd=reader;database=asset;SslMode=none");
+        private void Do_Search(object sender, DoWorkEventArgs e)
         {
-            DateTime timestamp = DateTime.Now;
+            //DateTime timestamp = DateTime.Now;
+            Dispatcher.Invoke(delegate ()
+            {
+                status.Fill = new SolidColorBrush(Colors.Red);
+            });
 
-            Console.WriteLine("DoSearch: {0}", e.Argument.ToString());
-            List<string> output = new List<string>();
+            Console.WriteLine("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
+            //List<string> output = new List<string>();
+
+            MyResults results = new MyResults();
+
             if (e.Argument.ToString().Length < 3)
             {
                 e.Result = null;
@@ -91,34 +105,38 @@ namespace BBC.BSC.Tool
             else
             {
 
-                using (var conn = new MySqlConnection())
-                    {
                 try
                 {
-                        conn.ConnectionString = "server=bbcws3001;port=3306;uid=mms1;pwd=System1;database=asset;SslMode=none";
+                    //conn.ConnectionString = "server=bbcws3001;port=3306;uid=mms1;pwd=System1;database=asset;SslMode=none";
+                    if (conn.State != System.Data.ConnectionState.Open)
+                    {
                         conn.Open();
-                        MySqlCommand cmd = new MySqlCommand(string.Format("SELECT host_name, also_known_as  FROM network INNER JOIN asset ON network.asset_id = asset.asset_id WHERE life_cycle_status_id = 4 AND host_name like '%{0}%'", e.Argument.ToString()), conn);
-                        MySqlDataReader rdr = cmd.ExecuteReader();
+                    }
+                    MySqlCommand cmd = new MySqlCommand(string.Format("SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip FROM network INNER JOIN asset ON network.asset_id = asset.asset_id WHERE life_cycle_status_id = 4 AND (host_name like '%{0}%' OR IP = inet_aton('{0}') )", e.Argument.ToString()), conn);
+                    MySqlDataReader rdr = cmd.ExecuteReader();
 
-                        while (rdr.Read())
-                        {
-                            //Console.WriteLine(rdr[0] + " -- " + rdr[1]);
-                            output.Add(rdr[0].ToString().ToUpper());
-                        }
-                        rdr.Close();
-                 }
-                 
+                    while (rdr.Read())
+                    {
+                        //Console.WriteLine(rdr[0] + " -- " + rdr[1]);
+                        MyResult result = new MyResult();
+                        result.hostname = rdr["host_name"].ToString().ToUpper();
+                        result.ip = rdr["ip"].ToString().Trim();
+                        results.results.Add(result);
+                    }
+                    rdr.Close();
+                }
+
                 catch (Exception ex)
                 {
-                         Console.WriteLine(ex.Message);
-                }  
-                        conn.Close();
+                    Console.WriteLine(ex.Message);
                 }
 
 
+
+
                 try
                 {
-                    string path = @"LDAP://national";
+                    string path = @"LDAP://ldap.national.core.bbc.co.uk";
 
 
                     using (DirectoryEntry dEntry = new DirectoryEntry(path))
@@ -126,12 +144,12 @@ namespace BBC.BSC.Tool
                     {
                         // (|(cn=*334810*)(displayname=*334810*)(cn=PC-*334810*)(cn=B1-D0*334810*)(cn=B1-L0*334810*)(cn=61-D0*334810*)(cn=61-L0*334810*)(cn=71-D0*334810*)(cn=71-L0*334810*)(cn=91-D0*334810*)(cn=91-L0*334810*)(cn=F1-D0*334810*)(cn=F1-L0*334810*)(cn=MC-*334810*)(sn=*334810*)(samAccountName=*334810*)(mail=*334810*)(proxyaddresses=smtp:*334810*)(ou=*334810*)(&(objectcategory=printqueue)(printername=*334810*)))
                         //Filter = string.Format("(&(objectClass=computer)(cn={0}*))", e.Argument.ToString()),
-                        Filter = string.Format("(&(!userAccountControl:1.2.840.113556.1.4.803:=2)(objectClass=computer)(|(cn={0}*)(displayname={0}*)(cn=PC-{0}*)(cn=B1-D0{0}*)(cn=B1-L0{0}*)(cn=31-D0{0}*)(cn=31*-D0{0}*)(cn=61-D0{0}*)(cn=61-L0{0}*)(cn=71-D0{0}*)(cn=71-L0{0}*)(cn=91-D0{0}*)(cn=91-L0{0}*)(cn=F1-D0{0}*)(cn=F1-L0{0}*)(cn=MC-{0}*)(sn={0}*)(samAccountName={0}*)(mail={0}*)(proxyaddresses=smtp:{0}*)(ou={0}*)(&(objectcategory=printqueue)(printername={0}*))))", e.Argument.ToString()),
+                        Filter = string.Format("(&(!userAccountControl:1.2.840.113556.1.4.803:=2)(objectClass=computer)(|(cn={0}*)(displayname={0}*)(cn=PC-{0}*)(cn=B1-D0{0}*)(cn=B1-L0{0}*)(cn=31-D0{0}*)(cn=31*-D0{0}*)(cn=61-D0{0}*)(cn=61-L0{0}*)(cn=71-D0{0}*)(cn=71-L0{0}*)(cn=91-D0{0}*)(cn=91-L0{0}*)(cn=F1-D0{0}*)(cn=F1-L0{0}*)(cn=MC-{0}*)(sn={0}*)(samAccountName={0}*)(ipv4address={0})(mail={0}*)(proxyaddresses=smtp:{0}*)(ou={0}*)))", e.Argument.ToString()),
                         PageSize = 20,
                         ServerTimeLimit = new TimeSpan(2000),
                         ServerPageTimeLimit = new TimeSpan(3000),
                         SizeLimit = 20
-                        
+
                     })
                     {
                         using (SearchResultCollection sResults = dSearcher.FindAll())
@@ -141,68 +159,95 @@ namespace BBC.BSC.Tool
                             {
                                 //ResultPropertyCollection fields = item.Properties;
                                 ResultPropertyValueCollection name = item.Properties["name"];
-                                output.Add(name[0].ToString().ToUpper());
+                                ResultPropertyValueCollection ip = item.Properties["ipv4address"];
+                                //output.Add(name[0].ToString().ToUpper());
+                                try
+                                {
+                                results.results.Add(new MyResult(name[0].ToString().ToUpper(), ip[0].ToString().ToUpper()));
+
+                                }
+                                catch (Exception)
+                                {
+                                results.AddResult(new MyResult(name[0].ToString().ToUpper()));
+
+                                  
+                                }
+
+                                
                             }
                         }
-                       
+
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-
+                    Console.WriteLine("LDAP error: {0}", ex.Message);
                     //throw;
                 }
 
             }
-            //e.Result = output.ToArray();
 
-            output.Sort();
+            //output.Sort();
 
 
-            MyResults res = new MyResults
-            {
-                results = output.Distinct().ToArray(),
-                timestamp = timestamp
-            };
-            e.Result = res;
-       
+            //MyResults res = new MyResults
+            //{
+            //    results = output.Distinct().ToArray(),
+            //    timestamp = timestamp
+            //};
+            e.Result = results;
+
         }
-        
-        private void DoSearch(object sender, TextChangedEventArgs e)
+
+        private void Text_Changed(object sender, TextChangedEventArgs e)
         {
-            BackgroundWorker worker = new BackgroundWorker();
-            worker.DoWork += DoSearch;
-            worker.RunWorkerCompleted += DisplayResults;
-            workers.Add(worker);
-            worker.RunWorkerAsync(((TextBox)sender).Text);
+            Console.WriteLine("search text changed: {0}", searchIn.Text.Trim());
+            search_text = searchIn.Text;
+            searchTimer.Stop();
+            searchTimer.Start();
+            textbox_host.Text = searchIn.Text;
+
         }
+
+
+        public List<MyResult> Results;
 
         private void DisplayResults(object sender, RunWorkerCompletedEventArgs e)
         {
             workers.Remove((BackgroundWorker)sender);
             ((BackgroundWorker)sender).Dispose();
-            //listBox.Items.Clear();
 
             MyResults res = (MyResults)e.Result;
+
             try
             {
                 if (res.timestamp > lastResultTimestamp)
                 {
 
-                listBox.ItemsSource = (String[])res.results;
+                    Dispatcher.Invoke(delegate ()
+                    {
+                        //searchResults.ItemsSource = (string[])res.results;
+
+                        //this.searchResults.ItemsSource = res.results;
+                        ObservableCollection<MyResult> Results = new ObservableCollection<MyResult>();
+
+                        foreach (var item in res.results)
+                        {
+                            Results.Add(item);
+                        }
+                        searchResults.ItemsSource = null;
+                        searchResults.ItemsSource = Results;
+                        searchResults.Items.Refresh();
+
+                    });
                     lastResultTimestamp = res.timestamp;
                 }
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                
-            }// listBox.ItemsSource = (String[])e.Result;
-
-            //foreach (var item in (String[])e.Result)
-            //{
-               //    listBox.Items.Add(item);
-            //}
+                Console.WriteLine(ex.Message);
+            }
 
         }
 
@@ -210,33 +255,49 @@ namespace BBC.BSC.Tool
         {
             Properties.Settings.Default.Save();
 
+
+            if (workers.Count > 0)
+            {
+                e.Cancel = true;
+                return;
+            }
+            else
+            {
+
+
+                try
+                {
+                    latestRestults.Dispose();
+                    conn.Close();
+                }
+                catch (Exception)
+                {
+
+                }
+                foreach (BackgroundWorker item in workers)
+                {
+                    item.Dispose();
+                }
+            }
+        }
+
+        private void SearchResults_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
             try
             {
-            latestRestults.Dispose();
-                        
+                textbox_host.Text = ((MyResult)((ListBox)sender).SelectedValue).hostname.ToString();
             }
             catch (Exception)
             {
-
-               
+                textbox_host.Text = "";
             }
-            foreach (var item in workers)
-                        {
-                            item.Dispose();
-                        }
-
         }
 
-        private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            textbox_host.Text = ((ListBox)sender).SelectedValue.ToString();
-        }
-
-        private void ListBox_GotFocus(object sender, RoutedEventArgs e)
+        private void SearchResults_GotFocus(object sender, RoutedEventArgs e)
         {
             try
             {
-            textbox_host.Text = ((ListBox)sender).SelectedValue.ToString();
+                textbox_host.Text = ((MyResult)((ListBox)sender).SelectedValue).hostname.ToString();
 
             }
             catch
@@ -273,7 +334,7 @@ namespace BBC.BSC.Tool
 
                     string RcFileName = System.IO.Path.Combine(directory, "rc.exe");
                     RcFileName = exeToRun;
-                    string RcArguments = String.Format(@"/c runas /user:national\{0} /savecred ""{1} 1 {2}""", textBox_ere.Text, RcFileName, textbox_host.Text.Trim());
+                    string RcArguments = string.Format(@"/c runas /user:national\{0} /savecred ""{1} 1 {2}""", textBox_ere.Text, RcFileName, textbox_host.Text.Trim());
                     Console.WriteLine(RcArguments);
                     startInfo.Arguments = RcArguments;
                     startInfo.FileName = "cmd";
@@ -282,19 +343,19 @@ namespace BBC.BSC.Tool
 
 
                 case "button_SSH":
-                    startInfo.Arguments = String.Format("{0}", textbox_host.Text);
+                    startInfo.Arguments = string.Format("{0}", textbox_host.Text);
                     startInfo.FileName = System.IO.Path.Combine(directory, "putty.exe");
                     break;
 
                 case "button_SSH_ERE":
 
-               
-                    startInfo.Arguments = String.Format("{1}@{0}", textbox_host.Text, textBox_ere.Text.Trim());
+
+                    startInfo.Arguments = string.Format("{1}@{0}", textbox_host.Text, textBox_ere.Text.Trim());
                     startInfo.FileName = System.IO.Path.Combine(directory, "putty.exe");
                     break;
 
                 case "button_TELNET":
-                    startInfo.Arguments = String.Format("-telnet -P 23 {0}", textbox_host.Text);
+                    startInfo.Arguments = string.Format("-telnet -P 23 {0}", textbox_host.Text);
                     startInfo.FileName = System.IO.Path.Combine(directory, "putty.exe");
                     break;
 
@@ -307,16 +368,16 @@ namespace BBC.BSC.Tool
                         exeFile.Write(VncExeBytes, 0, VncExeBytes.Length);
                     }
 
-                    startInfo.Arguments = String.Format(@"{1} username={0} ", textBox_ere.Text,  textbox_host.Text.Trim());
+                    startInfo.Arguments = string.Format(@"{1} username={0} ", textBox_ere.Text, textbox_host.Text.Trim());
                     startInfo.FileName = VncExeToRun;
                     startInfo.WorkingDirectory = directory;
                     break;
 
                 case "button_HTTP":
-                    startInfo.FileName = String.Format("http://{0}:80/", textbox_host.Text.Trim());
+                    startInfo.FileName = string.Format("http://{0}:80/", textbox_host.Text.Trim());
                     break;
                 case "button_HTTPS":
-                    startInfo.FileName = String.Format("https://{0}:443/", textbox_host.Text.Trim());
+                    startInfo.FileName = string.Format("https://{0}:443/", textbox_host.Text.Trim());
                     break;
 
 
@@ -334,33 +395,62 @@ namespace BBC.BSC.Tool
             Properties.Settings.Default.Save();
         }
 
+
         private void Textbox_host_TextChanged(object sender, TextChangedEventArgs e)
         {
+            Console.WriteLine("host text changed: {0}", textbox_host.Text.Trim());
+            host_text = textbox_host.Text.Trim();
+            hostTimer.Stop();
+            hostTimer.Start();
 
+        }
+
+        private string search_text;
+
+        private void Search_Timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            Console.WriteLine("search timer elapsed: {0}", search_text);
+            searchTimer.Stop();
+            BackgroundWorker worker = new BackgroundWorker();
+            worker.DoWork += Do_Search;
+            worker.RunWorkerCompleted += DisplayResults;
+            workers.Add(worker);
+            worker.RunWorkerAsync(search_text);
+
+
+        }
+
+
+        private string host_text;
+        private void Host_Timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            Console.WriteLine("host timer elapsed: {0}", host_text);
+            hostTimer.Stop();
             BackgroundWorker connectionWorker = new BackgroundWorker();
             connectionWorker.DoWork += Do_Test_Connection;
             connectionWorker.RunWorkerCompleted += Complete_Test_Connection;
             connectionWorkers.Add(connectionWorker);
-            connectionWorker.RunWorkerAsync(argument: textbox_host.Text.Trim());
-
-
+            connectionWorker.RunWorkerAsync(argument: host_text);
         }
-        
 
         private void Complete_Test_Connection(object sender, RunWorkerCompletedEventArgs e)
         {
             MyConnection con = (MyConnection)e.Result;
             if (LastConnectionResult < con.timestamp)
             {
-                this.button_RDP.IsEnabled = con.rdp;
-                this.button_RC.IsEnabled = con.rdp;
-                this.button_VNC.IsEnabled = con.vnc;
-                this.button_SSH.IsEnabled = con.ssh;
-                this.button_SSH_ERE.IsEnabled = con.ssh;
-                this.button_HTTP.IsEnabled = con.http;
-                this.button_HTTPS.IsEnabled = con.https;
-                this.button_TELNET.IsEnabled = con.telnet;
-                LastConnectionResult = con.timestamp;
+                Dispatcher.Invoke(delegate ()
+                {
+
+                    button_RDP.IsEnabled = con.rdp;
+                    button_RC.IsEnabled = con.rdp;
+                    button_VNC.IsEnabled = con.vnc;
+                    button_SSH.IsEnabled = con.ssh;
+                    button_SSH_ERE.IsEnabled = con.ssh;
+                    button_HTTP.IsEnabled = con.http;
+                    button_HTTPS.IsEnabled = con.https;
+                    button_TELNET.IsEnabled = con.telnet;
+                    LastConnectionResult = con.timestamp;
+                });
             }
 
 
@@ -369,37 +459,55 @@ namespace BBC.BSC.Tool
 
         private void Do_Test_Connection(object sender, DoWorkEventArgs e)
         {
+            Console.WriteLine("Testing connection to {0}", e.Argument.ToString());
             using (MyConnection con = new MyConnection())
             {
                 int timeout = 200;
 
                 if (IsPortOpen(e.Argument.ToString(), 3389, TimeSpan.FromMilliseconds(timeout)))
+                {
                     con.rdp = true;
+                }
+
                 if (IsPortOpen(e.Argument.ToString(), 5900, TimeSpan.FromMilliseconds(timeout)))
+                {
                     con.vnc = true;
+                }
+
                 if (IsPortOpen(e.Argument.ToString(), 22, TimeSpan.FromMilliseconds(timeout)))
+                {
                     con.ssh = true;
+                }
+
                 if (IsPortOpen(e.Argument.ToString(), 23, TimeSpan.FromMilliseconds(timeout)))
+                {
                     con.telnet = true;
+                }
+
                 if (IsPortOpen(e.Argument.ToString(), 80, TimeSpan.FromMilliseconds(timeout)))
+                {
                     con.http = true;
+                }
+
                 if (IsPortOpen(e.Argument.ToString(), 443, TimeSpan.FromMilliseconds(timeout)))
+                {
                     con.https = true;
-                
-                e.Result = con; 
+                }
+
+                e.Result = con;
             }
 
 
         }
-        
-        bool IsPortOpen(string host, int port, TimeSpan timeout)
+
+        private bool IsPortOpen(string host, int port, TimeSpan timeout)
         {
             try
             {
-                using (var client = new TcpClient())
+                using (TcpClient client = new TcpClient())
                 {
-                    var result = client.BeginConnect(host, port, null, null);
-                    var success = result.AsyncWaitHandle.WaitOne(timeout);
+                    IAsyncResult result = client.BeginConnect(host, port, null, null);
+                    bool success = result.AsyncWaitHandle.WaitOne(timeout);
                     if (!success)
                     {
                         return false;
@@ -415,18 +523,69 @@ namespace BBC.BSC.Tool
             }
             return true;
         }
-        
 
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                textbox_host.Text = ((Button)sender).Content.ToString();
+            }
+            catch (Exception)
+            {
+                textbox_host.Text = "";
+            }
+        }
     }
-    class MyResults
+
+    internal class MyResults
     {
 
-        public DateTime timestamp;
-        public object results;
+        public DateTime timestamp
+        {
+            get;
+        }
+        public List<MyResult> results = new List<MyResult>();
 
+        public MyResults()
+        {
+            this.timestamp = DateTime.Now;
+        }
+        public void AddResult(MyResult result)
+        {
+            this.results.Add(result);
+        }
+
+
+        
     }
+    public class MyResult 
+        {
+            public string hostname
+        {
+            get;
+            set;
+        }
+        public string ip
+        {
+            get;
+            set;
+        }
+        public MyResult()
+        {
 
-    class MyConnection : IDisposable
+        }
+        public MyResult(string HOSTNAME)
+        {
+            this.hostname = HOSTNAME;
+        }
+        public MyResult(string HOSTNAME, string IP)
+        {
+            this.hostname = HOSTNAME;
+            this.ip = IP;
+        }
+
+    };
+    internal class MyConnection : IDisposable
     {
         public DateTime timestamp = DateTime.Now;
         public bool rdp = false;
@@ -438,11 +597,11 @@ namespace BBC.BSC.Tool
 
         public void Dispose()
         {
-        //    this.rdp = null;
-        //    this.vnc = null;
-        //    this.ssh = null;
-        //    this.http = null;
-        //    this.telnet = null;
+            //    this.rdp = null;
+            //    this.vnc = null;
+            //    this.ssh = null;
+            //    this.http = null;
+            //    this.telnet = null;
         }
     }
 
@@ -462,8 +621,8 @@ namespace BBC.BSC.Tool
 
         private void Initialize()
         {
-            this.Source = Properties.Settings.Default;
-            this.Mode = BindingMode.TwoWay;
+            Source = Properties.Settings.Default;
+            Mode = BindingMode.TwoWay;
         }
     }
 }
