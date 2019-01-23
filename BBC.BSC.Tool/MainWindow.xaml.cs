@@ -26,9 +26,12 @@ namespace BBC.BSC.Tool
         private List<BackgroundWorker> connectionWorkers = new List<BackgroundWorker>();
         private DateTime LastConnectionResult = DateTime.Now;
         private DateTime lastResultTimestamp;
-
+        private readonly string path = @"LDAP://ldap.national.core.bbc.co.uk";
         private Timer searchTimer = new Timer(400);
         private Timer hostTimer = new Timer(400);
+        private MySqlConnection conn = new MySqlConnection("server=bbcws3001;port=3306;uid=catread;pwd=reader;database=asset;SslMode=none");
+        private string host_text;
+
 
         public MainWindow()
         {
@@ -47,14 +50,10 @@ namespace BBC.BSC.Tool
                 c);
 
             System.Threading.ThreadPool.SetMinThreads(20, 10);
-
-
             hostTimer.Elapsed += Host_Timer_Elapsed;
             searchTimer.Elapsed += Search_Timer_Elapsed;
-
             DataContext = this;
             searchResults.ItemsSource = Results;
-
         }
 
 
@@ -80,27 +79,20 @@ namespace BBC.BSC.Tool
 
         }
 
-        private MySqlConnection conn = new MySqlConnection("server=bbcws3001;port=3306;uid=catread;pwd=reader;database=asset;SslMode=none");
         private void Do_Search(object sender, DoWorkEventArgs e)
         {
-            //DateTime timestamp = DateTime.Now;
             Dispatcher.Invoke(delegate ()
             {
                 status.Fill = new SolidColorBrush(Colors.Red);
             });
-
-            //List<string> output = new List<string>();
-
             MyResults results = new MyResults();
-
             if (e.Argument.ToString().Length < 4)
             {
                 e.Result = null;
             }
             else
             {
-
-            Console.WriteLine("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
+                Console.WriteLine("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
                 try
                 {
                     if (conn.State != System.Data.ConnectionState.Open)
@@ -123,24 +115,14 @@ namespace BBC.BSC.Tool
                     }
                     rdr.Close();
                 }
-
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
+                    Trace.TraceError(ex.Message);
                 }
-
-
-
-
                 try
                 {
-                    string path = @"LDAP://ldap.national.core.bbc.co.uk";
-
-
-                    using (DirectoryEntry dEntry = new DirectoryEntry(path)
-                    {
-
-                    })
+                    using (DirectoryEntry dEntry = new DirectoryEntry(path))
                     using (DirectorySearcher dSearcher = new DirectorySearcher(dEntry)
                     {
                         // (|(cn=*334810*)(displayname=*334810*)(cn=PC-*334810*)(cn=B1-D0*334810*)(cn=B1-L0*334810*)(cn=61-D0*334810*)(cn=61-L0*334810*)(cn=71-D0*334810*)(cn=71-L0*334810*)(cn=91-D0*334810*)(cn=91-L0*334810*)(cn=F1-D0*334810*)(cn=F1-L0*334810*)(cn=MC-*334810*)(sn=*334810*)(samAccountName=*334810*)(mail=*334810*)(proxyaddresses=smtp:*334810*)(ou=*334810*)(&(objectcategory=printqueue)(printername=*334810*)))
@@ -150,8 +132,7 @@ namespace BBC.BSC.Tool
                         //ServerTimeLimit = TimeSpan.FromSeconds(15),
                         //ServerPageTimeLimit = TimeSpan.FromSeconds(15),
                         //SizeLimit = 20,
-                        ClientTimeout = TimeSpan.FromSeconds(10)
-
+                        ClientTimeout = TimeSpan.FromSeconds(15)
                     })
                     {
                         dSearcher.PropertiesToLoad.Clear();
@@ -172,39 +153,19 @@ namespace BBC.BSC.Tool
                                         Ip = "Load IP",
                                         Source = "AD"
                                     });
-
-                                    //results.results.Add(new MyResult(
-                                    //    HOSTNAME: name[0].ToString().ToUpper(),
-                                    //    IP: Dns.GetHostEntry(name[0].ToString().ToUpper()).AddressList[0].ToString(),
-                                    //    SOURCE: "AD"));
-
                                 }
-
                             }
                         }
-
                     }
                 }
                 catch (Exception ex)
                 {
+                    Trace.TraceError(ex.Message);
                     Console.WriteLine("LDAP error: {0}", ex.Message);
-                    //throw;
                 }
-
             }
-
-            //output.Sort();
-
-
-            //MyResults res = new MyResults
-            //{
-            //    results = output.Distinct().ToArray(),
-            //    timestamp = timestamp
-            //};
             results.results.Sort((a, b) => a.Hostname.CompareTo(b.Hostname));
-
             e.Result = results;
-
         }
 
         private void Text_Changed(object sender, TextChangedEventArgs e)
@@ -214,31 +175,22 @@ namespace BBC.BSC.Tool
             searchTimer.Stop();
             searchTimer.Start();
             textbox_host.Text = searchIn.Text;
-
         }
-
-
+        
         public List<MyResult> Results;
 
         private void DisplayResults(object sender, RunWorkerCompletedEventArgs e)
         {
             workers.Remove((BackgroundWorker)sender);
             ((BackgroundWorker)sender).Dispose();
-
             MyResults res = (MyResults)e.Result;
-
             try
             {
                 if (res.timestamp > lastResultTimestamp)
                 {
-
                     Dispatcher.Invoke(delegate ()
                     {
-                        //searchResults.ItemsSource = (string[])res.results;
-
-                        //this.searchResults.ItemsSource = res.results;
                         ObservableCollection<MyResult> Results = new ObservableCollection<MyResult>();
-
                         foreach (MyResult item in res.results)
                         {
                             Results.Add(item);
@@ -246,17 +198,15 @@ namespace BBC.BSC.Tool
                         searchResults.ItemsSource = null;
                         searchResults.ItemsSource = Results;
                         //searchResults.Items.Refresh();
-
                     });
                     lastResultTimestamp = res.timestamp;
                 }
-
             }
             catch (Exception ex)
             {
+                Trace.TraceError(ex.Message);
                 Console.WriteLine(ex.Message);
             }
-
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)
@@ -271,16 +221,14 @@ namespace BBC.BSC.Tool
             }
             else
             {
-
-
                 try
                 {
                     latestRestults.Dispose();
                     conn.Close();
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-
+                    Trace.TraceError(ex.Message);
                 }
                 foreach (BackgroundWorker item in workers)
                 {
@@ -295,8 +243,9 @@ namespace BBC.BSC.Tool
             {
                 textbox_host.Text = ((MyResult)((ListBox)sender).SelectedValue).Hostname.ToString();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Trace.TraceError(ex.Message);
                 textbox_host.Text = "";
             }
         }
@@ -306,11 +255,10 @@ namespace BBC.BSC.Tool
             try
             {
                 textbox_host.Text = ((MyResult)((ListBox)sender).SelectedValue).Hostname.ToString();
-
             }
-            catch
+            catch (Exception ex)
             {
-
+                Trace.TraceError(ex.Message);
             }
         }
 
@@ -324,22 +272,17 @@ namespace BBC.BSC.Tool
             {
 
                 case "button_RDP":
-
                     startInfo.FileName = "cmd";
                     startInfo.Arguments = string.Format(@"/c runas /user:national\{1} /savecred ""mstsc.exe /v:{0}""", textbox_host.Text, textBox_ere.Text);
-
-
                     break;
 
                 case "button_RC":
-
                     byte[] exeBytes = Properties.Resources.rc;
                     string exeToRun = @"d:\rc.exe";
                     using (System.IO.FileStream exeFile = new System.IO.FileStream(exeToRun, System.IO.FileMode.Create))
                     {
                         exeFile.Write(exeBytes, 0, exeBytes.Length);
                     }
-
                     string RcFileName = System.IO.Path.Combine(directory, "rc.exe");
                     RcFileName = exeToRun;
                     string RcArguments = string.Format(@"/c runas /user:national\{0} /savecred ""{1} 1 {2}""", textBox_ere.Text, RcFileName, textbox_host.Text.Trim());
@@ -347,22 +290,19 @@ namespace BBC.BSC.Tool
                     startInfo.Arguments = RcArguments;
                     startInfo.FileName = "cmd";
                     startInfo.WorkingDirectory = directory;
-                    break
+                    break;
                 case "button_SSH":
                     startInfo.Arguments = string.Format("{0}", textbox_host.Text);
                     startInfo.FileName = System.IO.Path.Combine(directory, "putty.exe");
                     break;
-
                 case "button_SSH_ERE":
                     startInfo.Arguments = string.Format("{1}@{0}", textbox_host.Text, textBox_ere.Text.Trim());
                     startInfo.FileName = System.IO.Path.Combine(directory, "putty.exe");
                     break;
-
                 case "button_TELNET":
                     startInfo.Arguments = string.Format("-telnet -P 23 {0}", textbox_host.Text);
                     startInfo.FileName = System.IO.Path.Combine(directory, "putty.exe");
                     break;
-
                 case "button_VNC":
                     byte[] VncExeBytes = Properties.Resources.vncx64;
                     string VncExeToRun = @"d:\vncx64.exe";
@@ -370,26 +310,20 @@ namespace BBC.BSC.Tool
                     {
                         exeFile.Write(VncExeBytes, 0, VncExeBytes.Length);
                     }
-
                     startInfo.Arguments = string.Format(@"/c runas /user:national\{0} /savecred ""{2} {1}""", textBox_ere.Text, textbox_host.Text.Trim(), VncExeToRun);
                     startInfo.FileName = "cmd";
                     startInfo.WorkingDirectory = directory;
                     break;
-
                 case "button_HTTP":
                     startInfo.FileName = string.Format("http://{0}:80/", textbox_host.Text.Trim());
                     break;
                 case "button_HTTPS":
                     startInfo.FileName = string.Format("https://{0}:443/", textbox_host.Text.Trim());
                     break;
-
-
                 default:
                     break;
             }
-
             Process.Start(startInfo);
-
         }
 
         private void TextBox_ere_TextChanged(object sender, TextChangedEventArgs e)
@@ -405,7 +339,6 @@ namespace BBC.BSC.Tool
             host_text = textbox_host.Text.Trim();
             hostTimer.Stop();
             hostTimer.Start();
-
         }
 
         private string search_text;
@@ -419,12 +352,9 @@ namespace BBC.BSC.Tool
             worker.RunWorkerCompleted += DisplayResults;
             workers.Add(worker);
             worker.RunWorkerAsync(search_text);
-
-
         }
 
 
-        private string host_text;
         private void Host_Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             Console.WriteLine("host timer elapsed: {0}", host_text);
@@ -443,7 +373,6 @@ namespace BBC.BSC.Tool
             {
                 Dispatcher.Invoke(delegate ()
                 {
-
                     button_RDP.IsEnabled = con.rdp;
                     button_RC.IsEnabled = con.rdp;
                     button_VNC.IsEnabled = con.vnc;
@@ -462,7 +391,7 @@ namespace BBC.BSC.Tool
 
         private void Do_Test_Connection(object sender, DoWorkEventArgs e)
         {
-           
+
             Console.WriteLine("Testing connection to {0}", e.Argument.ToString());
             using (MyConnection con = new MyConnection())
             {
@@ -540,20 +469,21 @@ namespace BBC.BSC.Tool
                 if (((Button)sender).Content.ToString() == "Load IP")
                 {
 
-                    var tempBw = new BackgroundWorker();
+                    BackgroundWorker tempBw = new BackgroundWorker();
                     tempBw.DoWork += delegate
                         {
                             Dispatcher.Invoke(delegate ()
                         {
                             try
                             {
-                            textbox_host.Text = System.Net.Dns.GetHostEntry(((Button)sender).Tag.ToString()).AddressList[0].ToString();
+                                textbox_host.Text = System.Net.Dns.GetHostEntry(((Button)sender).Tag.ToString()).AddressList[0].ToString();
                             }
-                            catch (Exception)
+                            catch (Exception ex)
                             {
+                                Trace.TraceError(ex.Message);
                                 textbox_host.Text = null;
                             }
-                            
+
                         });
 
                         };
@@ -567,8 +497,9 @@ namespace BBC.BSC.Tool
                     textbox_host.Text = ((Button)sender).Content.ToString();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Trace.TraceError(ex.Message);
                 textbox_host.Text = "";
             }
 
