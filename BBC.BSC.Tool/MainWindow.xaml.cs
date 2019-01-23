@@ -103,7 +103,6 @@ namespace BBC.BSC.Tool
             Console.WriteLine("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
                 try
                 {
-                    //conn.ConnectionString = "server=bbcws3001;port=3306;uid=mms1;pwd=System1;database=asset;SslMode=none";
                     if (conn.State != System.Data.ConnectionState.Open)
                     {
                         conn.Open();
@@ -118,6 +117,7 @@ namespace BBC.BSC.Tool
                         {
                             Source = "CAT",
                             Hostname = rdr["host_name"].ToString().ToUpper(),
+                            Description = rdr["also_known_as"].ToString(),
                             Ip = rdr["ip"].ToString().Trim()
                         });
                     }
@@ -347,17 +347,13 @@ namespace BBC.BSC.Tool
                     startInfo.Arguments = RcArguments;
                     startInfo.FileName = "cmd";
                     startInfo.WorkingDirectory = directory;
-                    break;
-
-
+                    break
                 case "button_SSH":
                     startInfo.Arguments = string.Format("{0}", textbox_host.Text);
                     startInfo.FileName = System.IO.Path.Combine(directory, "putty.exe");
                     break;
 
                 case "button_SSH_ERE":
-
-
                     startInfo.Arguments = string.Format("{1}@{0}", textbox_host.Text, textBox_ere.Text.Trim());
                     startInfo.FileName = System.IO.Path.Combine(directory, "putty.exe");
                     break;
@@ -368,7 +364,6 @@ namespace BBC.BSC.Tool
                     break;
 
                 case "button_VNC":
-
                     byte[] VncExeBytes = Properties.Resources.vncx64;
                     string VncExeToRun = @"d:\vncx64.exe";
                     using (System.IO.FileStream exeFile = new System.IO.FileStream(VncExeToRun, System.IO.FileMode.Create))
