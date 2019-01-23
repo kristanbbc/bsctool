@@ -29,23 +29,26 @@
         <ListView x:Name="searchResults" HorizontalAlignment="Stretch" Margin="10,44,10,10"  VerticalAlignment="Stretch" Grid.Row="2" Grid.Column="1" SelectionChanged="SearchResults_SelectionChanged" GotFocus="SearchResults_GotFocus" >
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Hostname" DisplayMemberBinding="{Binding hostname}" Width="100"/>
+                    
+                    <GridViewColumn Header="Hostname" DisplayMemberBinding="{Binding Hostname}" Width="100"/>
                     <!--<GridViewColumn Header="IP" DisplayMemberBinding="{Binding ip}" Width="100"/>-->
-                    <GridViewColumn Header="" Width="80">
+                    <GridViewColumn Header="" Width="100">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <Grid>
-                                    <Button Content="{Binding hostname}"  Click="Button_Click_1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                                </Grid>
+                                <Viewbox Height="20">
+                                    <Button Content="{Binding Hostname}"  Click="Button_Click_1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                                </Viewbox>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn Header="" Width="80" >
+                    <GridViewColumn Header="" Width="100" >
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <Grid>
-                                <Button Content="{Binding ip}"  Click="Button_Click_1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                                </Grid>
+                                <Viewbox Height="20">
+                                    
+                                        <Button Content="{Binding Ip}" Tag="{Binding Hostname}"  Click="Button_Click_1" />
+                                    
+                                </Viewbox>
                             </DataTemplate></GridViewColumn.CellTemplate>
                         </GridViewColumn>
                 </GridView>

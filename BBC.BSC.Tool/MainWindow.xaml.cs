@@ -24,7 +24,7 @@ namespace BBC.BSC.Tool
         private SearchResultCollection latestRestults;
         private List<BackgroundWorker> workers = new List<BackgroundWorker>();
         private List<BackgroundWorker> connectionWorkers = new List<BackgroundWorker>();
-        private DateTime LastConnectionResult;
+        private DateTime LastConnectionResult = DateTime.Now;
         private DateTime lastResultTimestamp;
 
         private Timer searchTimer = new Timer(400);
@@ -39,12 +39,7 @@ namespace BBC.BSC.Tool
             };
             watcher.Elapsed += Do_Watcher;
             watcher.Enabled = true;
-            // Get the numbers of minimum
-
-
-            int w;
-            int c;
-            System.Threading.ThreadPool.GetMinThreads(out w, out c);
+            System.Threading.ThreadPool.GetMinThreads(out int w, out int c);
 
             // Write the numbers of minimum threads
             Console.WriteLine("{0}, {1}",
@@ -84,7 +79,8 @@ namespace BBC.BSC.Tool
             });
 
         }
-        MySqlConnection conn = new MySqlConnection("server=bbcws3001;port=3306;uid=catread;pwd=reader;database=asset;SslMode=none");
+
+        private MySqlConnection conn = new MySqlConnection("server=bbcws3001;port=3306;uid=catread;pwd=reader;database=asset;SslMode=none");
         private void Do_Search(object sender, DoWorkEventArgs e)
         {
             //DateTime timestamp = DateTime.Now;
@@ -93,18 +89,18 @@ namespace BBC.BSC.Tool
                 status.Fill = new SolidColorBrush(Colors.Red);
             });
 
-            Console.WriteLine("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
             //List<string> output = new List<string>();
 
             MyResults results = new MyResults();
 
-            if (e.Argument.ToString().Length < 3)
+            if (e.Argument.ToString().Length < 4)
             {
                 e.Result = null;
             }
             else
             {
 
+            Console.WriteLine("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
                 try
                 {
                     //conn.ConnectionString = "server=bbcws3001;port=3306;uid=mms1;pwd=System1;database=asset;SslMode=none";
@@ -118,10 +114,12 @@ namespace BBC.BSC.Tool
                     while (rdr.Read())
                     {
                         //Console.WriteLine(rdr[0] + " -- " + rdr[1]);
-                        MyResult result = new MyResult();
-                        result.hostname = rdr["host_name"].ToString().ToUpper();
-                        result.ip = rdr["ip"].ToString().Trim();
-                        results.results.Add(result);
+                        results.results.Add(new MyResult
+                        {
+                            Source = "CAT",
+                            Hostname = rdr["host_name"].ToString().ToUpper(),
+                            Ip = rdr["ip"].ToString().Trim()
+                        });
                     }
                     rdr.Close();
                 }
@@ -139,41 +137,49 @@ namespace BBC.BSC.Tool
                     string path = @"LDAP://ldap.national.core.bbc.co.uk";
 
 
-                    using (DirectoryEntry dEntry = new DirectoryEntry(path))
+                    using (DirectoryEntry dEntry = new DirectoryEntry(path)
+                    {
+
+                    })
                     using (DirectorySearcher dSearcher = new DirectorySearcher(dEntry)
                     {
                         // (|(cn=*334810*)(displayname=*334810*)(cn=PC-*334810*)(cn=B1-D0*334810*)(cn=B1-L0*334810*)(cn=61-D0*334810*)(cn=61-L0*334810*)(cn=71-D0*334810*)(cn=71-L0*334810*)(cn=91-D0*334810*)(cn=91-L0*334810*)(cn=F1-D0*334810*)(cn=F1-L0*334810*)(cn=MC-*334810*)(sn=*334810*)(samAccountName=*334810*)(mail=*334810*)(proxyaddresses=smtp:*334810*)(ou=*334810*)(&(objectcategory=printqueue)(printername=*334810*)))
                         //Filter = string.Format("(&(objectClass=computer)(cn={0}*))", e.Argument.ToString()),
-                        Filter = string.Format("(&(!userAccountControl:1.2.840.113556.1.4.803:=2)(objectClass=computer)(|(cn={0}*)(displayname={0}*)(cn=PC-{0}*)(cn=B1-D0{0}*)(cn=B1-L0{0}*)(cn=31-D0{0}*)(cn=31*-D0{0}*)(cn=61-D0{0}*)(cn=61-L0{0}*)(cn=71-D0{0}*)(cn=71-L0{0}*)(cn=91-D0{0}*)(cn=91-L0{0}*)(cn=F1-D0{0}*)(cn=F1-L0{0}*)(cn=MC-{0}*)(sn={0}*)(samAccountName={0}*)(ipv4address={0})(mail={0}*)(proxyaddresses=smtp:{0}*)(ou={0}*)))", e.Argument.ToString()),
-                        PageSize = 20,
-                        ServerTimeLimit = new TimeSpan(2000),
-                        ServerPageTimeLimit = new TimeSpan(3000),
-                        SizeLimit = 20
+                        Filter = string.Format("(&(!userAccountControl:1.2.840.113556.1.4.803:=2)(objectClass=computer)(|(cn={0}*)(displayname={0}*)(cn=PC-{0}*)(cn=B1-D0{0}*)(cn=B1-L0{0}*)(cn=31-D0{0}*)(cn=31*-D0{0}*)(cn=61-D0{0}*)(cn=61-L0{0}*)(cn=71-D0{0}*)(cn=71-L0{0}*)(cn=91-D0{0}*)(cn=91-L0{0}*)(cn=F1-D0{0}*)(cn=F1-L0{0}*)(cn=MC-{0}*)(sn={0}*)(samAccountName={0}*)))", e.Argument.ToString()),
+                        //PageSize = 20,
+                        //ServerTimeLimit = TimeSpan.FromSeconds(15),
+                        //ServerPageTimeLimit = TimeSpan.FromSeconds(15),
+                        //SizeLimit = 20,
+                        ClientTimeout = TimeSpan.FromSeconds(10)
 
                     })
                     {
+                        dSearcher.PropertiesToLoad.Clear();
+                        dSearcher.PropertiesToLoad.Add("name");
+                        dSearcher.PropertiesToLoad.Add("description");
                         using (SearchResultCollection sResults = dSearcher.FindAll())
                         {
                             latestRestults = sResults;
                             foreach (SearchResult item in sResults)
                             {
-                                //ResultPropertyCollection fields = item.Properties;
-                                ResultPropertyValueCollection name = item.Properties["name"];
-                                ResultPropertyValueCollection ip = item.Properties["ipv4address"];
-                                //output.Add(name[0].ToString().ToUpper());
-                                try
+                                //Console.WriteLine("AD: found: {0}", item.Properties["name"][0].ToString().ToUpper());
+                                if (!results.results.Any(n => n.Hostname == item.Properties["name"][0].ToString().ToUpper()))
                                 {
-                                results.results.Add(new MyResult(name[0].ToString().ToUpper(), ip[0].ToString().ToUpper()));
+                                    results.AddResult(new MyResult()
+                                    {
+                                        Hostname = item.Properties["name"][0].ToString().ToUpper(),
+                                        Description = (item.Properties.Contains("description") ? item.Properties["description"][0].ToString() : ""),
+                                        Ip = "Load IP",
+                                        Source = "AD"
+                                    });
+
+                                    //results.results.Add(new MyResult(
+                                    //    HOSTNAME: name[0].ToString().ToUpper(),
+                                    //    IP: Dns.GetHostEntry(name[0].ToString().ToUpper()).AddressList[0].ToString(),
+                                    //    SOURCE: "AD"));
 
                                 }
-                                catch (Exception)
-                                {
-                                results.AddResult(new MyResult(name[0].ToString().ToUpper()));
 
-                                  
-                                }
-
-                                
                             }
                         }
 
@@ -195,6 +201,8 @@ namespace BBC.BSC.Tool
             //    results = output.Distinct().ToArray(),
             //    timestamp = timestamp
             //};
+            results.results.Sort((a, b) => a.Hostname.CompareTo(b.Hostname));
+
             e.Result = results;
 
         }
@@ -231,13 +239,13 @@ namespace BBC.BSC.Tool
                         //this.searchResults.ItemsSource = res.results;
                         ObservableCollection<MyResult> Results = new ObservableCollection<MyResult>();
 
-                        foreach (var item in res.results)
+                        foreach (MyResult item in res.results)
                         {
                             Results.Add(item);
                         }
                         searchResults.ItemsSource = null;
                         searchResults.ItemsSource = Results;
-                        searchResults.Items.Refresh();
+                        //searchResults.Items.Refresh();
 
                     });
                     lastResultTimestamp = res.timestamp;
@@ -285,7 +293,7 @@ namespace BBC.BSC.Tool
         {
             try
             {
-                textbox_host.Text = ((MyResult)((ListBox)sender).SelectedValue).hostname.ToString();
+                textbox_host.Text = ((MyResult)((ListBox)sender).SelectedValue).Hostname.ToString();
             }
             catch (Exception)
             {
@@ -297,7 +305,7 @@ namespace BBC.BSC.Tool
         {
             try
             {
-                textbox_host.Text = ((MyResult)((ListBox)sender).SelectedValue).hostname.ToString();
+                textbox_host.Text = ((MyResult)((ListBox)sender).SelectedValue).Hostname.ToString();
 
             }
             catch
@@ -459,9 +467,15 @@ namespace BBC.BSC.Tool
 
         private void Do_Test_Connection(object sender, DoWorkEventArgs e)
         {
+           
             Console.WriteLine("Testing connection to {0}", e.Argument.ToString());
             using (MyConnection con = new MyConnection())
             {
+                if (e.Argument.ToString().Length < 4)
+                {
+                    e.Result = con;
+                    return;
+                }
                 int timeout = 200;
 
                 if (IsPortOpen(e.Argument.ToString(), 3389, TimeSpan.FromMilliseconds(timeout)))
@@ -528,12 +542,43 @@ namespace BBC.BSC.Tool
         {
             try
             {
-                textbox_host.Text = ((Button)sender).Content.ToString();
+                if (((Button)sender).Content.ToString() == "Load IP")
+                {
+
+                    var tempBw = new BackgroundWorker();
+                    tempBw.DoWork += delegate
+                        {
+                            Dispatcher.Invoke(delegate ()
+                        {
+                            try
+                            {
+                            textbox_host.Text = System.Net.Dns.GetHostEntry(((Button)sender).Tag.ToString()).AddressList[0].ToString();
+                            }
+                            catch (Exception)
+                            {
+                                textbox_host.Text = null;
+                            }
+                            
+                        });
+
+                        };
+                    tempBw.RunWorkerAsync();
+
+
+
+                }
+                else
+                {
+                    textbox_host.Text = ((Button)sender).Content.ToString();
+                }
             }
             catch (Exception)
             {
                 textbox_host.Text = "";
             }
+
+
+
         }
     }
 
@@ -548,24 +593,35 @@ namespace BBC.BSC.Tool
 
         public MyResults()
         {
-            this.timestamp = DateTime.Now;
+            timestamp = DateTime.Now;
         }
         public void AddResult(MyResult result)
         {
-            this.results.Add(result);
+            results.Add(result);
         }
 
 
-        
+
     }
-    public class MyResult 
-        {
-            public string hostname
+    public class MyResult
+    {
+        public string Source
         {
             get;
             set;
         }
-        public string ip
+        public string Hostname
+        {
+            get;
+            set;
+        }
+        public string Ip
+        {
+            get;
+            set;
+        }
+
+        public string Description
         {
             get;
             set;
@@ -574,14 +630,16 @@ namespace BBC.BSC.Tool
         {
 
         }
-        public MyResult(string HOSTNAME)
+        public MyResult(string HOSTNAME, string SOURCE = null)
         {
-            this.hostname = HOSTNAME;
+            Hostname = HOSTNAME;
+            Source = SOURCE;
         }
-        public MyResult(string HOSTNAME, string IP)
+        public MyResult(string HOSTNAME, string IP, string SOURCE = null)
         {
-            this.hostname = HOSTNAME;
-            this.ip = IP;
+            Hostname = HOSTNAME;
+            Ip = IP;
+            Source = SOURCE;
         }
 
     };
