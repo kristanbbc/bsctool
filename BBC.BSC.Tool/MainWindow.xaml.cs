@@ -99,7 +99,7 @@ namespace BBC.BSC.Tool
                     {
                         conn.Open();
                     }
-                    MySqlCommand cmd = new MySqlCommand(string.Format("SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip FROM network INNER JOIN asset ON network.asset_id = asset.asset_id WHERE life_cycle_status_id = 4 AND (host_name like '%{0}%' OR IP = inet_aton('{0}') )", e.Argument.ToString().Replace("*", "%")), conn);
+                    MySqlCommand cmd = new MySqlCommand(string.Format("SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip FROM network INNER JOIN asset ON network.asset_id = asset.asset_id WHERE life_cycle_status_id = 4 AND (host_name like '%{0}%' OR IP = inet_aton('{0}') OR also_known_as LIKE '%{0}%')", e.Argument.ToString().Replace("*", "%")), conn);
                     MySqlDataReader rdr = cmd.ExecuteReader();
 
                     while (rdr.Read())
