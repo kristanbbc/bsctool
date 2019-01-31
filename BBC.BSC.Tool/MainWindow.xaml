@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BBC.BSC.Tool"
         mc:Ignorable="d"
-        Title="ALPHA 2019 BSC Tool" Height="420.524" Width="486.958" Topmost="False" Closing="Window_Closing" Icon="bsctoolicon.ico"
+        Title="ALPHA 2019 BSC Tool" Height="420.524" Width="734.958" Topmost="False" Closing="Window_Closing" Icon="bsctoolicon.ico"
         >
     <Window.Background>
         <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
@@ -30,9 +30,9 @@
             <ListView.View>
                 <GridView>
                     
-                    <GridViewColumn Header="Hostname" DisplayMemberBinding="{Binding Hostname}" Width="100"/>
+                    <GridViewColumn Header="Hostname" DisplayMemberBinding="{Binding Hostname}" Width="130"/>
                     <!--<GridViewColumn Header="IP" DisplayMemberBinding="{Binding ip}" Width="100"/>-->
-                    <GridViewColumn Header="" Width="100">
+                    <GridViewColumn Header="" Width="130">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <Viewbox Height="20">
@@ -45,14 +45,15 @@
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <Viewbox Height="20">
-                                    
-                                        <Button Content="{Binding Ip}" Tag="{Binding Hostname}"  Click="Button_Click_1" />
-                                    
+                                    <Button Content="{Binding Ip}" Tag="{Binding Hostname}"  Click="Button_Click_1" />
                                 </Viewbox>
-                            </DataTemplate></GridViewColumn.CellTemplate>
-                        </GridViewColumn>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Description" DisplayMemberBinding="{Binding Description}" Width="200"/>
+
+
                 </GridView>
-                
                 
             </ListView.View>
 
