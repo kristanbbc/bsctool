@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.DirectoryServices;
 using System.Linq;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
@@ -176,7 +177,7 @@ namespace BBC.BSC.Tool
             searchTimer.Start();
             textbox_host.Text = searchIn.Text;
         }
-        
+
         public List<MyResult> Results;
 
         private void DisplayResults(object sender, RunWorkerCompletedEventArgs e)
@@ -277,19 +278,12 @@ namespace BBC.BSC.Tool
                     break;
 
                 case "button_RC":
-                    byte[] exeBytes = Properties.Resources.rc;
                     string exeToRun = @"d:\rc.exe";
-                    using (System.IO.FileStream exeFile = new System.IO.FileStream(exeToRun, System.IO.FileMode.Create))
+                    if (PrepareTool(Properties.Resources.rc, exeToRun))
                     {
-                        exeFile.Write(exeBytes, 0, exeBytes.Length);
+                        startInfo.Arguments = string.Format(@"/c runas /user:national\{0} /savecred ""{1} 1 {2}""", textBox_ere.Text, exeToRun, textbox_host.Text.Trim());
+                        startInfo.FileName = "cmd";
                     }
-                    string RcFileName = System.IO.Path.Combine(directory, "rc.exe");
-                    RcFileName = exeToRun;
-                    string RcArguments = string.Format(@"/c runas /user:national\{0} /savecred ""{1} 1 {2}""", textBox_ere.Text, RcFileName, textbox_host.Text.Trim());
-                    Console.WriteLine(RcArguments);
-                    startInfo.Arguments = RcArguments;
-                    startInfo.FileName = "cmd";
-                    startInfo.WorkingDirectory = directory;
                     break;
                 case "button_SSH":
                     startInfo.Arguments = string.Format("{0}", textbox_host.Text);
@@ -304,15 +298,12 @@ namespace BBC.BSC.Tool
                     startInfo.FileName = System.IO.Path.Combine(directory, "putty.exe");
                     break;
                 case "button_VNC":
-                    byte[] VncExeBytes = Properties.Resources.vncx64;
                     string VncExeToRun = @"d:\vncx64.exe";
-                    using (System.IO.FileStream exeFile = new System.IO.FileStream(VncExeToRun, System.IO.FileMode.Create))
+                    if (PrepareTool(Properties.Resources.vncx64, VncExeToRun))
                     {
-                        exeFile.Write(VncExeBytes, 0, VncExeBytes.Length);
+                        startInfo.Arguments = string.Format(@"/c runas /user:national\{0} /savecred ""{2} {1}""", textBox_ere.Text, textbox_host.Text.Trim(), VncExeToRun);
+                        startInfo.FileName = "cmd";
                     }
-                    startInfo.Arguments = string.Format(@"/c runas /user:national\{0} /savecred ""{2} {1}""", textBox_ere.Text, textbox_host.Text.Trim(), VncExeToRun);
-                    startInfo.FileName = "cmd";
-                    startInfo.WorkingDirectory = directory;
                     break;
                 case "button_HTTP":
                     startInfo.FileName = string.Format("http://{0}:80/", textbox_host.Text.Trim());
@@ -323,8 +314,59 @@ namespace BBC.BSC.Tool
                 default:
                     break;
             }
-            Process.Start(startInfo);
+
+            if (startInfo.FileName.Length > 0)
+            {
+
+                Process.Start(startInfo);
+            }
         }
+
+
+        private bool PrepareTool(byte[] resource, string outputPath)
+        {
+            byte[] existingMD5;
+            byte[] resourceMD5;
+            if (System.IO.File.Exists(outputPath))
+            {
+                //check md5
+                using (MD5 md5 = MD5.Create())
+                {
+                    using (System.IO.FileStream stream = System.IO.File.OpenRead(outputPath))
+                    {
+                        existingMD5 = md5.ComputeHash(stream);
+                    }
+                }
+
+                //md5 of embedded resource
+                using (MD5 md5 = System.Security.Cryptography.MD5.Create())
+                {
+                    md5.TransformFinalBlock(resource, 0, resource.Length);
+                    resourceMD5 = md5.Hash;
+                }
+
+                if (System.Text.Encoding.Default.GetString(existingMD5) == System.Text.Encoding.Default.GetString(resourceMD5))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            }
+            else
+            {
+                using (System.IO.FileStream exeFile = new System.IO.FileStream(outputPath, System.IO.FileMode.Create))
+                {
+                    exeFile.Write(resource, 0, resource.Length);
+                }
+                return true;
+            }
+            return false;
+        }
+
+
 
         private void TextBox_ere_TextChanged(object sender, TextChangedEventArgs e)
         {
