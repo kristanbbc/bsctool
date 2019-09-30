@@ -1,4 +1,4 @@
-﻿using MySql.Data.MySqlClient;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.DirectoryServices;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Timers;
@@ -31,7 +32,6 @@ namespace BBC.BSC.Tool
         private readonly string path = @"LDAP://ldap.national.core.bbc.co.uk";
         private Timer searchTimer = new Timer(400);
         private Timer hostTimer = new Timer(400);
-        private MySqlConnection conn = new MySqlConnection("server=bbcws3001;port=3306;uid=catread;pwd=reader;database=asset;SslMode=none");
         private string host_text;
         private string history_file = "history.dat";
 
@@ -91,6 +91,15 @@ namespace BBC.BSC.Tool
 
         }
 
+        private List<catRestult> catRestults = new List<catRestult>();
+        private class catRestult
+        {
+            public string host_name;
+            public string also_known_as;
+            public string ip;
+
+        }
+
         private void Do_Search(object sender, DoWorkEventArgs e)
         {
             Dispatcher.Invoke(delegate ()
@@ -107,25 +116,31 @@ namespace BBC.BSC.Tool
                 Console.WriteLine("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
                 try
                 {
-                    if (conn.State != System.Data.ConnectionState.Open)
-                    {
-                        conn.Open();
-                    }
-                    MySqlCommand cmd = new MySqlCommand(string.Format("SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip FROM network INNER JOIN asset ON network.asset_id = asset.asset_id WHERE life_cycle_status_id = 4 AND (host_name like '%{0}%' OR IP = inet_aton('{0}') OR also_known_as LIKE '%{0}%')", e.Argument.ToString().Replace("*", "%")), conn);
-                    MySqlDataReader rdr = cmd.ExecuteReader();
+                    string catQuery = string.Format("SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip FROM network INNER JOIN asset ON network.asset_id = asset.asset_id WHERE life_cycle_status_id = 4 AND (host_name like '%{0}%' OR IP = inet_aton('{0}') OR also_known_as LIKE '%{0}%')", e.Argument.ToString().Replace("*", "%"));
 
-                    while (rdr.Read())
+                    string json_data = string.Empty;
+                    Console.WriteLine(string.Format(@"http://cat.er.bbc.co.uk/catquery.php?json&query={0}", catQuery));
+
+                    using (WebClient w = new WebClient())
                     {
-                        //Console.WriteLine(rdr[0] + " -- " + rdr[1]);
+                        w.UseDefaultCredentials = true;
+                        json_data = w.DownloadString(string.Format(@"http://cat.er.bbc.co.uk/catquery.php?json&query={0}", catQuery));
+                    }
+
+                    catRestults = !string.IsNullOrEmpty(json_data) ? JsonConvert.DeserializeObject<List<catRestult>>(json_data) : null;
+                    Console.WriteLine(string.Format("Got {0} results from CAT", catRestults.Count()));
+                    foreach (catRestult item in catRestults)
+                    {
                         results.results.Add(new MyResult
                         {
                             Source = "CAT",
-                            Hostname = rdr["host_name"].ToString().ToUpper(),
-                            Description = rdr["also_known_as"].ToString(),
-                            Ip = rdr["ip"].ToString().Trim()
+                            Hostname = item.host_name.ToUpper(),
+                            Description = item.also_known_as,
+                            Ip = item.ip
                         });
                     }
-                    rdr.Close();
+
+                   
                 }
                 catch (Exception ex)
                 {
@@ -236,7 +251,6 @@ namespace BBC.BSC.Tool
                 try
                 {
                     latestRestults.Dispose();
-                    conn.Close();
                 }
                 catch (Exception ex)
                 {
