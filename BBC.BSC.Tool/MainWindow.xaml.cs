@@ -26,12 +26,14 @@ namespace BBC.BSC.Tool
     /// </summary>
     public partial class MainWindow : Window
     {
+        //TODO make more of these configurable?
+        private readonly string catPath = @"http://cat.er.bbc.co.uk/catquery.php?json&query=";
         private SearchResultCollection latestRestults;
         private List<BackgroundWorker> workers = new List<BackgroundWorker>();
         private List<BackgroundWorker> connectionWorkers = new List<BackgroundWorker>();
         private DateTime LastConnectionResult = DateTime.Now;
         private DateTime lastResultTimestamp;
-        private readonly string path = @"LDAP://ldap.national.core.bbc.co.uk";
+        private readonly string ldapPath = @"LDAP://ldap.national.core.bbc.co.uk";
         private Timer searchTimer = new Timer(400);
         private Timer hostTimer = new Timer(400);
         private string host_text;
@@ -125,7 +127,7 @@ namespace BBC.BSC.Tool
                 {
                     string catQuery = string.Format("{1}SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip FROM network INNER JOIN asset ON network.asset_id = asset.asset_id WHERE life_cycle_status_id = 4 AND (host_name like '%{0}%' OR IP = inet_aton('{0}') OR also_known_as LIKE '%{0}%')",
                         e.Argument.ToString().Replace("*", "%"),
-                        @"http://cat.er.bbc.co.uk/catquery.php?json&query=");
+                        catPath);
 
                     string json_data = string.Empty;
                     logger.Debug("Running query against CAT with\n{0}", catQuery);
@@ -157,7 +159,7 @@ namespace BBC.BSC.Tool
                 }
                 try
                 {
-                    using (DirectoryEntry dEntry = new DirectoryEntry(path))
+                    using (DirectoryEntry dEntry = new DirectoryEntry(ldapPath))
                     using (DirectorySearcher dSearcher = new DirectorySearcher(dEntry)
                     {
                         // (|(cn=*334810*)(displayname=*334810*)(cn=PC-*334810*)(cn=B1-D0*334810*)(cn=B1-L0*334810*)(cn=61-D0*334810*)(cn=61-L0*334810*)(cn=71-D0*334810*)(cn=71-L0*334810*)(cn=91-D0*334810*)(cn=91-L0*334810*)(cn=F1-D0*334810*)(cn=F1-L0*334810*)(cn=MC-*334810*)(sn=*334810*)(samAccountName=*334810*)(mail=*334810*)(proxyaddresses=smtp:*334810*)(ou=*334810*)(&(objectcategory=printqueue)(printername=*334810*)))
