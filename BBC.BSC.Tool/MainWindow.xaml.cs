@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.DirectoryServices;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Security.Cryptography;
@@ -32,7 +33,7 @@ namespace BBC.BSC.Tool
         private Timer hostTimer = new Timer(400);
         private MySqlConnection conn = new MySqlConnection("server=bbcws3001;port=3306;uid=catread;pwd=reader;database=asset;SslMode=none");
         private string host_text;
-
+        private string history_file = "history.dat";
 
         public MainWindow()
         {
@@ -55,6 +56,16 @@ namespace BBC.BSC.Tool
             searchTimer.Elapsed += Search_Timer_Elapsed;
             DataContext = this;
             searchResults.ItemsSource = Results;
+            if (System.IO.File.Exists(history_file))
+            {
+
+                foreach (string item in System.IO.File.ReadLines(history_file).Reverse())
+                {
+                    lvHisotry.Items.Add(item);
+                }
+            }
+
+
         }
 
 
@@ -320,6 +331,19 @@ namespace BBC.BSC.Tool
 
                 Process.Start(startInfo);
             }
+            if (!lvHisotry.Items.Contains(textbox_host.Text.Trim()))
+            {
+                lvHisotry.Items.Insert(0, textbox_host.Text.Trim());
+
+                using (StreamWriter tw = new StreamWriter(history_file))
+                {
+                    foreach (string item in lvHisotry.Items)
+                    {
+                        tw.WriteLine(item);
+                    }
+                }
+            }
+
         }
 
 
@@ -547,6 +571,11 @@ namespace BBC.BSC.Tool
 
 
 
+        }
+
+        private void LvHisotry_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            textbox_host.Text = e.AddedItems[0].ToString();
         }
     }
 
