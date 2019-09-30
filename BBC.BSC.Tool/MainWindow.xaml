@@ -78,7 +78,7 @@
             <TabItem Header="History">
                 <Grid Background="#FFE5E5E5">
 
-                    <ListView>
+                    <ListView x:Name="lvHisotry" SelectionChanged="LvHisotry_SelectionChanged">
                         
                         
                     </ListView>
