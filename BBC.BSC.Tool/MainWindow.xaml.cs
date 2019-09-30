@@ -94,9 +94,12 @@ namespace BBC.BSC.Tool
         private List<catRestult> catRestults = new List<catRestult>();
         private class catRestult
         {
-            public string host_name;
-            public string also_known_as;
-            public string ip;
+            [JsonProperty("host_name")]
+            public string HostName;
+            [JsonProperty("also_known_as")]
+            public string AlsoKnownAs;
+            [JsonProperty("ip")]
+            public string IP;
 
         }
 
@@ -134,9 +137,9 @@ namespace BBC.BSC.Tool
                         results.results.Add(new MyResult
                         {
                             Source = "CAT",
-                            Hostname = item.host_name.ToUpper(),
-                            Description = item.also_known_as,
-                            Ip = item.ip
+                            Hostname = item.HostName.ToUpper(),
+                            Description = item.AlsoKnownAs,
+                            Ip = item.IP
                         });
                     }
 
