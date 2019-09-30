@@ -1,4 +1,6 @@
 ﻿using Newtonsoft.Json;
+using NLog;
+using NLog.Targets;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -34,10 +36,14 @@ namespace BBC.BSC.Tool
         private Timer hostTimer = new Timer(400);
         private string host_text;
         private string history_file = "history.dat";
+        private Logger logger;
 
         public MainWindow()
         {
             InitializeComponent();
+            logger = LogManager.GetCurrentClassLogger();
+
+            logger.Info("BSC Tool starting");
             System.Timers.Timer watcher = new System.Timers.Timer
             {
                 Interval = 1000
@@ -47,9 +53,7 @@ namespace BBC.BSC.Tool
             System.Threading.ThreadPool.GetMinThreads(out int w, out int c);
 
             // Write the numbers of minimum threads
-            Console.WriteLine("{0}, {1}",
-                w,
-                c);
+            logger.Debug("Minumium number of threads available {0}, {1}", w, c);
 
             System.Threading.ThreadPool.SetMinThreads(20, 10);
             hostTimer.Elapsed += Host_Timer_Elapsed;
@@ -74,7 +78,7 @@ namespace BBC.BSC.Tool
         /// <param name="e"></param>
         private void Do_Watcher(object sender, ElapsedEventArgs e)
         {
-            Console.WriteLine(workers.Count);
+            logger.Debug("There are {0} workers", workers.Count);
             Dispatcher.Invoke(delegate ()
             {
                 if (workers.Count > 0)
@@ -116,22 +120,23 @@ namespace BBC.BSC.Tool
             }
             else
             {
-                Console.WriteLine("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
+                logger.Info("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
                 try
                 {
-                    string catQuery = string.Format("SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip FROM network INNER JOIN asset ON network.asset_id = asset.asset_id WHERE life_cycle_status_id = 4 AND (host_name like '%{0}%' OR IP = inet_aton('{0}') OR also_known_as LIKE '%{0}%')", e.Argument.ToString().Replace("*", "%"));
+                    string catQuery = string.Format("{1}SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip FROM network INNER JOIN asset ON network.asset_id = asset.asset_id WHERE life_cycle_status_id = 4 AND (host_name like '%{0}%' OR IP = inet_aton('{0}') OR also_known_as LIKE '%{0}%')",
+                        e.Argument.ToString().Replace("*", "%"),
+                        @"http://cat.er.bbc.co.uk/catquery.php?json&query=");
 
                     string json_data = string.Empty;
-                    Console.WriteLine(string.Format(@"http://cat.er.bbc.co.uk/catquery.php?json&query={0}", catQuery));
-
+                    logger.Debug("Running query against CAT with\n{0}", catQuery);
                     using (WebClient w = new WebClient())
                     {
                         w.UseDefaultCredentials = true;
-                        json_data = w.DownloadString(string.Format(@"http://cat.er.bbc.co.uk/catquery.php?json&query={0}", catQuery));
+                        json_data = w.DownloadString(catQuery);
                     }
 
                     catRestults = !string.IsNullOrEmpty(json_data) ? JsonConvert.DeserializeObject<List<catRestult>>(json_data) : null;
-                    Console.WriteLine(string.Format("Got {0} results from CAT", catRestults.Count()));
+                    logger.Debug("Got {0} results from CAT", catRestults.Count());
                     foreach (catRestult item in catRestults)
                     {
                         results.results.Add(new MyResult
@@ -143,11 +148,11 @@ namespace BBC.BSC.Tool
                         });
                     }
 
-                   
+
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    logger.Warn("Error running query against CAT:\n{0}", ex.Message);
                     Trace.TraceError(ex.Message);
                 }
                 try
@@ -173,7 +178,7 @@ namespace BBC.BSC.Tool
                             latestRestults = sResults;
                             foreach (SearchResult item in sResults)
                             {
-                                //Console.WriteLine("AD: found: {0}", item.Properties["name"][0].ToString().ToUpper());
+                                logger.Debug("AD: found: {0}", item.Properties["name"][0].ToString().ToUpper());
                                 if (!results.results.Any(n => n.Hostname == item.Properties["name"][0].ToString().ToUpper()))
                                 {
                                     results.AddResult(new MyResult()
@@ -191,7 +196,7 @@ namespace BBC.BSC.Tool
                 catch (Exception ex)
                 {
                     Trace.TraceError(ex.Message);
-                    Console.WriteLine("LDAP error: {0}", ex.Message);
+                    logger.Warn("LDAP query error: {0}", ex.Message);
                 }
             }
             results.results.Sort((a, b) => a.Hostname.CompareTo(b.Hostname));
@@ -200,7 +205,7 @@ namespace BBC.BSC.Tool
 
         private void Text_Changed(object sender, TextChangedEventArgs e)
         {
-            Console.WriteLine("search text changed: {0}", searchIn.Text.Trim());
+            logger.Debug("search text changed: {0}", searchIn.Text.Trim());
             search_text = searchIn.Text;
             searchTimer.Stop();
             searchTimer.Start();
@@ -235,7 +240,7 @@ namespace BBC.BSC.Tool
             catch (Exception ex)
             {
                 Trace.TraceError(ex.Message);
-                Console.WriteLine(ex.Message);
+                logger.Error("Problem displaying results:\n{0}", ex.Message);
             }
         }
 
@@ -257,6 +262,7 @@ namespace BBC.BSC.Tool
                 }
                 catch (Exception ex)
                 {
+                    logger.Error("Error disposing:\n{0}", ex.Message);
                     Trace.TraceError(ex.Message);
                 }
                 foreach (BackgroundWorker item in workers)
@@ -274,6 +280,8 @@ namespace BBC.BSC.Tool
             }
             catch (Exception ex)
             {
+                logger.Trace(ex);
+
                 Trace.TraceError(ex.Message);
                 textbox_host.Text = "";
             }
@@ -287,6 +295,8 @@ namespace BBC.BSC.Tool
             }
             catch (Exception ex)
             {
+                logger.Trace(ex);
+
                 Trace.TraceError(ex.Message);
             }
         }
@@ -418,7 +428,7 @@ namespace BBC.BSC.Tool
 
         private void Textbox_host_TextChanged(object sender, TextChangedEventArgs e)
         {
-            Console.WriteLine("host text changed: {0}", textbox_host.Text.Trim());
+            logger.Debug("host text changed: {0}", textbox_host.Text.Trim());
             host_text = textbox_host.Text.Trim();
             hostTimer.Stop();
             hostTimer.Start();
@@ -428,7 +438,7 @@ namespace BBC.BSC.Tool
 
         private void Search_Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            Console.WriteLine("search timer elapsed: {0}", search_text);
+            logger.Debug("search timer elapsed: {0}", search_text);
             searchTimer.Stop();
             BackgroundWorker worker = new BackgroundWorker();
             worker.DoWork += Do_Search;
@@ -440,7 +450,7 @@ namespace BBC.BSC.Tool
 
         private void Host_Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            Console.WriteLine("host timer elapsed: {0}", host_text);
+            logger.Debug("host timer elapsed: {0}", host_text);
             hostTimer.Stop();
             BackgroundWorker connectionWorker = new BackgroundWorker();
             connectionWorker.DoWork += Do_Test_Connection;
@@ -475,7 +485,7 @@ namespace BBC.BSC.Tool
         private void Do_Test_Connection(object sender, DoWorkEventArgs e)
         {
 
-            Console.WriteLine("Testing connection to {0}", e.Argument.ToString());
+            logger.Info("Testing connection to {0}", e.Argument.ToString());
             using (MyConnection con = new MyConnection())
             {
                 if (e.Argument.ToString().Length < 4)
