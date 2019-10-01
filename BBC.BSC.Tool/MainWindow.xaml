@@ -5,41 +5,68 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BBC.BSC.Tool"
         mc:Ignorable="d"
-        Title="ALPHA 2019 BSC Tool" Height="420.524" Width="734.958" Topmost="False" Closing="Window_Closing" Icon="bsctoolicon.ico"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontWeight="Regular"
+        TextElement.FontSize="13"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="Auto"
+        Background="{DynamicResource MaterialDesignPaper}"
+        FontFamily="{DynamicResource MaterialDesignFont}"
+        
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        
+        Title="ALPHA 2019 BSC Tool" Height="550" Width="800" Topmost="False" Closing="Window_Closing" Icon="bsctoolicon.ico"
         >
-    <Window.Background>
+    
+    <Window.Resources>
+        <CornerRadius x:Key="cornerRadius">8</CornerRadius>
+    </Window.Resources>
+    
+    
+    <!--<Window.Background>
         <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
             <GradientStop Color="#FFCDF3CD" Offset="0"/>
             <GradientStop Color="#FFCFC8F0" Offset="1"/>
         </LinearGradientBrush>
-    </Window.Background>
+    </Window.Background>-->
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition />
-            <RowDefinition Height="58"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Stretch"  Grid.Row="3" Stroke="Black" VerticalAlignment="Stretch"  Grid.ColumnSpan="2" Margin="0"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Stretch"  Grid.Row="2" Stroke="Black" VerticalAlignment="Stretch"  Grid.ColumnSpan="2" Margin="0"/>
+
 
         <TextBlock x:Name="textBlock" HorizontalAlignment="Stretch" Margin="15" TextWrapping="Wrap" VerticalAlignment="Stretch" Grid.ColumnSpan="2" ><Run Text="This is the test version of the new for 2019 BSC Support Tool.                                        "/><LineBreak/><Run Text="Features will be added from time to time"/><Run Text=" so always install any updates."/><LineBreak/><Run Text="To start"/><Run Text=" type a computer name in the search box and the results will be shown below"/><Run Text="."/><LineBreak/><Run Text="You can search just the asset name: e.g. N334123 or the full host name."/><LineBreak/><Run Text="B"/><Run Text="oth AD and the CAT are searched"/><Run Text=".  "/><LineBreak/><Run Text="- Ensure your ERE account is set in the bottom box."/><LineBreak/><Run Text="- Select a host and the name will be copied to the connection box"/><Run Text=" at the bottom"/><Run Text="."/><LineBreak/><Run Text="- "/><Run Text="(You can manually edit the connection box)"/><LineBreak/><Run Text="- Valid connection methods will be enabled"/><Run Text="."/></TextBlock>
 
 
-        <TabControl x:Name="tabControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Grid.ColumnSpan="2" Grid.Row="1">
+        <TabControl x:Name="tabControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Grid.ColumnSpan="2" Grid.Row="1"  
+                    Style="{StaticResource MaterialDesignTabControl}" 
+                    BorderBrush="{DynamicResource PrimaryHueDarkBrush}" BorderThickness="1"
+                    >
             <TabItem Header="SEARCH">
                 <Grid Background="#FFE5E5E5">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
-                    <Rectangle x:Name="status" Fill="AliceBlue" HorizontalAlignment="Left" Height="24" Margin="37,109,0,0" Grid.Row="2" Stroke="Black" VerticalAlignment="Top" Width="25"/>
-                    <TextBox x:Name="searchIn" HorizontalAlignment="Stretch" Height="29" Margin="10,10,10,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" TextChanged="Text_Changed" Grid.Row="1" Grid.Column="1" Grid.RowSpan="2"/>
-                    <Label x:Name="label" Content="Search term:" HorizontalAlignment="Left" Margin="15,13,0,0" Grid.Row="2" VerticalAlignment="Top" Height="23" Width="73"/>
-                    <Label x:Name="label_Copy" Content="Search results:" HorizontalAlignment="Left" Margin="8,52,0,0" Grid.Row="2" VerticalAlignment="Top" Height="23" Width="82"/>
-                    <ListView x:Name="searchResults" HorizontalAlignment="Stretch" Margin="10,44,10,10"  VerticalAlignment="Stretch" Grid.Row="2" Grid.Column="1" SelectionChanged="SearchResults_SelectionChanged" GotFocus="SearchResults_GotFocus" >
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Rectangle x:Name="status" Fill="AliceBlue" HorizontalAlignment="Center" Margin="10" Height="24" Grid.Row="2" Stroke="Black" VerticalAlignment="Top" Width="25"/>
+                    <TextBox x:Name="searchIn" HorizontalAlignment="Stretch"  Margin="10" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" TextChanged="Text_Changed" Grid.Row="0" Grid.Column="1" />
+                    <Label x:Name="label3" Content="Search term:" HorizontalAlignment="Right" Margin="8" VerticalAlignment="Center" />
+                    <Label x:Name="label4" Content="Search results:" HorizontalAlignment="Right" Margin="8" Grid.Row="1" VerticalAlignment="Top"/>
+
+                    <ListView x:Name="searchResults" HorizontalAlignment="Stretch" Margin="10"  VerticalAlignment="Stretch" Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" SelectionChanged="SearchResults_SelectionChanged" GotFocus="SearchResults_GotFocus" AlternationCount="1" >
                         <ListView.View>
                             <GridView>
 
@@ -78,28 +105,42 @@
             <TabItem Header="History">
                 <Grid Background="#FFE5E5E5">
 
-                    <ListView x:Name="lvHisotry" SelectionChanged="LvHisotry_SelectionChanged">
-                        
-                        
+                    <ListView x:Name="lvHisotry" SelectionChanged="LvHisotry_SelectionChanged" AlternationCount="1">
+
+
                     </ListView>
                 </Grid>
             </TabItem>
         </TabControl>
 
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Label x:Name="label1" Content="Connect to:"  Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Center"  FontWeight="Bold" />
+            <Label x:Name="label2" Content="ERE account:" Grid.Row="1"  HorizontalAlignment="Right" VerticalAlignment="Center" />
 
+            <TextBox x:Name="textbox_host"  Grid.Row="0" Grid.Column="1" TextWrapping="Wrap" Text="" VerticalAlignment="Center" Width="200" TextChanged="Textbox_host_TextChanged" FontWeight="Bold"/>
+            <TextBox x:Name="textBox_ere"   Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" Text="{local:SettingBinding ere}" VerticalAlignment="Center" TextChanged="TextBox_ere_TextChanged" />
 
-        <Button x:Name="button_RDP" Content="RDP" Grid.Column="1" HorizontalAlignment="Left" Margin="129,7,0,0" Grid.Row="3" VerticalAlignment="Top" Width="84" Click="Button_Click" Height="20" IsEnabled="False"/>
-        <Button x:Name="button_RC" Content="RC" Grid.Column="1" HorizontalAlignment="Left" Margin="72,31,0,0" Grid.Row="3" VerticalAlignment="Top" Width="52" Click="Button_Click" Height="20" IsEnabled="False"/>
-        <Button x:Name="button_SSH" Content="SSH" Grid.Column="1" HorizontalAlignment="Left" Margin="291,7,0,0" Grid.Row="3" VerticalAlignment="Top" Width="82" Click="Button_Click" Height="20" IsEnabled="False"/>
-        <TextBox x:Name="textbox_host" Grid.ColumnSpan="2" HorizontalAlignment="Left" Height="23" Margin="74,5,0,0" Grid.Row="3" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="142" TextChanged="Textbox_host_TextChanged" FontWeight="Bold"/>
-        <TextBox x:Name="textBox_ere" HorizontalAlignment="Left" Height="23" Margin="74,30,0,0" Grid.Row="3" TextWrapping="Wrap" Text="{local:SettingBinding ere}" VerticalAlignment="Top" Width="85" TextChanged="TextBox_ere_TextChanged" Grid.ColumnSpan="2"/>
-        <Label x:Name="label1" Content="Connect to:" HorizontalAlignment="Left" Margin="2,5,0,0" Grid.Row="3" VerticalAlignment="Top" FontWeight="Bold"/>
-        <Label x:Name="label2" Content="ERE account:" HorizontalAlignment="Left" Margin="4,30,0,0" Grid.Row="3" VerticalAlignment="Top"/>
-        <Button x:Name="button_VNC" Content="VNC" Grid.Column="1" HorizontalAlignment="Left" Margin="129,31,0,0" Grid.Row="3" VerticalAlignment="Top" Width="47" Click="Button_Click" Height="20" IsEnabled="False"/>
-        <Button x:Name="button_SSH_ERE" Content="SSH ERE" Grid.Column="1" HorizontalAlignment="Left" Margin="291,31,0,0" Grid.Row="3" VerticalAlignment="Top" Width="82" Click="Button_Click" Height="20" IsEnabled="False"/>
-        <Button x:Name="button_TELNET" Content="TELNET" Grid.Column="1" HorizontalAlignment="Left" Margin="218,7,0,0" Grid.Row="3" VerticalAlignment="Top" Width="68" Click="Button_Click" Height="20" IsEnabled="False"/>
-        <Button x:Name="button_HTTP" Content="HTTP" Grid.Column="1" HorizontalAlignment="Left" Margin="181,31,0,0" Grid.Row="3" VerticalAlignment="Top" Width="44" Click="Button_Click" Height="20" IsEnabled="False"/>
-        <Button x:Name="button_HTTPS" Content="HTTPS" Grid.Column="1" HorizontalAlignment="Left" Margin="230,31,0,0" Grid.Row="3" VerticalAlignment="Top" Width="55" Click="Button_Click" Height="20" IsEnabled="False"/>
+        </Grid>
+        <WrapPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="1" Margin="10,0" >
+            <Button x:Name="button_RDP" Content="RDP" Click="Button_Click" Margin="4" IsEnabled="False"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+            <Button x:Name="button_RC" Content="RC"  Click="Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+            <Button x:Name="button_VNC" Content="VNC" Click="Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+            <Button x:Name="button_SSH" Content="SSH"  Click="Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+            <Button x:Name="button_SSH_ERE" Content="SSH ERE"  Click="Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+            <Button x:Name="button_TELNET" Content="TELNET"  Click="Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+            <Button x:Name="button_HTTP" Content="HTTP"  Click="Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+            <Button x:Name="button_HTTPS" Content="HTTPS" Click="Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+
+        </WrapPanel>
+
 
 
 
