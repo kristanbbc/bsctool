@@ -77,6 +77,7 @@ namespace BBC.BSC.Tool
                 }
             }
 
+            searchIn.Focus();
 
         }
 
