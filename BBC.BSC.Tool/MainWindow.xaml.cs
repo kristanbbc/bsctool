@@ -43,7 +43,13 @@ namespace BBC.BSC.Tool
         public MainWindow()
         {
             InitializeComponent();
+            NLog.Config.LoggingConfiguration config = new NLog.Config.LoggingConfiguration();
+            ColoredConsoleTarget consoleTarget = new ColoredConsoleTarget();
+            config.AddRule(LogLevel.Trace, LogLevel.Fatal, consoleTarget);
+            consoleTarget.Layout = "${time} ${pad:padding=3:inner=${threadid}} ${message} ${exception:format=tostring}";
+            NLog.LogManager.Configuration = config;
             logger = LogManager.GetCurrentClassLogger();
+
 
             logger.Info("BSC Tool starting");
             System.Timers.Timer watcher = new System.Timers.Timer
