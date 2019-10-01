@@ -85,7 +85,7 @@
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <Viewbox Height="20">
-                                                <Button Content="{Binding Hostname}"  Click="Button_Click_1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                                                <Button Content="{Binding Hostname}"  Click="Load_Result_Button_Click" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                                             </Viewbox>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
@@ -94,7 +94,7 @@
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <Viewbox Height="20">
-                                                <Button Content="{Binding Ip}" Tag="{Binding Hostname}"  Click="Button_Click_1" />
+                                                <Button Content="{Binding Ip}" Tag="{Binding Hostname}"  Click="Load_Result_Button_Click" />
                                             </Viewbox>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
@@ -138,15 +138,15 @@
             <TextBox x:Name="textBox_ere"   Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" Text="{local:SettingBinding ere}" VerticalAlignment="Center" TextChanged="TextBox_ere_TextChanged" />
 
         </Grid>
-        <WrapPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="1" Margin="10,0" >
-            <Button x:Name="button_RDP" Content="RDP" Click="Button_Click" Margin="4" IsEnabled="False"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
-            <Button x:Name="button_RC" Content="RC"  Click="Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
-            <Button x:Name="button_VNC" Content="VNC" Click="Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
-            <Button x:Name="button_SSH" Content="SSH"  Click="Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
-            <Button x:Name="button_SSH_ERE" Content="SSH ERE"  Click="Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
-            <Button x:Name="button_TELNET" Content="TELNET"  Click="Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
-            <Button x:Name="button_HTTP" Content="HTTP"  Click="Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
-            <Button x:Name="button_HTTPS" Content="HTTPS" Click="Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+        <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.Row="2" Grid.Column="1" Margin="10,0" >
+            <Button x:Name="button_RDP" Content="RDP" Click="Connect_Button_Click" Margin="4" IsEnabled="False"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+            <Button x:Name="button_RC" Content="RC"  Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+            <Button x:Name="button_VNC" Content="VNC" Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+            <Button x:Name="button_SSH" Content="SSH"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+            <Button x:Name="button_SSH_ERE" Content="SSH ERE"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+            <Button x:Name="button_TELNET" Content="TELNET"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+            <Button x:Name="button_HTTP" Content="HTTP"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+            <Button x:Name="button_HTTPS" Content="HTTPS" Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
 
         </WrapPanel>
 

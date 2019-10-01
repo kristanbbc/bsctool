@@ -310,7 +310,7 @@ namespace BBC.BSC.Tool
             }
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void Connect_Button_Click(object sender, RoutedEventArgs e)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo();
 
@@ -564,7 +564,7 @@ namespace BBC.BSC.Tool
             return true;
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private void Load_Result_Button_Click(object sender, RoutedEventArgs e)
         {
             try
             {
