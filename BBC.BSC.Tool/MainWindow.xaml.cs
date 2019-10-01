@@ -104,8 +104,8 @@ namespace BBC.BSC.Tool
 
         }
 
-        private List<catRestult> catRestults = new List<catRestult>();
-        private class catRestult
+        private List<CatRestult> catRestults = new List<CatRestult>();
+        private class CatRestult
         {
             [JsonProperty("host_name")]
             public string HostName;
@@ -144,9 +144,9 @@ namespace BBC.BSC.Tool
                         json_data = w.DownloadString(catQuery);
                     }
 
-                    catRestults = !string.IsNullOrEmpty(json_data) ? JsonConvert.DeserializeObject<List<catRestult>>(json_data) : null;
+                    catRestults = !string.IsNullOrEmpty(json_data) ? JsonConvert.DeserializeObject<List<CatRestult>>(json_data) : null;
                     logger.Debug("Got {0} results from CAT", catRestults.Count());
-                    foreach (catRestult item in catRestults)
+                    foreach (CatRestult item in catRestults)
                     {
                         results.results.Add(new MyResult
                         {
