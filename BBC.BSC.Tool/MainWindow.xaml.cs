@@ -709,45 +709,45 @@ namespace BBC.BSC.Tool
             switch (((Button)sender).Content)
             {
                 case "West":
-                    phoneBoxConfig.ServerAddress = "10.32.141.26";
-                    phoneBoxConfig.ServerBackupAddress = "10.32.13.26";
-                    phoneBoxConfig.OasisAddress = "10.32.141.23";
-                    phoneBoxConfig.OasisBackupAddress = "10.32.13.23";
+                    phoneBoxConfig.ServerAddress = "3GBV2APPBXBW01";
+                    phoneBoxConfig.ServerBackupAddress = "3GBV1APPBXBW02";
+                    phoneBoxConfig.OasisAddress = "3GBV2APOAS1002";
+                    phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS1002";
                     break;
 
                 case "South":
-                    phoneBoxConfig.ServerAddress = "10.32.141.29";
-                    phoneBoxConfig.ServerBackupAddress = "10.32.13.29";
-                    phoneBoxConfig.OasisAddress = "10.32.141.23";
-                    phoneBoxConfig.OasisBackupAddress = "10.32.13.23";
+                    phoneBoxConfig.ServerAddress = "3GBV2APPBXBS01";
+                    phoneBoxConfig.ServerBackupAddress = "3GBV1APPBXBS02";
+                    phoneBoxConfig.OasisAddress = "3GBV2APOAS1002";
+                    phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS1002";
                     break;
 
                 case "North":
-                    phoneBoxConfig.ServerAddress = "10.32.141.27";
-                    phoneBoxConfig.ServerBackupAddress = "10.32.13.27";
-                    phoneBoxConfig.OasisAddress = "10.32.13.22";
-                    phoneBoxConfig.OasisBackupAddress = "10.32.141.22";
+                    phoneBoxConfig.ServerAddress = "3GBV1APPBXBN01";
+                    phoneBoxConfig.ServerBackupAddress = "3GBV2APPBXBN2";
+                    phoneBoxConfig.OasisAddress = "3GBV1APOAS1001"; 
+                    phoneBoxConfig.OasisBackupAddress = "3GBV2APOAS1001";
                     break;
 
                 case "Midlands":
-                    phoneBoxConfig.ServerAddress = "10.32.141.28";
-                    phoneBoxConfig.ServerBackupAddress = "10.32.13.28";
-                    phoneBoxConfig.OasisAddress = "10.32.13.22";
-                    phoneBoxConfig.OasisBackupAddress = "10.32.141.22";
+                    phoneBoxConfig.ServerAddress = "3GBV1APPBXBM01";
+                    phoneBoxConfig.ServerBackupAddress = "3GBV2APPBXBM02";
+                    phoneBoxConfig.OasisAddress = "3GBV1APOAS1001";
+                    phoneBoxConfig.OasisBackupAddress = "3GBV2APOAS1001";
                     break;
 
                 case "East":
-                    phoneBoxConfig.ServerAddress = "10.32.13.25";
-                    phoneBoxConfig.ServerBackupAddress = "10.32.141.25";
-                    phoneBoxConfig.OasisAddress = "10.32.141.23";
-                    phoneBoxConfig.OasisBackupAddress = "10.32.13.23";
+                    phoneBoxConfig.ServerAddress = "3GBV2APPBXBE01";
+                    phoneBoxConfig.ServerBackupAddress = "3GBV1APPBXBE02";
+                    phoneBoxConfig.OasisAddress = "3GBV2APOAS1002";
+                    phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS1002";
                     break;
 
                 case "VTS":
-                    phoneBoxConfig.ServerAddress = "10.32.13.220";
-                    phoneBoxConfig.ServerBackupAddress = "10.32.13.221";
-                    phoneBoxConfig.OasisAddress = "10.32.13.222";
-                    phoneBoxConfig.OasisBackupAddress = "";
+                    phoneBoxConfig.ServerAddress = "3GBV1APPBX6001"; // "10.32.13.220";
+                    phoneBoxConfig.ServerBackupAddress = "3GBV1APPBX6002";// "10.32.13.221";
+                    phoneBoxConfig.OasisAddress = "3GBV1APOAS6001"; // "10.32.13.222";
+                    phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS6002";
                     break;
 
                 default:
