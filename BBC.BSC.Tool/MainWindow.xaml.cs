@@ -657,6 +657,17 @@ namespace BBC.BSC.Tool
         {
             textbox_host.Text = e.AddedItems[0].ToString();
         }
+
+        private void Expander_Expanded(object sender, RoutedEventArgs e)
+        {
+            ((Expander)sender).Header = "Click to close help";
+        }
+
+        private void Expander_Collapsed(object sender, RoutedEventArgs e)
+        {
+            ((Expander)sender).Header = "Click to open help";
+
+        }
     }
 
     internal class MyResults
