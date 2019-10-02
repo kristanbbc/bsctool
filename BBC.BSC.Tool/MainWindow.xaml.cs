@@ -87,11 +87,11 @@ namespace BBC.BSC.Tool
         /// <param name="e"></param>
         private void Do_Watcher(object sender, ElapsedEventArgs e)
         {
-            logger.Debug("There are {0} workers", workers.Count);
             Dispatcher.Invoke(delegate ()
             {
                 if (workers.Count > 0)
                 {
+                    logger.Debug("There are {0} workers", workers.Count);
                     status.Fill = new SolidColorBrush(Colors.Red);
                     // this.Title = "Busy";
                 }
