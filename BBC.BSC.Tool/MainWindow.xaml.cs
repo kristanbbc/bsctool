@@ -670,6 +670,97 @@ namespace BBC.BSC.Tool
             ((Expander)sender).Header = "Click to open help";
 
         }
+
+        private void Button_Phonebox_Click(object sender, RoutedEventArgs e)
+        {
+            logger.Info("Phonbox button pressed with content {0}", ((Button)sender).Content);
+
+            if (!File.Exists(phoneboxIniPath))
+            {
+                logger.Error("Phonebox ini file doesn't exist at {0}. Not switching.", phoneboxIniPath);
+                return;
+            }
+            if (Process.GetProcessesByName("PhoneBOX.Client").Count() != 0)
+            {
+                logger.Warn("Phonebox running, will not continue.");
+                MessageBox.Show(messageBoxText: "Close PhoneBOX before continuing.", caption: "ERROR", button: MessageBoxButton.OK, icon: MessageBoxImage.Warning);
+                return;
+            }
+
+            PhoneBoxConfig phoneBoxConfig = new PhoneBoxConfig();
+            switch (((Button)sender).Content)
+            {
+                case "West":
+                    phoneBoxConfig.ServerAddress = "10.32.141.26";
+                    phoneBoxConfig.ServerBackupAddress = "10.32.13.26";
+                    phoneBoxConfig.OasisAddress = "10.32.141.23";
+                    phoneBoxConfig.OasisBackupAddress = "10.32.13.23";
+                    break;
+
+                case "South":
+                    phoneBoxConfig.ServerAddress = "10.32.141.29";
+                    phoneBoxConfig.ServerBackupAddress = "10.32.13.29";
+                    phoneBoxConfig.OasisAddress = "10.32.141.23";
+                    phoneBoxConfig.OasisBackupAddress = "10.32.13.23";
+                    break;
+
+                case "North":
+                    phoneBoxConfig.ServerAddress = "10.32.141.27";
+                    phoneBoxConfig.ServerBackupAddress = "10.32.13.27";
+                    phoneBoxConfig.OasisAddress = "10.32.13.22";
+                    phoneBoxConfig.OasisBackupAddress = "10.32.141.22";
+                    break;
+
+                case "Midlands":
+                    phoneBoxConfig.ServerAddress = "10.32.141.28";
+                    phoneBoxConfig.ServerBackupAddress = "10.32.13.28";
+                    phoneBoxConfig.OasisAddress = "10.32.13.22";
+                    phoneBoxConfig.OasisBackupAddress = "10.32.141.22";
+                    break;
+
+                case "East":
+                    phoneBoxConfig.ServerAddress = "10.32.13.25";
+                    phoneBoxConfig.ServerBackupAddress = "10.32.141.25";
+                    phoneBoxConfig.OasisAddress = "10.32.141.23";
+                    phoneBoxConfig.OasisBackupAddress = "10.32.13.23";
+                    break;
+
+                case "VTS":
+                    phoneBoxConfig.ServerAddress = "10.32.13.220";
+                    phoneBoxConfig.ServerBackupAddress = "10.32.13.221";
+                    phoneBoxConfig.OasisAddress = "10.32.13.222";
+                    phoneBoxConfig.OasisBackupAddress = "";
+                    break;
+
+                default:
+                    logger.Error("Unknonw phonebox site given");
+                    phoneBoxConfig = null;
+                    break;
+            }
+
+
+
+
+            if (phoneBoxConfig != null)
+            {
+                logger.Debug("Writing config to {0}\n{1}", phoneboxIniPath, phoneBoxConfig);
+                File.WriteAllLines(phoneboxIniPath, phoneBoxConfig.ToStringArray());
+
+                logger.Info("Attempting to start Phonebox");
+                try
+                {
+                    Process proc = Process.Start(phoneboxExePath);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, "Problem starting PhoneBOX");
+                }
+
+
+
+            }
+        }
+    }
     internal class PhoneBoxConfig
     {
         public string ServerAddress { get; set; }
