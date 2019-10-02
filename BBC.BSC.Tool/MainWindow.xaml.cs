@@ -132,8 +132,10 @@ namespace BBC.BSC.Tool
                 logger.Info("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
                 try
                 {
-                    string catQuery = string.Format("{1}SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip FROM network INNER JOIN asset ON network.asset_id = asset.asset_id WHERE life_cycle_status_id = 4 AND (host_name like '%{0}%' OR IP = inet_aton('{0}') OR also_known_as LIKE '%{0}%')",
-                        e.Argument.ToString().Replace("*", "%"),
+                    string catQuery = string.Format("{1}SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip FROM " +
+                        "network INNER JOIN asset ON network.asset_id = asset.asset_id " +
+                        "WHERE life_cycle_status_id = 4 AND (lower(host_name like '%{0}%') OR IP = inet_aton('{0}') OR lower(also_known_as) LIKE '%{0}%')",
+                        e.Argument.ToString().Replace("*", "%").ToLower(),
                         catPath);
 
                     string json_data = string.Empty;

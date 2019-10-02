@@ -18,12 +18,12 @@
         
         Title="ALPHA 2019 BSC Tool" Height="550" Width="800" Topmost="False" Closing="Window_Closing" Icon="bsctoolicon.ico"
         >
-    
+
     <Window.Resources>
         <CornerRadius x:Key="cornerRadius">8</CornerRadius>
     </Window.Resources>
-    
-    
+
+
     <!--<Window.Background>
         <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
             <GradientStop Color="#FFCDF3CD" Offset="0"/>
@@ -40,7 +40,7 @@
             <RowDefinition />
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Stretch"  Grid.Row="2" Stroke="Black" VerticalAlignment="Stretch"  Grid.ColumnSpan="2" Margin="0"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Stretch"  Grid.Row="2" Stroke="{DynamicResource PrimaryHueDarkBrush}" VerticalAlignment="Stretch"  Grid.ColumnSpan="2" Margin="0"/>
 
         <Expander Grid.ColumnSpan="2" Header="Click for help" BorderBrush="{DynamicResource PrimaryHueDarkBrush}" BorderThickness="1">
             <TextBlock x:Name="textBlock" HorizontalAlignment="Stretch" Margin="10,5" TextWrapping="Wrap" VerticalAlignment="Stretch"  >
@@ -75,31 +75,37 @@
                     <Label x:Name="label3" Content="Search term:" HorizontalAlignment="Right" Margin="8" VerticalAlignment="Center" />
                     <Label x:Name="label4" Content="Search results:" HorizontalAlignment="Right" Margin="8" Grid.Row="1" VerticalAlignment="Top"/>
 
-                    <ListView x:Name="searchResults" HorizontalAlignment="Stretch" Margin="10"  VerticalAlignment="Stretch" Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" SelectionChanged="SearchResults_SelectionChanged" GotFocus="SearchResults_GotFocus" AlternationCount="1" >
+                    <ListView x:Name="searchResults" 
+                              HorizontalAlignment="Stretch" 
+                              Margin="10" 
+                              VerticalAlignment="Stretch" 
+                              Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" 
+                              SelectionChanged="SearchResults_SelectionChanged" 
+                              GotFocus="SearchResults_GotFocus" AlternationCount="1">
                         <ListView.View>
                             <GridView>
 
-                                <GridViewColumn Header="Hostname" DisplayMemberBinding="{Binding Hostname}" Width="130"/>
+                                <GridViewColumn Header="Hostname" DisplayMemberBinding="{Binding Hostname}"/>
                                 <!--<GridViewColumn Header="IP" DisplayMemberBinding="{Binding ip}" Width="100"/>-->
-                                <GridViewColumn Header="" Width="130">
+                                <GridViewColumn Header="Load Hostname" >
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Viewbox Height="20">
+                                            <Viewbox Height="25">
                                                 <Button Content="{Binding Hostname}"  Click="Load_Result_Button_Click" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                                             </Viewbox>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Header="" Width="100" >
+                                <GridViewColumn Header="Load IP" >
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Viewbox Height="20">
+                                            <Viewbox Height="25">
                                                 <Button Content="{Binding Ip}" Tag="{Binding Hostname}"  Click="Load_Result_Button_Click" />
                                             </Viewbox>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Header="Description" DisplayMemberBinding="{Binding Description}" Width="200"/>
+                                <GridViewColumn Header="Description" DisplayMemberBinding="{Binding Description}"/>
 
 
                             </GridView>
