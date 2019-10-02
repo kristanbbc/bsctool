@@ -285,14 +285,18 @@ namespace BBC.BSC.Tool
             {
                 try
                 {
-                    latestRestults.Dispose();
+                    foreach (BackgroundWorker item in workers)
+                    {
+                        item.Dispose();
+                    }
+                    //latestRestults.Dispose();
                 }
                 catch (Exception ex)
                 {
-                    logger.Error("Error disposing:\n{0}", ex.Message);
+                    logger.Error("Error disposing :\n{0}", ex.Message);
                     Trace.TraceError(ex.Message);
                 }
-                foreach (BackgroundWorker item in workers)
+
                 //send logs as email
                 try
                 {
@@ -307,7 +311,6 @@ namespace BBC.BSC.Tool
                 }
                 catch (Exception ex)
                 {
-                    item.Dispose();
                     logger.Warn(ex);
                     //temp fix to ensure email is sent
                     logger.Warn(string.Join(Environment.NewLine, memoryTarget.Logs));
