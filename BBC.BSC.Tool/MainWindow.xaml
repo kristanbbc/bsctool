@@ -42,7 +42,7 @@
         </Grid.RowDefinitions>
         <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Stretch"  Grid.Row="2" Stroke="{DynamicResource PrimaryHueDarkBrush}" VerticalAlignment="Stretch"  Grid.ColumnSpan="2" Margin="0"/>
 
-        <Expander Grid.ColumnSpan="2" Header="Click for help" BorderBrush="{DynamicResource PrimaryHueDarkBrush}" BorderThickness="1">
+        <Expander Grid.ColumnSpan="2" Header="Click to expand help" BorderBrush="{DynamicResource PrimaryHueDarkBrush}" BorderThickness="1" Expanded="Expander_Expanded" Collapsed="Expander_Collapsed">
             <TextBlock x:Name="textBlock" HorizontalAlignment="Stretch" Margin="10,5" TextWrapping="Wrap" VerticalAlignment="Stretch"  >
                 <Run Text="To start type a computer name in the search box and the results will be shown below."/><LineBreak/>
                 <Run Text="You can search just the asset name: e.g. N334123 or the full host name."/><LineBreak/>
