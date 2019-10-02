@@ -43,6 +43,8 @@ namespace BBC.BSC.Tool
         private MailTarget mailTarget;
         private MemoryTarget memoryTarget;
 
+        private string phoneboxIniPath = @"C:\ProgramData\Broadcast Bionics\PhoneBOX4\client.ini";
+        private string phoneboxExePath = @"C:\Program Files (x86)\Broadcast Bionics\PhoneBOX4\Client\PhoneBOX.Client.exe";
         public MainWindow()
         {
             InitializeComponent();
