@@ -417,6 +417,24 @@ namespace BBC.BSC.Tool
                 case "button_HTTPS":
                     startInfo.FileName = string.Format("https://{0}:443/", textbox_host.Text.Trim());
                     break;
+                case "button_LogView":
+                    string[] logViewPaths =
+                    {
+                        @"C:\Program Files (x86)\dira\diraBasics\LogView.exe",
+                        @"C:\Program Files\dira\diraBasics\LogView.exe",
+                        @"C:\Program Files\VCS\dira\diraBasics\LogView.exe"
+                    };
+                    foreach (string item in logViewPaths)
+                    {
+                        if (File.Exists(item))
+                        {
+                            startInfo.FileName = item;
+                            startInfo.Arguments = string.Format("/ho:{0}", textbox_host.Text.Trim());
+                            break;
+                        }
+                    }
+
+                    break;
                 default:
                     break;
             }
@@ -549,6 +567,7 @@ namespace BBC.BSC.Tool
                     button_HTTP.IsEnabled = con.http;
                     button_HTTPS.IsEnabled = con.https;
                     button_TELNET.IsEnabled = con.telnet;
+                    button_LogView.IsEnabled = con.diralogview;
                     LastConnectionResult = con.timestamp;
                 });
             }
@@ -598,6 +617,10 @@ namespace BBC.BSC.Tool
                 if (IsPortOpen(e.Argument.ToString(), 443, TimeSpan.FromMilliseconds(timeout)))
                 {
                     con.https = true;
+                }
+                if (IsPortOpen(e.Argument.ToString(), 5100, TimeSpan.FromMilliseconds(timeout)))
+                {
+                    con.diralogview = true;
                 }
 
                 e.Result = con;
@@ -886,6 +909,7 @@ backupaddress = {3}
         public bool http = false;
         public bool https = false;
         public bool telnet = false;
+        public bool diralogview = false;
 
         public void Dispose()
         {

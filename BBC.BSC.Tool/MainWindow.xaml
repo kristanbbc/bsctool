@@ -171,6 +171,7 @@
             <Button x:Name="button_TELNET" Content="TELNET"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
             <Button x:Name="button_HTTP" Content="HTTP"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
             <Button x:Name="button_HTTPS" Content="HTTPS" Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+            <Button x:Name="button_LogView" Content="LogView" Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
 
         </WrapPanel>
 
