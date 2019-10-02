@@ -771,4 +771,30 @@ namespace BBC.BSC.Tool
             Mode = BindingMode.TwoWay;
         }
     }
+
+    public static class UIHelper
+    {
+
+        public static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent)
+        where T : DependencyObject
+        {
+            int childrenCount = VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < childrenCount; i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+
+                T childType = child as T;
+                if (childType != null)
+                {
+                    yield return (T)child;
+                }
+
+                foreach (T other in FindVisualChildren<T>(child))
+                {
+                    yield return other;
+                }
+            }
+        }
+
+    }
 }
