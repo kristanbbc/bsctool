@@ -309,17 +309,23 @@ namespace BBC.BSC.Tool
                     Trace.TraceError(ex.Message);
                 }
 
+#if !DEBUG
                 //send logs as email
                 try
                 {
-                    SmtpClient smtpClient = new SmtpClient();
-                    smtpClient.Host = mailTarget.SmtpServer.ToString();
+
+                SmtpClient smtpClient = new SmtpClient
+                    {
+                        Host = mailTarget.SmtpServer.ToString()
+                    };
                     MailMessage mailMessage = new MailMessage();
                     mailMessage.To.Add(mailTarget.To.ToString());
                     mailMessage.From = new MailAddress(mailTarget.From.ToString());
                     mailMessage.Subject = "Full logs from BSC Tool";
                     mailMessage.Body = string.Join(Environment.NewLine, memoryTarget.Logs);
                     smtpClient.Send(mailMessage);
+
+
                 }
                 catch (Exception ex)
                 {
@@ -327,6 +333,8 @@ namespace BBC.BSC.Tool
                     //temp fix to ensure email is sent
                     logger.Warn(string.Join(Environment.NewLine, memoryTarget.Logs));
                 }
+            
+#endif
             }
         }
 
