@@ -366,8 +366,9 @@ namespace BBC.BSC.Tool
 
             if (startInfo.FileName.Length > 0)
             {
-
-                Process.Start(startInfo);
+                logger.Debug("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
+                Process proc = Process.Start(startInfo);
+                logger.Trace(proc.Id);
             }
             if (!lvHisotry.Items.Contains(textbox_host.Text.Trim()))
             {
@@ -387,10 +388,12 @@ namespace BBC.BSC.Tool
 
         private bool PrepareTool(byte[] resource, string outputPath)
         {
+            logger.Trace("Preparing tool to path {0}", outputPath);
             byte[] existingMD5;
             byte[] resourceMD5;
             if (System.IO.File.Exists(outputPath))
             {
+                logger.Trace("Tool path already exists.");
                 //check md5
                 using (MD5 md5 = MD5.Create())
                 {
@@ -409,20 +412,24 @@ namespace BBC.BSC.Tool
 
                 if (System.Text.Encoding.Default.GetString(existingMD5) == System.Text.Encoding.Default.GetString(resourceMD5))
                 {
+                    logger.Trace("Tool path exists and MD5 matches, returning true");
                     return true;
                 }
                 else
                 {
+                    logger.Warn("Tool path exists, but MD5 doesn't match, returning false");
                     return false;
                 }
 
             }
             else
             {
+                logger.Trace("Tool doesn't exist, writing out new file");
                 using (System.IO.FileStream exeFile = new System.IO.FileStream(outputPath, System.IO.FileMode.Create))
                 {
                     exeFile.Write(resource, 0, resource.Length);
                 }
+                logger.Debug("Tool written to {0}, returning true", outputPath);
                 return true;
             }
             return false;
