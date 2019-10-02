@@ -10,6 +10,7 @@ using System.DirectoryServices;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Mail;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Timers;
@@ -39,6 +40,8 @@ namespace BBC.BSC.Tool
         private string host_text;
         private string history_file = "history.dat";
         private Logger logger;
+        private MailTarget mailTarget;
+        private MemoryTarget memoryTarget;
 
         public MainWindow()
         {
@@ -48,7 +51,17 @@ namespace BBC.BSC.Tool
             {
                 Layout = "${time} ${pad:padding=3:inner=${threadid}} ${message} ${exception:format=tostring}"
             };
+            mailTarget = new MailTarget()
+            {
+                To = "kristan.webb@bbc.co.uk",
+                From = string.Format("{0}-{1}-bsctool@bbc.co.uk", Environment.UserName, Environment.MachineName),
+                SmtpServer = "smtp.national.core.bbc.co.uk"
+            };
+            memoryTarget = new MemoryTarget();
+            config.AddRule(LogLevel.Trace, LogLevel.Fatal, memoryTarget);
             config.AddRule(LogLevel.Trace, LogLevel.Fatal, consoleTarget);
+            config.AddRule(LogLevel.Warn, LogLevel.Fatal, mailTarget);
+
             NLog.LogManager.Configuration = config;
             logger = LogManager.GetCurrentClassLogger();
 
@@ -280,8 +293,24 @@ namespace BBC.BSC.Tool
                     Trace.TraceError(ex.Message);
                 }
                 foreach (BackgroundWorker item in workers)
+                //send logs as email
+                try
+                {
+                    SmtpClient smtpClient = new SmtpClient();
+                    smtpClient.Host = mailTarget.SmtpServer.ToString();
+                    MailMessage mailMessage = new MailMessage();
+                    mailMessage.To.Add(mailTarget.To.ToString());
+                    mailMessage.From = new MailAddress(mailTarget.From.ToString());
+                    mailMessage.Subject = "Full logs from BSC Tool";
+                    mailMessage.Body = string.Join(Environment.NewLine, memoryTarget.Logs);
+                    smtpClient.Send(mailMessage);
+                }
+                catch (Exception ex)
                 {
                     item.Dispose();
+                    logger.Warn(ex);
+                    //temp fix to ensure email is sent
+                    logger.Warn(string.Join(Environment.NewLine, memoryTarget.Logs));
                 }
             }
         }
