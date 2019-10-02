@@ -44,9 +44,11 @@ namespace BBC.BSC.Tool
         {
             InitializeComponent();
             NLog.Config.LoggingConfiguration config = new NLog.Config.LoggingConfiguration();
-            ColoredConsoleTarget consoleTarget = new ColoredConsoleTarget();
+            ColoredConsoleTarget consoleTarget = new ColoredConsoleTarget
+            {
+                Layout = "${time} ${pad:padding=3:inner=${threadid}} ${message} ${exception:format=tostring}"
+            };
             config.AddRule(LogLevel.Trace, LogLevel.Fatal, consoleTarget);
-            consoleTarget.Layout = "${time} ${pad:padding=3:inner=${threadid}} ${message} ${exception:format=tostring}";
             NLog.LogManager.Configuration = config;
             logger = LogManager.GetCurrentClassLogger();
 
