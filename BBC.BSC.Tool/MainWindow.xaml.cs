@@ -214,9 +214,10 @@ namespace BBC.BSC.Tool
                         using (SearchResultCollection sResults = dSearcher.FindAll())
                         {
                             latestRestults = sResults;
+                            logger.Info("Found {0} results in Active Directory", sResults.Count);
                             foreach (SearchResult item in sResults)
                             {
-                                logger.Debug("AD: found: {0}", item.Properties["name"][0].ToString().ToUpper());
+                                logger.ConditionalTrace("AD: found: {0}", item.Properties["name"][0].ToString().ToUpper());
                                 if (!results.results.Any(n => n.Hostname == item.Properties["name"][0].ToString().ToUpper()))
                                 {
                                     results.AddResult(new MyResult()
