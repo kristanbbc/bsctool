@@ -218,7 +218,7 @@ namespace BBC.BSC.Tool
 
         private void Text_Changed(object sender, TextChangedEventArgs e)
         {
-            logger.Debug("search text changed: {0}", searchIn.Text.Trim());
+            logger.ConditionalTrace("search text changed: {0}", searchIn.Text.Trim());
             search_text = searchIn.Text;
             searchTimer.Stop();
             searchTimer.Start();
@@ -264,6 +264,7 @@ namespace BBC.BSC.Tool
 
             if (workers.Count > 0)
             {
+                logger.Info("Unable to close as workers still running");
                 e.Cancel = true;
                 return;
             }
@@ -370,7 +371,7 @@ namespace BBC.BSC.Tool
             {
                 logger.Debug("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
                 Process proc = Process.Start(startInfo);
-                logger.Trace(proc.Id);
+                
             }
             if (!lvHisotry.Items.Contains(textbox_host.Text.Trim()))
             {
@@ -448,7 +449,7 @@ namespace BBC.BSC.Tool
 
         private void Textbox_host_TextChanged(object sender, TextChangedEventArgs e)
         {
-            logger.Debug("host text changed: {0}", textbox_host.Text.Trim());
+            logger.ConditionalTrace("host text changed: {0}", textbox_host.Text.Trim());
             host_text = textbox_host.Text.Trim();
             hostTimer.Stop();
             hostTimer.Start();
@@ -458,7 +459,7 @@ namespace BBC.BSC.Tool
 
         private void Search_Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            logger.Debug("search timer elapsed: {0}", search_text);
+            logger.Trace("search timer elapsed: {0}", search_text);
             searchTimer.Stop();
             BackgroundWorker worker = new BackgroundWorker();
             worker.DoWork += Do_Search;
