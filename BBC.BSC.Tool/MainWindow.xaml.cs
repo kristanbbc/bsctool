@@ -316,7 +316,7 @@ namespace BBC.BSC.Tool
                 try
                 {
 
-                SmtpClient smtpClient = new SmtpClient
+                    SmtpClient smtpClient = new SmtpClient
                     {
                         Host = mailTarget.SmtpServer.ToString()
                     };
@@ -335,7 +335,7 @@ namespace BBC.BSC.Tool
                     //temp fix to ensure email is sent
                     logger.Warn(string.Join(Environment.NewLine, memoryTarget.Logs));
                 }
-            
+
 #endif
             }
         }
@@ -433,6 +433,8 @@ namespace BBC.BSC.Tool
                             break;
                         }
                     }
+
+                   
 
                     break;
                 default:
@@ -750,7 +752,7 @@ namespace BBC.BSC.Tool
                 case "North":
                     phoneBoxConfig.ServerAddress = "3GBV1APPBXBN01";
                     phoneBoxConfig.ServerBackupAddress = "3GBV2APPBXBN2";
-                    phoneBoxConfig.OasisAddress = "3GBV1APOAS1001"; 
+                    phoneBoxConfig.OasisAddress = "3GBV1APOAS1001";
                     phoneBoxConfig.OasisBackupAddress = "3GBV2APOAS1001";
                     break;
 
