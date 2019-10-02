@@ -441,9 +441,9 @@ namespace BBC.BSC.Tool
 
             if (startInfo.FileName.Length > 0)
             {
-                logger.Debug("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
+                logger.Info("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
                 Process proc = Process.Start(startInfo);
-                
+
             }
             if (!lvHisotry.Items.Contains(textbox_host.Text.Trim()))
             {
