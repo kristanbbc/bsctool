@@ -1,12 +1,18 @@
-﻿using MySql.Data.MySqlClient;
+﻿using Newtonsoft.Json;
+using NLog;
+using NLog.Targets;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.DirectoryServices;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Mail;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,21 +27,46 @@ namespace BBC.BSC.Tool
     /// </summary>
     public partial class MainWindow : Window
     {
+        //TODO make more of these configurable?
+        private readonly string catPath = @"http://er.bbc.co.uk/catquery.php?json&query=";
         private SearchResultCollection latestRestults;
         private List<BackgroundWorker> workers = new List<BackgroundWorker>();
         private List<BackgroundWorker> connectionWorkers = new List<BackgroundWorker>();
         private DateTime LastConnectionResult = DateTime.Now;
         private DateTime lastResultTimestamp;
-        private readonly string path = @"LDAP://ldap.national.core.bbc.co.uk";
+        private readonly string ldapPath = @"LDAP://ldap.national.core.bbc.co.uk";
         private Timer searchTimer = new Timer(400);
         private Timer hostTimer = new Timer(400);
-        private MySqlConnection conn = new MySqlConnection("server=bbcws3001;port=3306;uid=catread;pwd=reader;database=asset;SslMode=none");
         private string host_text;
-
+        private string history_file = "history.dat";
+        private Logger logger;
+        private MailTarget mailTarget;
+        private MemoryTarget memoryTarget;
 
         public MainWindow()
         {
             InitializeComponent();
+            NLog.Config.LoggingConfiguration config = new NLog.Config.LoggingConfiguration();
+            ColoredConsoleTarget consoleTarget = new ColoredConsoleTarget
+            {
+                Layout = "${time} ${pad:padding=3:inner=${threadid}} ${message} ${exception:format=tostring}"
+            };
+            mailTarget = new MailTarget()
+            {
+                To = "kristan.webb@bbc.co.uk",
+                From = string.Format("{0}-{1}-bsctool@bbc.co.uk", Environment.UserName, Environment.MachineName),
+                SmtpServer = "smtp.national.core.bbc.co.uk"
+            };
+            memoryTarget = new MemoryTarget();
+            config.AddRule(LogLevel.Trace, LogLevel.Fatal, memoryTarget);
+            config.AddRule(LogLevel.Trace, LogLevel.Fatal, consoleTarget);
+            config.AddRule(LogLevel.Warn, LogLevel.Fatal, mailTarget);
+
+            NLog.LogManager.Configuration = config;
+            logger = LogManager.GetCurrentClassLogger();
+
+
+            logger.Info("BSC Tool starting");
             System.Timers.Timer watcher = new System.Timers.Timer
             {
                 Interval = 1000
@@ -45,15 +76,24 @@ namespace BBC.BSC.Tool
             System.Threading.ThreadPool.GetMinThreads(out int w, out int c);
 
             // Write the numbers of minimum threads
-            Console.WriteLine("{0}, {1}",
-                w,
-                c);
+            logger.Debug("Minumium number of threads available {0}, {1}", w, c);
 
             System.Threading.ThreadPool.SetMinThreads(20, 10);
             hostTimer.Elapsed += Host_Timer_Elapsed;
             searchTimer.Elapsed += Search_Timer_Elapsed;
             DataContext = this;
             searchResults.ItemsSource = Results;
+            if (System.IO.File.Exists(history_file))
+            {
+
+                foreach (string item in System.IO.File.ReadLines(history_file).Reverse())
+                {
+                    lvHisotry.Items.Add(item);
+                }
+            }
+
+            searchIn.Focus();
+
         }
 
 
@@ -62,11 +102,11 @@ namespace BBC.BSC.Tool
         /// <param name="e"></param>
         private void Do_Watcher(object sender, ElapsedEventArgs e)
         {
-            Console.WriteLine(workers.Count);
             Dispatcher.Invoke(delegate ()
             {
                 if (workers.Count > 0)
                 {
+                    logger.Debug("There are {0} workers", workers.Count);
                     status.Fill = new SolidColorBrush(Colors.Red);
                     // this.Title = "Busy";
                 }
@@ -76,6 +116,18 @@ namespace BBC.BSC.Tool
                     //this.Title = "Finished";
                 }
             });
+
+        }
+
+        private List<CatRestult> catRestults = new List<CatRestult>();
+        private class CatRestult
+        {
+            [JsonProperty("host_name")]
+            public string HostName;
+            [JsonProperty("also_known_as")]
+            public string AlsoKnownAs;
+            [JsonProperty("ip")]
+            public string IP;
 
         }
 
@@ -92,37 +144,46 @@ namespace BBC.BSC.Tool
             }
             else
             {
-                Console.WriteLine("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
+                logger.Info("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
                 try
                 {
-                    if (conn.State != System.Data.ConnectionState.Open)
-                    {
-                        conn.Open();
-                    }
-                    MySqlCommand cmd = new MySqlCommand(string.Format("SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip FROM network INNER JOIN asset ON network.asset_id = asset.asset_id WHERE life_cycle_status_id = 4 AND (host_name like '%{0}%' OR IP = inet_aton('{0}') OR also_known_as LIKE '%{0}%')", e.Argument.ToString().Replace("*", "%")), conn);
-                    MySqlDataReader rdr = cmd.ExecuteReader();
+                    string catQuery = string.Format("{1}SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip FROM " +
+                        "network INNER JOIN asset ON network.asset_id = asset.asset_id " +
+                        "WHERE life_cycle_status_id = 4 AND (lower(host_name like '%{0}%') OR IP = inet_aton('{0}') OR lower(also_known_as) LIKE '%{0}%')",
+                        e.Argument.ToString().Replace("*", "%").ToLower(),
+                        catPath);
 
-                    while (rdr.Read())
+                    string json_data = string.Empty;
+                    logger.Debug("Running query against CAT with\n{0}", catQuery);
+                    using (WebClient w = new WebClient())
                     {
-                        //Console.WriteLine(rdr[0] + " -- " + rdr[1]);
+                        w.UseDefaultCredentials = true;
+                        json_data = w.DownloadString(catQuery);
+                    }
+
+                    catRestults = !string.IsNullOrEmpty(json_data) ? JsonConvert.DeserializeObject<List<CatRestult>>(json_data) : null;
+                    logger.Debug("Got {0} results from CAT", catRestults.Count());
+                    foreach (CatRestult item in catRestults)
+                    {
                         results.results.Add(new MyResult
                         {
                             Source = "CAT",
-                            Hostname = rdr["host_name"].ToString().ToUpper(),
-                            Description = rdr["also_known_as"].ToString(),
-                            Ip = rdr["ip"].ToString().Trim()
+                            Hostname = item.HostName.ToUpper(),
+                            Description = item.AlsoKnownAs,
+                            Ip = item.IP
                         });
                     }
-                    rdr.Close();
+
+
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    logger.Warn("Error running query against CAT:\n{0}", ex.Message);
                     Trace.TraceError(ex.Message);
                 }
                 try
                 {
-                    using (DirectoryEntry dEntry = new DirectoryEntry(path))
+                    using (DirectoryEntry dEntry = new DirectoryEntry(ldapPath))
                     using (DirectorySearcher dSearcher = new DirectorySearcher(dEntry)
                     {
                         // (|(cn=*334810*)(displayname=*334810*)(cn=PC-*334810*)(cn=B1-D0*334810*)(cn=B1-L0*334810*)(cn=61-D0*334810*)(cn=61-L0*334810*)(cn=71-D0*334810*)(cn=71-L0*334810*)(cn=91-D0*334810*)(cn=91-L0*334810*)(cn=F1-D0*334810*)(cn=F1-L0*334810*)(cn=MC-*334810*)(sn=*334810*)(samAccountName=*334810*)(mail=*334810*)(proxyaddresses=smtp:*334810*)(ou=*334810*)(&(objectcategory=printqueue)(printername=*334810*)))
@@ -143,7 +204,7 @@ namespace BBC.BSC.Tool
                             latestRestults = sResults;
                             foreach (SearchResult item in sResults)
                             {
-                                //Console.WriteLine("AD: found: {0}", item.Properties["name"][0].ToString().ToUpper());
+                                logger.Debug("AD: found: {0}", item.Properties["name"][0].ToString().ToUpper());
                                 if (!results.results.Any(n => n.Hostname == item.Properties["name"][0].ToString().ToUpper()))
                                 {
                                     results.AddResult(new MyResult()
@@ -161,7 +222,7 @@ namespace BBC.BSC.Tool
                 catch (Exception ex)
                 {
                     Trace.TraceError(ex.Message);
-                    Console.WriteLine("LDAP error: {0}", ex.Message);
+                    logger.Warn("LDAP query error: {0}", ex.Message);
                 }
             }
             results.results.Sort((a, b) => a.Hostname.CompareTo(b.Hostname));
@@ -170,13 +231,13 @@ namespace BBC.BSC.Tool
 
         private void Text_Changed(object sender, TextChangedEventArgs e)
         {
-            Console.WriteLine("search text changed: {0}", searchIn.Text.Trim());
+            logger.ConditionalTrace("search text changed: {0}", searchIn.Text.Trim());
             search_text = searchIn.Text;
             searchTimer.Stop();
             searchTimer.Start();
             textbox_host.Text = searchIn.Text;
         }
-        
+
         public List<MyResult> Results;
 
         private void DisplayResults(object sender, RunWorkerCompletedEventArgs e)
@@ -205,7 +266,7 @@ namespace BBC.BSC.Tool
             catch (Exception ex)
             {
                 Trace.TraceError(ex.Message);
-                Console.WriteLine(ex.Message);
+                logger.Error("Problem displaying results:\n{0}", ex.Message);
             }
         }
 
@@ -216,6 +277,7 @@ namespace BBC.BSC.Tool
 
             if (workers.Count > 0)
             {
+                logger.Info("Unable to close as workers still running");
                 e.Cancel = true;
                 return;
             }
@@ -223,16 +285,35 @@ namespace BBC.BSC.Tool
             {
                 try
                 {
-                    latestRestults.Dispose();
-                    conn.Close();
+                    foreach (BackgroundWorker item in workers)
+                    {
+                        item.Dispose();
+                    }
+                    //latestRestults.Dispose();
                 }
                 catch (Exception ex)
                 {
+                    logger.Error("Error disposing :\n{0}", ex.Message);
                     Trace.TraceError(ex.Message);
                 }
-                foreach (BackgroundWorker item in workers)
+
+                //send logs as email
+                try
                 {
-                    item.Dispose();
+                    SmtpClient smtpClient = new SmtpClient();
+                    smtpClient.Host = mailTarget.SmtpServer.ToString();
+                    MailMessage mailMessage = new MailMessage();
+                    mailMessage.To.Add(mailTarget.To.ToString());
+                    mailMessage.From = new MailAddress(mailTarget.From.ToString());
+                    mailMessage.Subject = "Full logs from BSC Tool";
+                    mailMessage.Body = string.Join(Environment.NewLine, memoryTarget.Logs);
+                    smtpClient.Send(mailMessage);
+                }
+                catch (Exception ex)
+                {
+                    logger.Warn(ex);
+                    //temp fix to ensure email is sent
+                    logger.Warn(string.Join(Environment.NewLine, memoryTarget.Logs));
                 }
             }
         }
@@ -245,6 +326,8 @@ namespace BBC.BSC.Tool
             }
             catch (Exception ex)
             {
+                logger.Trace(ex);
+
                 Trace.TraceError(ex.Message);
                 textbox_host.Text = "";
             }
@@ -258,11 +341,13 @@ namespace BBC.BSC.Tool
             }
             catch (Exception ex)
             {
+                logger.Trace(ex);
+
                 Trace.TraceError(ex.Message);
             }
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void Connect_Button_Click(object sender, RoutedEventArgs e)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo();
 
@@ -277,19 +362,12 @@ namespace BBC.BSC.Tool
                     break;
 
                 case "button_RC":
-                    byte[] exeBytes = Properties.Resources.rc;
                     string exeToRun = @"d:\rc.exe";
-                    using (System.IO.FileStream exeFile = new System.IO.FileStream(exeToRun, System.IO.FileMode.Create))
+                    if (PrepareTool(Properties.Resources.rc, exeToRun))
                     {
-                        exeFile.Write(exeBytes, 0, exeBytes.Length);
+                        startInfo.Arguments = string.Format(@"/c runas /user:national\{0} /savecred ""{1} 1 {2}""", textBox_ere.Text, exeToRun, textbox_host.Text.Trim());
+                        startInfo.FileName = "cmd";
                     }
-                    string RcFileName = System.IO.Path.Combine(directory, "rc.exe");
-                    RcFileName = exeToRun;
-                    string RcArguments = string.Format(@"/c runas /user:national\{0} /savecred ""{1} 1 {2}""", textBox_ere.Text, RcFileName, textbox_host.Text.Trim());
-                    Console.WriteLine(RcArguments);
-                    startInfo.Arguments = RcArguments;
-                    startInfo.FileName = "cmd";
-                    startInfo.WorkingDirectory = directory;
                     break;
                 case "button_SSH":
                     startInfo.Arguments = string.Format("{0}", textbox_host.Text);
@@ -304,15 +382,12 @@ namespace BBC.BSC.Tool
                     startInfo.FileName = System.IO.Path.Combine(directory, "putty.exe");
                     break;
                 case "button_VNC":
-                    byte[] VncExeBytes = Properties.Resources.vncx64;
-                    string VncExeToRun = @"d:\vncx64.exe";
-                    using (System.IO.FileStream exeFile = new System.IO.FileStream(VncExeToRun, System.IO.FileMode.Create))
+                    string VncExeToRun = Path.Combine(Path.GetTempPath(), "vncx64.exe");
+                    if (PrepareTool(Properties.Resources.vncx64, VncExeToRun))
                     {
-                        exeFile.Write(VncExeBytes, 0, VncExeBytes.Length);
+                        startInfo.Arguments = string.Format(@"-username {0} ""{1}""", textBox_ere.Text, textbox_host.Text.Trim());
+                        startInfo.FileName = VncExeToRun;
                     }
-                    startInfo.Arguments = string.Format(@"/c runas /user:national\{0} /savecred ""{2} {1}""", textBox_ere.Text, textbox_host.Text.Trim(), VncExeToRun);
-                    startInfo.FileName = "cmd";
-                    startInfo.WorkingDirectory = directory;
                     break;
                 case "button_HTTP":
                     startInfo.FileName = string.Format("http://{0}:80/", textbox_host.Text.Trim());
@@ -323,8 +398,79 @@ namespace BBC.BSC.Tool
                 default:
                     break;
             }
-            Process.Start(startInfo);
+
+            if (startInfo.FileName.Length > 0)
+            {
+                logger.Debug("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
+                Process proc = Process.Start(startInfo);
+                
+            }
+            if (!lvHisotry.Items.Contains(textbox_host.Text.Trim()))
+            {
+                lvHisotry.Items.Insert(0, textbox_host.Text.Trim());
+
+                using (StreamWriter tw = new StreamWriter(history_file))
+                {
+                    foreach (string item in lvHisotry.Items)
+                    {
+                        tw.WriteLine(item);
+                    }
+                }
+            }
+
         }
+
+
+        private bool PrepareTool(byte[] resource, string outputPath)
+        {
+            logger.Trace("Preparing tool to path {0}", outputPath);
+            byte[] existingMD5;
+            byte[] resourceMD5;
+            if (System.IO.File.Exists(outputPath))
+            {
+                logger.Trace("Tool path already exists.");
+                //check md5
+                using (MD5 md5 = MD5.Create())
+                {
+                    using (System.IO.FileStream stream = System.IO.File.OpenRead(outputPath))
+                    {
+                        existingMD5 = md5.ComputeHash(stream);
+                    }
+                }
+
+                //md5 of embedded resource
+                using (MD5 md5 = System.Security.Cryptography.MD5.Create())
+                {
+                    md5.TransformFinalBlock(resource, 0, resource.Length);
+                    resourceMD5 = md5.Hash;
+                }
+
+                if (System.Text.Encoding.Default.GetString(existingMD5) == System.Text.Encoding.Default.GetString(resourceMD5))
+                {
+                    logger.Trace("Tool path exists and MD5 matches, returning true");
+                    return true;
+                }
+                else
+                {
+                    logger.Warn("Tool path exists, but MD5 doesn't match, returning false");
+                    return false;
+                }
+
+            }
+            else
+            {
+                logger.Trace("Tool doesn't exist, writing out new file");
+                using (System.IO.FileStream exeFile = new System.IO.FileStream(outputPath, System.IO.FileMode.Create))
+                {
+                    exeFile.Write(resource, 0, resource.Length);
+                }
+                logger.Debug("Tool written to {0}, returning true", outputPath);
+                return true;
+            }
+            return false;
+        }
+
+
 
         private void TextBox_ere_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -335,7 +481,7 @@ namespace BBC.BSC.Tool
 
         private void Textbox_host_TextChanged(object sender, TextChangedEventArgs e)
         {
-            Console.WriteLine("host text changed: {0}", textbox_host.Text.Trim());
+            logger.ConditionalTrace("host text changed: {0}", textbox_host.Text.Trim());
             host_text = textbox_host.Text.Trim();
             hostTimer.Stop();
             hostTimer.Start();
@@ -345,7 +491,7 @@ namespace BBC.BSC.Tool
 
         private void Search_Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            Console.WriteLine("search timer elapsed: {0}", search_text);
+            logger.Trace("search timer elapsed: {0}", search_text);
             searchTimer.Stop();
             BackgroundWorker worker = new BackgroundWorker();
             worker.DoWork += Do_Search;
@@ -357,7 +503,7 @@ namespace BBC.BSC.Tool
 
         private void Host_Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            Console.WriteLine("host timer elapsed: {0}", host_text);
+            logger.Debug("host timer elapsed: {0}", host_text);
             hostTimer.Stop();
             BackgroundWorker connectionWorker = new BackgroundWorker();
             connectionWorker.DoWork += Do_Test_Connection;
@@ -392,7 +538,7 @@ namespace BBC.BSC.Tool
         private void Do_Test_Connection(object sender, DoWorkEventArgs e)
         {
 
-            Console.WriteLine("Testing connection to {0}", e.Argument.ToString());
+            logger.Info("Testing connection to {0}", e.Argument.ToString());
             using (MyConnection con = new MyConnection())
             {
                 if (e.Argument.ToString().Length < 4)
@@ -462,7 +608,7 @@ namespace BBC.BSC.Tool
             return true;
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private void Load_Result_Button_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -504,6 +650,22 @@ namespace BBC.BSC.Tool
             }
 
 
+
+        }
+
+        private void LvHisotry_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            textbox_host.Text = e.AddedItems[0].ToString();
+        }
+
+        private void Expander_Expanded(object sender, RoutedEventArgs e)
+        {
+            ((Expander)sender).Header = "Click to close help";
+        }
+
+        private void Expander_Collapsed(object sender, RoutedEventArgs e)
+        {
+            ((Expander)sender).Header = "Click to open help";
 
         }
     }
