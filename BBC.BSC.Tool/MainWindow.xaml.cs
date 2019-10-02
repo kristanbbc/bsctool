@@ -239,6 +239,7 @@ namespace BBC.BSC.Tool
                 }
             }
             results.results.Sort((a, b) => a.Hostname.CompareTo(b.Hostname));
+            results.results = results.results.Distinct().ToList<MyResult>();
             e.Result = results;
         }
 
