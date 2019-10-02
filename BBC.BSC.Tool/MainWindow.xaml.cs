@@ -347,11 +347,11 @@ namespace BBC.BSC.Tool
                     startInfo.FileName = System.IO.Path.Combine(directory, "putty.exe");
                     break;
                 case "button_VNC":
-                    string VncExeToRun = @"d:\vncx64.exe";
+                    string VncExeToRun = Path.Combine(Path.GetTempPath(), "vncx64.exe");
                     if (PrepareTool(Properties.Resources.vncx64, VncExeToRun))
                     {
-                        startInfo.Arguments = string.Format(@"/c runas /user:national\{0} /savecred ""{2} {1}""", textBox_ere.Text, textbox_host.Text.Trim(), VncExeToRun);
-                        startInfo.FileName = "cmd";
+                        startInfo.Arguments = string.Format(@"-username {0} ""{1}""", textBox_ere.Text, textbox_host.Text.Trim());
+                        startInfo.FileName = VncExeToRun;
                     }
                     break;
                 case "button_HTTP":
