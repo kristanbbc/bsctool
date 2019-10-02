@@ -96,6 +96,16 @@ namespace BBC.BSC.Tool
 
             searchIn.Focus();
 
+            if (!File.Exists(phoneboxExePath))
+            {
+
+                foreach (Button item in UIHelper.FindVisualChildren<Button>(PhoneBoxButtons))
+                {
+                    item.IsEnabled = false;
+                }
+            }
+
+
         }
 
 
