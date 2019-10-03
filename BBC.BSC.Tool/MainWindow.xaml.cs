@@ -96,9 +96,10 @@ namespace BBC.BSC.Tool
 
             searchIn.Focus();
 
+            //If PhoneBox not installed don't enable tab
             if (!File.Exists(phoneboxExePath))
             {
-
+                PhoneBoxSwitcherTab.IsEnabled = false;
                 foreach (Button item in UIHelper.FindVisualChildren<Button>(PhoneBoxButtons))
                 {
                     item.IsEnabled = false;

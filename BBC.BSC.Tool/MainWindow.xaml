@@ -132,7 +132,7 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="PhoneBox Switcher">
+            <TabItem Header="PhoneBox Switcher" x:Name="PhoneBoxSwitcherTab">
                 <StackPanel Margin="10" x:Name="PhoneBoxButtons">
                     <TextBlock Style="{DynamicResource MaterialDesignTitleTextBlock}" Margin="5">Click button to swich PhoneBox settings:</TextBlock>
                     <DockPanel LastChildFill="True" Margin="30,0">
