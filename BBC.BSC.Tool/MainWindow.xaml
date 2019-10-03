@@ -134,7 +134,7 @@
                         <Button DockPanel.Dock="Top" Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource cornerRadius}">North</Button>
                         <Button DockPanel.Dock="Bottom" Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource cornerRadius}">South</Button>
 
-                        <Button DockPanel.Dock="Right" Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource cornerRadius}"> East</Button>
+                        <Button DockPanel.Dock="Right" Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource cornerRadius}">East</Button>
                         <Button DockPanel.Dock="Left" Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource cornerRadius}">West</Button>
                         <Button Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource cornerRadius}">Midlands</Button>
 
