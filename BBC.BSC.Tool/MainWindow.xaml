@@ -16,7 +16,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         
-        Title="ALPHA 2019 BSC Tool" Height="550" Width="800" Topmost="False" Closing="Window_Closing" Icon="bsctoolicon.ico"
+        Title="BSC Tool" Height="550" Width="800" Topmost="False" Closing="Window_Closing" Icon="bsctoolicon.ico"
         >
 
     <Window.Resources>
@@ -42,15 +42,20 @@
         </Grid.RowDefinitions>
         <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Stretch"  Grid.Row="2" Stroke="{DynamicResource PrimaryHueDarkBrush}" VerticalAlignment="Stretch"  Grid.ColumnSpan="2" Margin="0"/>
 
-        <Expander Grid.ColumnSpan="2" Header="Click to expand help" BorderBrush="{DynamicResource PrimaryHueDarkBrush}" BorderThickness="1" Expanded="Expander_Expanded" Collapsed="Expander_Collapsed">
+        <Expander Grid.ColumnSpan="2" Header="Click to open help" BorderBrush="{DynamicResource PrimaryHueDarkBrush}" BorderThickness="1" Expanded="Expander_Expanded" Collapsed="Expander_Collapsed">
             <TextBlock x:Name="textBlock" HorizontalAlignment="Stretch" Margin="10,5" TextWrapping="Wrap" VerticalAlignment="Stretch"  >
+                <TextBlock Style="{DynamicResource MaterialDesignTitleTextBlock}">Connecting</TextBlock><LineBreak/>
                 <Run Text="To start type a computer name in the search box and the results will be shown below."/><LineBreak/>
-                <Run Text="You can search just the asset name: e.g. N334123 or the full host name."/><LineBreak/>
-                <Run Text="Both AD and the CAT are searched."/><LineBreak/>
+                <Run Text="You can search just the asset name: e.g. N334123, the full host name or even keywords. (Both AD and the CAT are searched.)"/><LineBreak/>
                 <Run Text="- Ensure your ERE account is set in the bottom box."/><LineBreak/>
                 <Run Text="- Select a host and the name will be copied to the connection box at the bottom."/><LineBreak/>
                 <Run Text="- (You can manually edit the connection box)"/><LineBreak/>
-                <Run Text="- Valid connection methods will be enabled."/></TextBlock>
+                <Run Text="- Valid connection methods will be enabled."/><LineBreak/>
+                <LineBreak/>
+                <TextBlock Style="{DynamicResource MaterialDesignTitleTextBlock}">PhoneBox Switcher</TextBlock><LineBreak/>
+                <Run Text="If PhoneBox client is installed then you can use this section to overwrite the client configuration ini file."/><LineBreak/>
+                <Run Text="This is destructive so only run on support machines"/>
+            </TextBlock>
 
         </Expander>
 
@@ -127,14 +132,14 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="PhoneBox Switcher">
+            <TabItem Header="PhoneBox Switcher" x:Name="PhoneBoxSwitcherTab">
                 <StackPanel Margin="10" x:Name="PhoneBoxButtons">
                     <TextBlock Style="{DynamicResource MaterialDesignTitleTextBlock}" Margin="5">Click button to swich PhoneBox settings:</TextBlock>
                     <DockPanel LastChildFill="True" Margin="30,0">
                         <Button DockPanel.Dock="Top" Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource cornerRadius}">North</Button>
                         <Button DockPanel.Dock="Bottom" Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource cornerRadius}">South</Button>
 
-                        <Button DockPanel.Dock="Right" Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource cornerRadius}"> East</Button>
+                        <Button DockPanel.Dock="Right" Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource cornerRadius}">East</Button>
                         <Button DockPanel.Dock="Left" Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource cornerRadius}">West</Button>
                         <Button Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource cornerRadius}">Midlands</Button>
 
