@@ -94,7 +94,6 @@ namespace BBC.BSC.Tool
                 }
             }
 
-            searchIn.Focus();
 
             //If PhoneBox not installed don't enable tab
             if (!File.Exists(phoneboxExePath))
@@ -106,7 +105,8 @@ namespace BBC.BSC.Tool
                 }
             }
 
-
+            // Put Cursor in search box.
+            searchIn.Focus();
         }
 
 
