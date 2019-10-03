@@ -40,8 +40,10 @@ namespace BBC.BSC.Tool
         private string host_text;
         private string history_file = "history.dat";
         private Logger logger;
+#if !DEBUG
         private MailTarget mailTarget;
         private MemoryTarget memoryTarget;
+#endif
 
         private string phoneboxIniPath = @"C:\ProgramData\Broadcast Bionics\PhoneBOX4\client.ini";
         private string phoneboxExePath = @"C:\Program Files (x86)\Broadcast Bionics\PhoneBOX4\Client\PhoneBOX.Client.exe";
@@ -53,6 +55,7 @@ namespace BBC.BSC.Tool
             {
                 Layout = "${time} ${pad:padding=3:inner=${threadid}} ${message} ${exception:format=tostring}"
             };
+#if !DEBUG
             mailTarget = new MailTarget()
             {
                 To = "kristan.webb@bbc.co.uk",
@@ -61,14 +64,15 @@ namespace BBC.BSC.Tool
             };
             memoryTarget = new MemoryTarget();
             config.AddRule(LogLevel.Trace, LogLevel.Fatal, memoryTarget);
-            config.AddRule(LogLevel.Trace, LogLevel.Fatal, consoleTarget);
             config.AddRule(LogLevel.Warn, LogLevel.Fatal, mailTarget);
+#endif
+
+            config.AddRule(LogLevel.Trace, LogLevel.Fatal, consoleTarget);
 
             NLog.LogManager.Configuration = config;
             logger = LogManager.GetCurrentClassLogger();
 
-
-            logger.Info("BSC Tool starting");
+            logger.Info("BSC Tool {0} starting.", FileVersionInfo.GetVersionInfo(System.Reflection.Assembly.GetExecutingAssembly().Location).ProductVersion);
             System.Timers.Timer watcher = new System.Timers.Timer
             {
                 Interval = 1000
@@ -435,7 +439,7 @@ namespace BBC.BSC.Tool
                         }
                     }
 
-                   
+
 
                     break;
                 default:
