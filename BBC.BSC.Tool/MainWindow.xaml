@@ -16,7 +16,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         
-        Title="ALPHA 2019 BSC Tool" Height="550" Width="800" Topmost="False" Closing="Window_Closing" Icon="bsctoolicon.ico"
+        Title="BSC Tool" Height="550" Width="800" Topmost="False" Closing="Window_Closing" Icon="bsctoolicon.ico"
         >
 
     <Window.Resources>
