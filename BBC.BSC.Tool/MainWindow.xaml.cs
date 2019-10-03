@@ -40,9 +40,13 @@ namespace BBC.BSC.Tool
         private string host_text;
         private string history_file = "history.dat";
         private Logger logger;
+#if !DEBUG
         private MailTarget mailTarget;
         private MemoryTarget memoryTarget;
+#endif
 
+        private string phoneboxIniPath = @"C:\ProgramData\Broadcast Bionics\PhoneBOX4\client.ini";
+        private string phoneboxExePath = @"C:\Program Files (x86)\Broadcast Bionics\PhoneBOX4\Client\PhoneBOX.Client.exe";
         public MainWindow()
         {
             InitializeComponent();
@@ -51,6 +55,7 @@ namespace BBC.BSC.Tool
             {
                 Layout = "${time} ${pad:padding=3:inner=${threadid}} ${message} ${exception:format=tostring}"
             };
+#if !DEBUG
             mailTarget = new MailTarget()
             {
                 To = "kristan.webb@bbc.co.uk",
@@ -59,14 +64,15 @@ namespace BBC.BSC.Tool
             };
             memoryTarget = new MemoryTarget();
             config.AddRule(LogLevel.Trace, LogLevel.Fatal, memoryTarget);
-            config.AddRule(LogLevel.Trace, LogLevel.Fatal, consoleTarget);
             config.AddRule(LogLevel.Warn, LogLevel.Fatal, mailTarget);
+#endif
+
+            config.AddRule(LogLevel.Trace, LogLevel.Fatal, consoleTarget);
 
             NLog.LogManager.Configuration = config;
             logger = LogManager.GetCurrentClassLogger();
 
-
-            logger.Info("BSC Tool starting");
+            logger.Info("BSC Tool {0} starting.", FileVersionInfo.GetVersionInfo(System.Reflection.Assembly.GetExecutingAssembly().Location).ProductVersion);
             System.Timers.Timer watcher = new System.Timers.Timer
             {
                 Interval = 1000
@@ -92,8 +98,19 @@ namespace BBC.BSC.Tool
                 }
             }
 
-            searchIn.Focus();
 
+            //If PhoneBox not installed don't enable tab
+            if (!File.Exists(phoneboxExePath))
+            {
+                PhoneBoxSwitcherTab.IsEnabled = false;
+                foreach (Button item in UIHelper.FindVisualChildren<Button>(PhoneBoxButtons))
+                {
+                    item.IsEnabled = false;
+                }
+            }
+
+            // Put Cursor in search box.
+            searchIn.Focus();
         }
 
 
@@ -227,6 +244,7 @@ namespace BBC.BSC.Tool
                 }
             }
             results.results.Sort((a, b) => a.Hostname.CompareTo(b.Hostname));
+            results.results = results.results.Distinct().ToList<MyResult>();
             e.Result = results;
         }
 
@@ -298,17 +316,23 @@ namespace BBC.BSC.Tool
                     Trace.TraceError(ex.Message);
                 }
 
+#if !DEBUG
                 //send logs as email
                 try
                 {
-                    SmtpClient smtpClient = new SmtpClient();
-                    smtpClient.Host = mailTarget.SmtpServer.ToString();
+
+                    SmtpClient smtpClient = new SmtpClient
+                    {
+                        Host = mailTarget.SmtpServer.ToString()
+                    };
                     MailMessage mailMessage = new MailMessage();
                     mailMessage.To.Add(mailTarget.To.ToString());
                     mailMessage.From = new MailAddress(mailTarget.From.ToString());
                     mailMessage.Subject = "Full logs from BSC Tool";
                     mailMessage.Body = string.Join(Environment.NewLine, memoryTarget.Logs);
                     smtpClient.Send(mailMessage);
+
+
                 }
                 catch (Exception ex)
                 {
@@ -316,6 +340,8 @@ namespace BBC.BSC.Tool
                     //temp fix to ensure email is sent
                     logger.Warn(string.Join(Environment.NewLine, memoryTarget.Logs));
                 }
+
+#endif
             }
         }
 
@@ -396,15 +422,35 @@ namespace BBC.BSC.Tool
                 case "button_HTTPS":
                     startInfo.FileName = string.Format("https://{0}:443/", textbox_host.Text.Trim());
                     break;
+                case "button_LogView":
+                    string[] logViewPaths =
+                    {
+                        @"C:\Program Files (x86)\dira\diraBasics\LogView.exe",
+                        @"C:\Program Files\dira\diraBasics\LogView.exe",
+                        @"C:\Program Files\VCS\dira\diraBasics\LogView.exe"
+                    };
+                    foreach (string item in logViewPaths)
+                    {
+                        if (File.Exists(item))
+                        {
+                            startInfo.FileName = item;
+                            startInfo.Arguments = string.Format("/ho:{0}", textbox_host.Text.Trim());
+                            break;
+                        }
+                    }
+
+
+
+                    break;
                 default:
                     break;
             }
 
             if (startInfo.FileName.Length > 0)
             {
-                logger.Debug("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
+                logger.Info("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
                 Process proc = Process.Start(startInfo);
-                
+
             }
             if (!lvHisotry.Items.Contains(textbox_host.Text.Trim()))
             {
@@ -528,6 +574,7 @@ namespace BBC.BSC.Tool
                     button_HTTP.IsEnabled = con.http;
                     button_HTTPS.IsEnabled = con.https;
                     button_TELNET.IsEnabled = con.telnet;
+                    button_LogView.IsEnabled = con.diralogview;
                     LastConnectionResult = con.timestamp;
                 });
             }
@@ -577,6 +624,10 @@ namespace BBC.BSC.Tool
                 if (IsPortOpen(e.Argument.ToString(), 443, TimeSpan.FromMilliseconds(timeout)))
                 {
                     con.https = true;
+                }
+                if (IsPortOpen(e.Argument.ToString(), 5100, TimeSpan.FromMilliseconds(timeout)))
+                {
+                    con.diralogview = true;
                 }
 
                 e.Result = con;
@@ -669,6 +720,130 @@ namespace BBC.BSC.Tool
             ((Expander)sender).Header = "Click to open help";
 
         }
+
+        private void Button_Phonebox_Click(object sender, RoutedEventArgs e)
+        {
+            logger.Info("Phonbox button pressed with content {0}", ((Button)sender).Content);
+
+            if (!File.Exists(phoneboxIniPath))
+            {
+                logger.Error("Phonebox ini file doesn't exist at {0}. Not switching.", phoneboxIniPath);
+                return;
+            }
+            if (Process.GetProcessesByName("PhoneBOX.Client").Count() != 0)
+            {
+                logger.Warn("Phonebox running, will not continue.");
+                MessageBox.Show(messageBoxText: "Close PhoneBOX before continuing.", caption: "ERROR", button: MessageBoxButton.OK, icon: MessageBoxImage.Warning);
+                return;
+            }
+
+            PhoneBoxConfig phoneBoxConfig = new PhoneBoxConfig();
+            switch (((Button)sender).Content)
+            {
+                case "West":
+                    phoneBoxConfig.ServerAddress = "3GBV2APPBXBW01";
+                    phoneBoxConfig.ServerBackupAddress = "3GBV1APPBXBW02";
+                    phoneBoxConfig.OasisAddress = "3GBV2APOAS1002";
+                    phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS1002";
+                    break;
+
+                case "South":
+                    phoneBoxConfig.ServerAddress = "3GBV2APPBXBS01";
+                    phoneBoxConfig.ServerBackupAddress = "3GBV1APPBXBS02";
+                    phoneBoxConfig.OasisAddress = "3GBV2APOAS1002";
+                    phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS1002";
+                    break;
+
+                case "North":
+                    phoneBoxConfig.ServerAddress = "3GBV1APPBXBN01";
+                    phoneBoxConfig.ServerBackupAddress = "3GBV2APPBXBN2";
+                    phoneBoxConfig.OasisAddress = "3GBV1APOAS1001";
+                    phoneBoxConfig.OasisBackupAddress = "3GBV2APOAS1001";
+                    break;
+
+                case "Midlands":
+                    phoneBoxConfig.ServerAddress = "3GBV1APPBXBM01";
+                    phoneBoxConfig.ServerBackupAddress = "3GBV2APPBXBM02";
+                    phoneBoxConfig.OasisAddress = "3GBV1APOAS1001";
+                    phoneBoxConfig.OasisBackupAddress = "3GBV2APOAS1001";
+                    break;
+
+                case "East":
+                    phoneBoxConfig.ServerAddress = "3GBV2APPBXBE01";
+                    phoneBoxConfig.ServerBackupAddress = "3GBV1APPBXBE02";
+                    phoneBoxConfig.OasisAddress = "3GBV2APOAS1002";
+                    phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS1002";
+                    break;
+
+                case "VTS":
+                    phoneBoxConfig.ServerAddress = "3GBV1APPBX6001"; // "10.32.13.220";
+                    phoneBoxConfig.ServerBackupAddress = "3GBV1APPBX6002";// "10.32.13.221";
+                    phoneBoxConfig.OasisAddress = "3GBV1APOAS6001"; // "10.32.13.222";
+                    phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS6002";
+                    break;
+
+                default:
+                    logger.Error("Unknonw phonebox site given");
+                    phoneBoxConfig = null;
+                    break;
+            }
+
+
+
+
+            if (phoneBoxConfig != null)
+            {
+                logger.Debug("Writing config to {0}\n{1}", phoneboxIniPath, phoneBoxConfig);
+                File.WriteAllLines(phoneboxIniPath, phoneBoxConfig.ToStringArray());
+
+                logger.Info("Attempting to start Phonebox");
+                try
+                {
+                    Process proc = Process.Start(phoneboxExePath);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, "Problem starting PhoneBOX");
+                }
+
+
+
+            }
+        }
+    }
+    internal class PhoneBoxConfig
+    {
+        public string ServerAddress { get; set; }
+        public string ServerBackupAddress { get; set; }
+        public string OasisAddress { get; set; }
+        public string OasisBackupAddress { get; set; }
+
+        public override string ToString()
+        {
+            return string.Format(@"[server]
+backupaddress = {1}
+address = {0}
+[oasis]
+address = {2}
+backupaddress = {3}
+",
+                ServerAddress,
+                ServerBackupAddress,
+                OasisAddress,
+                OasisBackupAddress);
+        }
+        public string[] ToStringArray()
+        {
+            return new string[] {
+                $"[server]",
+                $"backupaddress = {ServerBackupAddress}",
+                $"address = {ServerAddress}",
+                $"[oasis]",
+                $"address = {OasisAddress}",
+                $"backupaddress = {OasisBackupAddress}"
+            };
+
+        }
     }
 
     internal class MyResults
@@ -741,6 +916,7 @@ namespace BBC.BSC.Tool
         public bool http = false;
         public bool https = false;
         public bool telnet = false;
+        public bool diralogview = false;
 
         public void Dispose()
         {
@@ -771,5 +947,31 @@ namespace BBC.BSC.Tool
             Source = Properties.Settings.Default;
             Mode = BindingMode.TwoWay;
         }
+    }
+
+    public static class UIHelper
+    {
+
+        public static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent)
+        where T : DependencyObject
+        {
+            int childrenCount = VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < childrenCount; i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+
+                T childType = child as T;
+                if (childType != null)
+                {
+                    yield return (T)child;
+                }
+
+                foreach (T other in FindVisualChildren<T>(child))
+                {
+                    yield return other;
+                }
+            }
+        }
+
     }
 }
