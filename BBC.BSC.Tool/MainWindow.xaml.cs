@@ -815,6 +815,18 @@ namespace BBC.BSC.Tool
 
             }
         }
+
+        private void Textbox_host_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (textbox_host.IsEnabled == true)
+            {
+                textbox_host.IsEnabled = false;
+            }
+            else
+            {
+                textbox_host.IsEnabled = true;
+            }
+        }
     }
     internal class PhoneBoxConfig
     {
