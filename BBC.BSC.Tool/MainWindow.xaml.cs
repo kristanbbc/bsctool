@@ -277,6 +277,11 @@ namespace BBC.BSC.Tool
                         }
                         searchResults.ItemsSource = null;
                         searchResults.ItemsSource = Results;
+
+                        if (res.results.Count == 1)
+                        { 
+                            textbox_host.Text = res.results[0].Hostname;
+                        }
                         //searchResults.Items.Refresh();
                     });
                     lastResultTimestamp = res.timestamp;
