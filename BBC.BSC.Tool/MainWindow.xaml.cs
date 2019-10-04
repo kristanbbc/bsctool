@@ -594,7 +594,7 @@ namespace BBC.BSC.Tool
                     e.Result = con;
                     return;
                 }
-                int timeout = 200;
+                int timeout = 100;
 
                 if (IsPortOpen(e.Argument.ToString(), 3389, TimeSpan.FromMilliseconds(timeout)))
                 {
