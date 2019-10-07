@@ -92,6 +92,10 @@ namespace BBC.BSC.Tool
 
             foreach (string item in Properties.Settings.Default.history.Split(';'))
             {
+                if (item == "System.Windows.Controls.ItemCollection")
+                {
+                    continue;
+                }
                 lvHisotry.Items.Add(item);
             }
 
@@ -458,7 +462,12 @@ namespace BBC.BSC.Tool
             {
                 lvHisotry.Items.Insert(0, textbox_host.Text.Trim());
 
-                Properties.Settings.Default.history = String.Join(";", lvHisotry.Items);
+                List<string> tempHist = new List<string>();
+                foreach (string item in lvHisotry.Items)
+                {
+                    tempHist.Add(item);
+                }
+                Properties.Settings.Default.history = String.Join(";", tempHist);
                 Properties.Settings.Default.Save();
             }
 
