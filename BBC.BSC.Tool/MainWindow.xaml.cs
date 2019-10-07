@@ -38,7 +38,6 @@ namespace BBC.BSC.Tool
         private Timer searchTimer = new Timer(400);
         private Timer hostTimer = new Timer(400);
         private string host_text;
-        private string history_file = "history.dat";
         private Logger logger;
 #if !DEBUG
         private MailTarget mailTarget;
@@ -89,13 +88,11 @@ namespace BBC.BSC.Tool
             searchTimer.Elapsed += Search_Timer_Elapsed;
             DataContext = this;
             searchResults.ItemsSource = Results;
-            if (System.IO.File.Exists(history_file))
-            {
 
-                foreach (string item in System.IO.File.ReadLines(history_file).Reverse())
-                {
-                    lvHisotry.Items.Add(item);
-                }
+
+            foreach (string item in Properties.Settings.Default.history.Split(';'))
+            {
+                lvHisotry.Items.Add(item);
             }
 
 
@@ -279,7 +276,7 @@ namespace BBC.BSC.Tool
                         searchResults.ItemsSource = Results;
 
                         if (res.results.Count == 1)
-                        { 
+                        {
                             textbox_host.Text = res.results[0].Hostname;
                         }
                         //searchResults.Items.Refresh();
@@ -461,13 +458,8 @@ namespace BBC.BSC.Tool
             {
                 lvHisotry.Items.Insert(0, textbox_host.Text.Trim());
 
-                using (StreamWriter tw = new StreamWriter(history_file))
-                {
-                    foreach (string item in lvHisotry.Items)
-                    {
-                        tw.WriteLine(item);
-                    }
-                }
+                Properties.Settings.Default.history = String.Join(";", lvHisotry.Items);
+                Properties.Settings.Default.Save();
             }
 
         }
