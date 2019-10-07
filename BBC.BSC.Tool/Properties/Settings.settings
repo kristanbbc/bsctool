@@ -5,5 +5,8 @@
     <Setting Name="ere" Type="System.String" Scope="User">
       <Value Profile="(Default)">ere-mid-</Value>
     </Setting>
+    <Setting Name="history" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

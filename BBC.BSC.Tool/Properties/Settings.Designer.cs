@@ -34,5 +34,17 @@ namespace BBC.BSC.Tool.Properties {
                 this["ere"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string history {
+            get {
+                return ((string)(this["history"]));
+            }
+            set {
+                this["history"] = value;
+            }
+        }
     }
 }
