@@ -110,8 +110,116 @@ namespace BBC.BSC.Tool
                 }
             }
 
+            BuildWs600View();
             // Put Cursor in search box.
             searchIn.Focus();
+        }
+
+
+        private void BuildWs600View()
+        {
+            foreach (string item in Directory.GetDirectories(@"\\ws600\vnc\"))
+            {
+                logger.ConditionalTrace("Adding directory {0} to BNCS tree", item);
+                TreeViewItem treeViewItem = new TreeViewItem
+                {
+                    Header = Path.GetFileNameWithoutExtension(item),
+                    Tag = item
+                };
+                treeViewItem.Items.Add(null);
+                treeViewItem.Expanded += new RoutedEventHandler(TreeViewBNCS_Expanded);
+
+                treeViewBNCS.Items.Add(treeViewItem);
+
+            }
+            foreach (string item in Directory.GetFiles(@"\\ws600\vnc\"))
+            {
+                logger.ConditionalTrace("Adding file {0} to BNCS tree", item);
+                TreeViewItem treeViewItem = new TreeViewItem
+                {
+                    Header = Path.GetFileNameWithoutExtension(item),
+                    Tag = item
+                };
+                treeViewItem.MouseDoubleClick += TreeViewBNCS_DoubleClicked;
+                treeViewBNCS.Items.Add(treeViewItem);
+            }
+        }
+
+        private void TreeViewBNCS_DoubleClicked(object sender, MouseButtonEventArgs e)
+        {
+            TreeViewItem tvSender = (TreeViewItem)sender;
+
+
+            FileInfo fileInfo = new FileInfo(tvSender.Tag.ToString());
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+
+            switch (fileInfo.Extension.ToLower())
+            {
+                case "vnc":
+                    string VncExeToRun = Path.Combine(Path.GetTempPath(), "vncx64.exe");
+                    if (PrepareTool(Properties.Resources.vncx64, VncExeToRun))
+                    {
+                        startInfo.Arguments = string.Format(@" ""{0}"" ", tvSender.Tag.ToString());
+                        startInfo.FileName = VncExeToRun;
+                    }
+
+                    break;
+                case "url":
+                    startInfo.FileName = string.Format("{0}", tvSender.Tag.ToString());
+
+
+                    break;
+                default:
+                    startInfo.FileName = string.Format("{0}", tvSender.Tag.ToString());
+
+                    break;
+            }
+
+            if (startInfo.FileName.Length > 0)
+            {
+                logger.Info("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
+                Process proc = Process.Start(startInfo);
+
+            }
+
+        }
+
+        private void TreeViewBNCS_Expanded(object sender, RoutedEventArgs e)
+        {
+
+            TreeViewItem tvSender = (TreeViewItem)sender;
+            if (tvSender.Items.Count == 1 && tvSender.Items[0] == null)
+            {
+                tvSender.Items.Clear();
+
+                foreach (string item in Directory.GetDirectories(tvSender.Tag.ToString()))
+                {
+                    logger.ConditionalTrace("Adding directory {0} to BNCS tree", item);
+                    TreeViewItem treeViewItem = new TreeViewItem
+                    {
+                        Header = Path.GetFileNameWithoutExtension(item),
+                        Tag = item
+                    };
+
+                    treeViewItem.Items.Add(null);
+                    treeViewItem.Expanded += new RoutedEventHandler(TreeViewBNCS_Expanded);
+
+                    tvSender.Items.Add(treeViewItem);
+
+                }
+                foreach (string item in Directory.GetFiles(tvSender.Tag.ToString()))
+                {
+                    logger.ConditionalTrace("Adding file {0} to BNCS tree", item);
+                    TreeViewItem treeViewItem = new TreeViewItem
+                    {
+                        Header = Path.GetFileNameWithoutExtension(item),
+                        Tag = item
+                    };
+                    treeViewItem.MouseDoubleClick += TreeViewBNCS_DoubleClicked;
+
+                    tvSender.Items.Add(treeViewItem);
+                }
+            }
         }
 
 
