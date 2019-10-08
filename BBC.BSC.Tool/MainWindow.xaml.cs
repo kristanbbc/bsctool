@@ -114,7 +114,10 @@ namespace BBC.BSC.Tool
             }
             if (Directory.Exists(bncsDir))
             {
+                Dispatcher.Invoke(delegate
+                {
                     BuildWs600View();
+                });
             }
             else
             {
@@ -207,7 +210,7 @@ namespace BBC.BSC.Tool
 
         private void TreeViewBNCS_Expanded(object sender, RoutedEventArgs e)
         {
-
+            Dispatcher.Invoke(delegate { 
             TreeViewItem tvSender = (TreeViewItem)sender;
             if (tvSender.Items.Count == 1 && tvSender.Items[0] == null)
             {
@@ -254,6 +257,7 @@ namespace BBC.BSC.Tool
                     tvSender.Items.Add(treeViewItem);
                 }
             }
+            });
         }
 
 
