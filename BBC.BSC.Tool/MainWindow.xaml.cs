@@ -40,6 +40,7 @@ namespace BBC.BSC.Tool
         private Timer searchTimer = new Timer(400);
         private Timer hostTimer = new Timer(400);
         private string host_text;
+        private string bncsDir = @"\\ws600\vnc\";
         private Logger logger;
 #if !DEBUG
         private MailTarget mailTarget;
@@ -111,8 +112,14 @@ namespace BBC.BSC.Tool
                     item.IsEnabled = false;
                 }
             }
+            if (Directory.Exists(bncsDir))
+            {
+            }
+            else
+            {
+                tabItemBNCSVNC.IsEnabled = false;
+            }
 
-            BuildWs600View();
             // Put Cursor in search box.
             searchIn.Focus();
         }
@@ -120,7 +127,7 @@ namespace BBC.BSC.Tool
 
         private void BuildWs600View()
         {
-            foreach (string item in Directory.GetDirectories(@"\\ws600\vnc\"))
+            foreach (string item in Directory.GetDirectories(bncsDir))
             {
                 logger.ConditionalTrace("Adding directory {0} to BNCS tree", item);
                 TreeViewItem treeViewItem = new TreeViewItem
