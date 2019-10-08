@@ -131,7 +131,7 @@
                     </ListView>
                 </Grid>
             </TabItem>
-            <TabItem Header="BNCS VNC" x:Name="tabItemBNCSVNC">
+            <TabItem Header="BNCS VNC Links" x:Name="tabItemBNCSVNC">
                 <Grid>
                     <TreeView x:Name="treeViewBNCS"/>
 
