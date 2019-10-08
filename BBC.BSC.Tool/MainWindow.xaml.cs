@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using MaterialDesignThemes.Wpf;
+using Newtonsoft.Json;
 using NLog;
 using NLog.Targets;
 using System;
@@ -126,6 +127,10 @@ namespace BBC.BSC.Tool
                     Header = Path.GetFileNameWithoutExtension(item),
                     Tag = item
                 };
+                StackPanel stack = new StackPanel { Orientation = Orientation.Horizontal };
+                stack.Children.Add(new PackIcon { Kind = PackIconKind.Folder });
+                stack.Children.Add(new Label() { Content = Path.GetFileNameWithoutExtension(item) });
+                treeViewItem.Header = stack;
                 treeViewItem.Items.Add(null);
                 treeViewItem.Expanded += new RoutedEventHandler(TreeViewBNCS_Expanded);
 
@@ -140,6 +145,13 @@ namespace BBC.BSC.Tool
                     Header = Path.GetFileNameWithoutExtension(item),
                     Tag = item
                 };
+                StackPanel stack = new StackPanel { Orientation = Orientation.Horizontal };
+                string ext = Path.GetExtension(item).Substring(1).ToLower();
+                PackIconKind packIconKind = ext == "vnc" ? PackIconKind.Computer : (
+                ext == "url" || ext == "lnk" ? PackIconKind.Web : PackIconKind.HelpBox);
+                stack.Children.Add(new PackIcon { Kind = packIconKind });
+                stack.Children.Add(new Label() { Content = Path.GetFileNameWithoutExtension(item) });
+                treeViewItem.Header = stack;
                 treeViewItem.MouseDoubleClick += TreeViewBNCS_DoubleClicked;
                 treeViewBNCS.Items.Add(treeViewItem);
             }
@@ -201,6 +213,10 @@ namespace BBC.BSC.Tool
                         Tag = item
                     };
 
+                    StackPanel stack = new StackPanel { Orientation = Orientation.Horizontal };
+                    stack.Children.Add(new PackIcon { Kind = PackIconKind.Folder });
+                    stack.Children.Add(new Label() { Content = Path.GetFileNameWithoutExtension(item) });
+                    treeViewItem.Header = stack;
                     treeViewItem.Items.Add(null);
                     treeViewItem.Expanded += new RoutedEventHandler(TreeViewBNCS_Expanded);
 
@@ -215,6 +231,15 @@ namespace BBC.BSC.Tool
                         Header = Path.GetFileNameWithoutExtension(item),
                         Tag = item
                     };
+                    StackPanel stack = new StackPanel { Orientation = Orientation.Horizontal };
+                    string ext = Path.GetExtension(item).Substring(1).ToLower();
+                    PackIconKind packIconKind = ext == "vnc" ? PackIconKind.Computer : (
+                    ext == "url" ? PackIconKind.Web : (
+                    ext == "lnk" ? PackIconKind.FolderNetwork : (
+                    ext == "rdp" ? PackIconKind.ComputerClassic : PackIconKind.HelpBox)));
+                    stack.Children.Add(new PackIcon { Kind = packIconKind });
+                    stack.Children.Add(new Label() { Content = Path.GetFileNameWithoutExtension(item) });
+                    treeViewItem.Header = stack;
                     treeViewItem.MouseDoubleClick += TreeViewBNCS_DoubleClicked;
 
                     tvSender.Items.Add(treeViewItem);
