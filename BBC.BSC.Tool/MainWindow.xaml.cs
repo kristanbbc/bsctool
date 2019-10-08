@@ -114,6 +114,7 @@ namespace BBC.BSC.Tool
             }
             if (Directory.Exists(bncsDir))
             {
+                    BuildWs600View();
             }
             else
             {
