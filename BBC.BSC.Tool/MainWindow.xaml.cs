@@ -153,7 +153,7 @@ namespace BBC.BSC.Tool
             FileInfo fileInfo = new FileInfo(tvSender.Tag.ToString());
             ProcessStartInfo startInfo = new ProcessStartInfo();
 
-            switch (fileInfo.Extension.ToLower())
+            switch (fileInfo.Extension.ToLower().Substring(1))
             {
                 case "vnc":
                     string VncExeToRun = Path.Combine(Path.GetTempPath(), "vncx64.exe");
