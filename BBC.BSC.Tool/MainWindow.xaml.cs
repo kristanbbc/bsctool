@@ -57,6 +57,26 @@ namespace BBC.BSC.Tool
             {
                 Layout = "${time} ${pad:padding=3:inner=${threadid}} ${message} ${exception:format=tostring}"
             };
+            NLog.Targets.ElasticSearch.ElasticSearchTarget elasticSearchTarget = new NLog.Targets.ElasticSearch.ElasticSearchTarget();
+            elasticSearchTarget.Index = "bsctool1";
+            elasticSearchTarget.IncludeAllProperties = true;
+            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name ="user", Layout = "${windows-identity:userName=True:domain=False}" });
+            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "host", Layout = "${machinename}" });
+            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "thread", Layout = "${threadid}" });
+            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "threadname", Layout = "${threadname}" });
+            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "version", Layout = "${assembly-version}" });
+#if DEBUG
+            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "build", Layout = "DEBUG" });
+
+#else
+            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "build", Layout = "RELEASE" });
+
+#endif
+
+            elasticSearchTarget.Layout = "${message} ${exception:format=tostring}";
+
+            elasticSearchTarget.Uri = @"http://3gbbmdbels1000:9200";
+            config.AddRule(LogLevel.Info, LogLevel.Fatal, elasticSearchTarget);
 #if !DEBUG
             mailTarget = new MailTarget()
             {
