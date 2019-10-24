@@ -338,7 +338,7 @@ namespace BBC.BSC.Tool
                         catPath);
 
                     string json_data = string.Empty;
-                    logger.Debug("Running query against CAT with\n{0}", catQuery);
+                    logger.Info("Running query against CAT with\n{0}", catQuery);
                     using (WebClient w = new WebClient())
                     {
                         w.UseDefaultCredentials = true;
@@ -346,7 +346,8 @@ namespace BBC.BSC.Tool
                     }
 
                     catRestults = !string.IsNullOrEmpty(json_data) ? JsonConvert.DeserializeObject<List<CatRestult>>(json_data) : null;
-                    logger.Debug("Got {0} results from CAT", catRestults.Count());
+                    logger.Info("Got {0} results from CAT", catRestults.Count());
+                    
                     foreach (CatRestult item in catRestults)
                     {
                         results.results.Add(new MyResult
@@ -428,6 +429,7 @@ namespace BBC.BSC.Tool
 
         private void DisplayResults(object sender, RunWorkerCompletedEventArgs e)
         {
+            //TODO add logging in this void
             workers.Remove((BackgroundWorker)sender);
             ((BackgroundWorker)sender).Dispose();
             MyResults res = (MyResults)e.Result;
