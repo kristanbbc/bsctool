@@ -396,7 +396,7 @@ namespace BBC.BSC.Tool
                                     results.AddResult(new MyResult()
                                     {
                                         Hostname = item.Properties["name"][0].ToString().ToUpper(),
-                                        Description = (item.Properties.Contains("description") ? item.Properties["description"][0].ToString() : ""),
+                                        Description = CleanResultProperty(item, "description"),
                                         Ip = "Load IP",
                                         Source = "AD"
                                     });
@@ -414,6 +414,11 @@ namespace BBC.BSC.Tool
             results.results.Sort((a, b) => a.Hostname.CompareTo(b.Hostname));
             results.results = results.results.Distinct().ToList<MyResult>();
             e.Result = results;
+        }
+
+        private static string CleanResultProperty(SearchResult item, string property)
+        {
+            return (item.Properties.Contains(property) ? item.Properties[property][0].ToString() : "");
         }
 
         private void Text_Changed(object sender, TextChangedEventArgs e)
