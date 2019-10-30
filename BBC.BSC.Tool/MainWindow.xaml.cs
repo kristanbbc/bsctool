@@ -57,6 +57,28 @@ namespace BBC.BSC.Tool
             {
                 Layout = "${time} ${pad:padding=3:inner=${threadid}} ${message} ${exception:format=tostring}"
             };
+            NLog.Targets.ElasticSearch.ElasticSearchTarget elasticSearchTarget = new NLog.Targets.ElasticSearch.ElasticSearchTarget
+            {
+                Index = "bsctool1",
+                IncludeAllProperties = true
+            };
+            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "user", Layout = "${windows-identity:userName=True:domain=False}" });
+            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "host", Layout = "${machinename}" });
+            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "thread", Layout = "${threadid}" });
+            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "threadname", Layout = "${threadname}" });
+            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "version", Layout = "${assembly-version}" });
+#if DEBUG
+            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "build", Layout = "DEBUG" });
+
+#else
+            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "build", Layout = "RELEASE" });
+
+#endif
+
+            elasticSearchTarget.Layout = "${message} ${exception:format=tostring}";
+
+            elasticSearchTarget.Uri = @"http://3gbbmdbels1000:9200";
+            config.AddRule(LogLevel.Info, LogLevel.Fatal, elasticSearchTarget);
 #if !DEBUG
             mailTarget = new MailTarget()
             {
@@ -210,53 +232,54 @@ namespace BBC.BSC.Tool
 
         private void TreeViewBNCS_Expanded(object sender, RoutedEventArgs e)
         {
-            Dispatcher.Invoke(delegate { 
-            TreeViewItem tvSender = (TreeViewItem)sender;
-            if (tvSender.Items.Count == 1 && tvSender.Items[0] == null)
+            Dispatcher.Invoke(delegate
             {
-                tvSender.Items.Clear();
-
-                foreach (string item in Directory.GetDirectories(tvSender.Tag.ToString()))
+                TreeViewItem tvSender = (TreeViewItem)sender;
+                if (tvSender.Items.Count == 1 && tvSender.Items[0] == null)
                 {
-                    logger.ConditionalTrace("Adding directory {0} to BNCS tree", item);
-                    TreeViewItem treeViewItem = new TreeViewItem
+                    tvSender.Items.Clear();
+
+                    foreach (string item in Directory.GetDirectories(tvSender.Tag.ToString()))
                     {
-                        Header = Path.GetFileNameWithoutExtension(item),
-                        Tag = item
-                    };
+                        logger.ConditionalTrace("Adding directory {0} to BNCS tree", item);
+                        TreeViewItem treeViewItem = new TreeViewItem
+                        {
+                            Header = Path.GetFileNameWithoutExtension(item),
+                            Tag = item
+                        };
 
-                    StackPanel stack = new StackPanel { Orientation = Orientation.Horizontal };
-                    stack.Children.Add(new PackIcon { Kind = PackIconKind.Folder });
-                    stack.Children.Add(new Label() { Content = Path.GetFileNameWithoutExtension(item) });
-                    treeViewItem.Header = stack;
-                    treeViewItem.Items.Add(null);
-                    treeViewItem.Expanded += new RoutedEventHandler(TreeViewBNCS_Expanded);
+                        StackPanel stack = new StackPanel { Orientation = Orientation.Horizontal };
+                        stack.Children.Add(new PackIcon { Kind = PackIconKind.Folder });
+                        stack.Children.Add(new Label() { Content = Path.GetFileNameWithoutExtension(item) });
+                        treeViewItem.Header = stack;
+                        treeViewItem.Items.Add(null);
+                        treeViewItem.Expanded += new RoutedEventHandler(TreeViewBNCS_Expanded);
 
-                    tvSender.Items.Add(treeViewItem);
+                        tvSender.Items.Add(treeViewItem);
 
-                }
-                foreach (string item in Directory.GetFiles(tvSender.Tag.ToString()))
-                {
-                    logger.ConditionalTrace("Adding file {0} to BNCS tree", item);
-                    TreeViewItem treeViewItem = new TreeViewItem
+                    }
+                    foreach (string item in Directory.GetFiles(tvSender.Tag.ToString()))
                     {
-                        Header = Path.GetFileNameWithoutExtension(item),
-                        Tag = item
-                    };
-                    StackPanel stack = new StackPanel { Orientation = Orientation.Horizontal };
-                    string ext = Path.GetExtension(item).Substring(1).ToLower();
-                    PackIconKind packIconKind = ext == "vnc" ? PackIconKind.Computer : (
-                    ext == "url" ? PackIconKind.Web : (
-                    ext == "lnk" ? PackIconKind.FolderNetwork : (
-                    ext == "rdp" ? PackIconKind.ComputerClassic : PackIconKind.HelpBox)));
-                    stack.Children.Add(new PackIcon { Kind = packIconKind });
-                    stack.Children.Add(new Label() { Content = Path.GetFileNameWithoutExtension(item) });
-                    treeViewItem.Header = stack;
-                    treeViewItem.MouseDoubleClick += TreeViewBNCS_DoubleClicked;
+                        logger.ConditionalTrace("Adding file {0} to BNCS tree", item);
+                        TreeViewItem treeViewItem = new TreeViewItem
+                        {
+                            Header = Path.GetFileNameWithoutExtension(item),
+                            Tag = item
+                        };
+                        StackPanel stack = new StackPanel { Orientation = Orientation.Horizontal };
+                        string ext = Path.GetExtension(item).Substring(1).ToLower();
+                        PackIconKind packIconKind = ext == "vnc" ? PackIconKind.Computer : (
+                        ext == "url" ? PackIconKind.Web : (
+                        ext == "lnk" ? PackIconKind.FolderNetwork : (
+                        ext == "rdp" ? PackIconKind.ComputerClassic : PackIconKind.HelpBox)));
+                        stack.Children.Add(new PackIcon { Kind = packIconKind });
+                        stack.Children.Add(new Label() { Content = Path.GetFileNameWithoutExtension(item) });
+                        treeViewItem.Header = stack;
+                        treeViewItem.MouseDoubleClick += TreeViewBNCS_DoubleClicked;
 
-                    tvSender.Items.Add(treeViewItem);
+                        tvSender.Items.Add(treeViewItem);
+                    }
                 }
-            }
             });
         }
 
@@ -292,6 +315,8 @@ namespace BBC.BSC.Tool
             public string AlsoKnownAs;
             [JsonProperty("ip")]
             public string IP;
+            [JsonProperty("os")]
+            public string OS;
 
         }
 
@@ -311,14 +336,15 @@ namespace BBC.BSC.Tool
                 logger.Info("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
                 try
                 {
-                    string catQuery = string.Format("{1}SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip FROM " +
+                    string catQuery = string.Format("{1}SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip, CONCAT(os,  \" \",os_version) as os FROM " +
                         "network INNER JOIN asset ON network.asset_id = asset.asset_id " +
+                        "left join asset_os on asset.asset_id = asset_os.asset_id left join os on asset_os.os_id = os.os_id left join os_version on asset_os.os_version_id = os_version.os_version_id " +
                         "WHERE life_cycle_status_id = 4 AND (lower(host_name like '%{0}%') OR IP = inet_aton('{0}') OR lower(also_known_as) LIKE '%{0}%')",
                         e.Argument.ToString().Replace("*", "%").ToLower(),
                         catPath);
 
                     string json_data = string.Empty;
-                    logger.Debug("Running query against CAT with\n{0}", catQuery);
+                    logger.Info("Running query against CAT with\n{0}", catQuery);
                     using (WebClient w = new WebClient())
                     {
                         w.UseDefaultCredentials = true;
@@ -326,7 +352,8 @@ namespace BBC.BSC.Tool
                     }
 
                     catRestults = !string.IsNullOrEmpty(json_data) ? JsonConvert.DeserializeObject<List<CatRestult>>(json_data) : null;
-                    logger.Debug("Got {0} results from CAT", catRestults.Count());
+                    logger.Info("Got {0} results from CAT", catRestults.Count());
+
                     foreach (CatRestult item in catRestults)
                     {
                         results.results.Add(new MyResult
@@ -334,6 +361,7 @@ namespace BBC.BSC.Tool
                             Source = "CAT",
                             Hostname = item.HostName.ToUpper(),
                             Description = item.AlsoKnownAs,
+                            OperatingSystem = item.OS,
                             Ip = item.IP
                         });
                     }
@@ -345,6 +373,8 @@ namespace BBC.BSC.Tool
                     logger.Warn("Error running query against CAT:\n{0}", ex.Message);
                     Trace.TraceError(ex.Message);
                 }
+
+                /// Start AD search
                 try
                 {
                     using (DirectoryEntry dEntry = new DirectoryEntry(ldapPath))
@@ -363,6 +393,7 @@ namespace BBC.BSC.Tool
                         dSearcher.PropertiesToLoad.Clear();
                         dSearcher.PropertiesToLoad.Add("name");
                         dSearcher.PropertiesToLoad.Add("description");
+                        dSearcher.PropertiesToLoad.Add("operatingsystem");
                         using (SearchResultCollection sResults = dSearcher.FindAll())
                         {
                             latestRestults = sResults;
@@ -375,8 +406,9 @@ namespace BBC.BSC.Tool
                                     results.AddResult(new MyResult()
                                     {
                                         Hostname = item.Properties["name"][0].ToString().ToUpper(),
-                                        Description = (item.Properties.Contains("description") ? item.Properties["description"][0].ToString() : ""),
+                                        Description = CleanResultProperty(item, "description"),
                                         Ip = "Load IP",
+                                        OperatingSystem = CleanResultProperty(item, "operatingSystem"),
                                         Source = "AD"
                                     });
                                 }
@@ -395,6 +427,11 @@ namespace BBC.BSC.Tool
             e.Result = results;
         }
 
+        private static string CleanResultProperty(SearchResult item, string property)
+        {
+            return (item.Properties.Contains(property) ? item.Properties[property][0].ToString() : "");
+        }
+
         private void Text_Changed(object sender, TextChangedEventArgs e)
         {
             logger.ConditionalTrace("search text changed: {0}", searchIn.Text.Trim());
@@ -406,11 +443,19 @@ namespace BBC.BSC.Tool
 
         public List<MyResult> Results;
 
+        private MyResult selectedResult = new MyResult();
+
         private void DisplayResults(object sender, RunWorkerCompletedEventArgs e)
         {
+            //TODO add logging in this void
             workers.Remove((BackgroundWorker)sender);
             ((BackgroundWorker)sender).Dispose();
             MyResults res = (MyResults)e.Result;
+            if (res.results.Count > 0)
+            {
+                selectedResult = ((MyResults)e.Result).results[0];
+
+            }
             try
             {
                 if (res.timestamp > lastResultTimestamp)
@@ -531,6 +576,8 @@ namespace BBC.BSC.Tool
             ProcessStartInfo startInfo = new ProcessStartInfo();
 
             string directory = System.IO.Path.Combine(Environment.CurrentDirectory, "tools");
+            string rcExeToRun = @"d:\rc.exe";
+            string rcW10ExeToRun = @"\\national\bbcere\BSC\Dump\Apps\sccm-remote\w10\cmrcviewer.exe";
 
             switch (((Button)sender).Name)
             {
@@ -541,12 +588,17 @@ namespace BBC.BSC.Tool
                     break;
 
                 case "button_RC":
-                    string exeToRun = @"d:\rc.exe";
-                    if (PrepareTool(Properties.Resources.rc, exeToRun))
+                    if (PrepareTool(Properties.Resources.rc, rcExeToRun))
                     {
-                        startInfo.Arguments = string.Format(@"/c runas /user:national\{0} /savecred ""{1} 1 {2}""", textBox_ere.Text, exeToRun, textbox_host.Text.Trim());
+                        startInfo.Arguments = string.Format(@"/c runas /user:national\{0} /savecred ""{1} 1 {2}""", textBox_ere.Text, rcExeToRun, textbox_host.Text.Trim());
                         startInfo.FileName = "cmd";
                     }
+                    break;
+                case "button_RC_W10":
+
+                    startInfo.Arguments = string.Format(@"/c runas /user:national\{0} /savecred ""{1} {2}""", textBox_ere.Text, rcW10ExeToRun, textbox_host.Text.Trim());
+                    startInfo.FileName = "cmd";
+
                     break;
                 case "button_SSH":
                     startInfo.Arguments = string.Format("{0}", textbox_host.Text);
@@ -720,6 +772,7 @@ namespace BBC.BSC.Tool
                 {
                     button_RDP.IsEnabled = con.rdp;
                     button_RC.IsEnabled = con.rdp;
+                    button_RC_W10.IsEnabled = con.rdp;
                     button_VNC.IsEnabled = con.vnc;
                     button_SSH.IsEnabled = con.ssh;
                     button_SSH_ERE.IsEnabled = con.ssh;
@@ -728,6 +781,34 @@ namespace BBC.BSC.Tool
                     button_TELNET.IsEnabled = con.telnet;
                     button_LogView.IsEnabled = con.diralogview;
                     LastConnectionResult = con.timestamp;
+
+                    button_RC_W10.Foreground = Brushes.White;
+                    button_RC.Foreground = Brushes.White;
+                    button_RDP.Foreground = Brushes.White;
+                    try
+                    {
+
+                        if (selectedResult.OperatingSystem.Contains("Windows 10"))
+                        {
+                            button_RC_W10.Foreground = Brushes.Yellow;
+                        }
+                        else if (selectedResult.OperatingSystem.Contains("Windows 7"))
+                        {
+                            button_RC.Foreground = Brushes.Yellow;
+                        }
+                        else if (selectedResult.OperatingSystem.Contains("Windows Server"))
+                        {
+                            button_RDP.Foreground = Brushes.Yellow;
+                        }
+
+
+                    }
+                    catch (Exception)
+                    {
+
+                        //// throw;
+                    }
+
                 });
             }
 
@@ -1033,27 +1114,11 @@ backupaddress = {3}
     }
     public class MyResult
     {
-        public string Source
-        {
-            get;
-            set;
-        }
-        public string Hostname
-        {
-            get;
-            set;
-        }
-        public string Ip
-        {
-            get;
-            set;
-        }
-
-        public string Description
-        {
-            get;
-            set;
-        }
+        public string Source { get; set; }
+        public string Hostname { get; set; }
+        public string Ip { get; set; }
+        public string Description { get; set; }
+        public string OperatingSystem { get; set; }
         public MyResult()
         {
 
