@@ -358,6 +358,7 @@ namespace BBC.BSC.Tool
                             Source = "CAT",
                             Hostname = item.HostName.ToUpper(),
                             Description = item.AlsoKnownAs,
+                            OperatingSystem = item.OS,
                             Ip = item.IP
                         });
                     }
@@ -437,12 +438,19 @@ namespace BBC.BSC.Tool
 
         public List<MyResult> Results;
 
+        private MyResult selectedResult = new MyResult();
+
         private void DisplayResults(object sender, RunWorkerCompletedEventArgs e)
         {
             //TODO add logging in this void
             workers.Remove((BackgroundWorker)sender);
             ((BackgroundWorker)sender).Dispose();
             MyResults res = (MyResults)e.Result;
+            if (res.results.Count > 0)
+            {
+                selectedResult = ((MyResults)e.Result).results[0];
+
+            }
             try
             {
                 if (res.timestamp > lastResultTimestamp)
@@ -768,6 +776,34 @@ namespace BBC.BSC.Tool
                     button_TELNET.IsEnabled = con.telnet;
                     button_LogView.IsEnabled = con.diralogview;
                     LastConnectionResult = con.timestamp;
+
+                    button_RC_W10.Foreground = Brushes.White;
+                    button_RC.Foreground = Brushes.White;
+                    button_RDP.Foreground = Brushes.White;
+                    try
+                    {
+
+                        if (selectedResult.OperatingSystem.Contains("Windows 10"))
+                        {
+                            button_RC_W10.Foreground = Brushes.Yellow;
+                        }
+                        else if (selectedResult.OperatingSystem.Contains("Windows 7"))
+                        {
+                            button_RC.Foreground = Brushes.Yellow;
+                        }
+                        else if (selectedResult.OperatingSystem.Contains("Windows Server"))
+                        {
+                            button_RDP.Foreground = Brushes.Yellow;
+                        }
+
+
+                    }
+                    catch (Exception)
+                    {
+
+                        //// throw;
+                    }
+
                 });
             }
 
@@ -1094,6 +1130,7 @@ backupaddress = {3}
             get;
             set;
         }
+        public string OperatingSystem { get; set; }
         public MyResult()
         {
 
