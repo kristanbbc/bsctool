@@ -312,6 +312,8 @@ namespace BBC.BSC.Tool
             public string AlsoKnownAs;
             [JsonProperty("ip")]
             public string IP;
+            [JsonProperty("os")]
+            public string OS;
 
         }
 
@@ -331,8 +333,9 @@ namespace BBC.BSC.Tool
                 logger.Info("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
                 try
                 {
-                    string catQuery = string.Format("{1}SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip FROM " +
+                    string catQuery = string.Format("{1}SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip, CONCAT(os,  \" \",os_version) as os FROM " +
                         "network INNER JOIN asset ON network.asset_id = asset.asset_id " +
+                        "left join asset_os on asset.asset_id = asset_os.asset_id left join os on asset_os.os_id = os.os_id left join os_version on asset_os.os_version_id = os_version.os_version_id " +
                         "WHERE life_cycle_status_id = 4 AND (lower(host_name like '%{0}%') OR IP = inet_aton('{0}') OR lower(also_known_as) LIKE '%{0}%')",
                         e.Argument.ToString().Replace("*", "%").ToLower(),
                         catPath);
@@ -384,6 +387,7 @@ namespace BBC.BSC.Tool
                         dSearcher.PropertiesToLoad.Clear();
                         dSearcher.PropertiesToLoad.Add("name");
                         dSearcher.PropertiesToLoad.Add("description");
+                        dSearcher.PropertiesToLoad.Add("operatingsystem");
                         using (SearchResultCollection sResults = dSearcher.FindAll())
                         {
                             latestRestults = sResults;
@@ -398,6 +402,7 @@ namespace BBC.BSC.Tool
                                         Hostname = item.Properties["name"][0].ToString().ToUpper(),
                                         Description = CleanResultProperty(item, "description"),
                                         Ip = "Load IP",
+                                        OperatingSystem = CleanResultProperty(item, "operatingSystem"),
                                         Source = "AD"
                                     });
                                 }
