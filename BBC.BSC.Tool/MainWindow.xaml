@@ -174,7 +174,8 @@
         </Grid>
         <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.Row="2" Grid.Column="1" Margin="10,0" >
             <Button x:Name="button_RDP" Content="RDP" Click="Connect_Button_Click" Margin="4" IsEnabled="False"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
-            <Button x:Name="button_RC" Content="RC"  Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+            <Button x:Name="button_RC" Content="RC W7"  Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+            <Button x:Name="button_RC_W10" Content="RC W10"  Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
             <Button x:Name="button_VNC" Content="VNC" Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
             <Button x:Name="button_SSH" Content="SSH"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
             <Button x:Name="button_SSH_ERE" Content="SSH ERE"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>

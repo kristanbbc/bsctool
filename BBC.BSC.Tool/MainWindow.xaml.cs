@@ -553,6 +553,8 @@ namespace BBC.BSC.Tool
             ProcessStartInfo startInfo = new ProcessStartInfo();
 
             string directory = System.IO.Path.Combine(Environment.CurrentDirectory, "tools");
+            string rcExeToRun = @"d:\rc.exe";
+            string rcW10ExeToRun = @"\\national\bbcere\BSC\Dump\Apps\sccm-remote\w10\cmrcviewer.exe";
 
             switch (((Button)sender).Name)
             {
@@ -563,12 +565,17 @@ namespace BBC.BSC.Tool
                     break;
 
                 case "button_RC":
-                    string exeToRun = @"d:\rc.exe";
-                    if (PrepareTool(Properties.Resources.rc, exeToRun))
+                    if (PrepareTool(Properties.Resources.rc, rcExeToRun))
                     {
-                        startInfo.Arguments = string.Format(@"/c runas /user:national\{0} /savecred ""{1} 1 {2}""", textBox_ere.Text, exeToRun, textbox_host.Text.Trim());
+                        startInfo.Arguments = string.Format(@"/c runas /user:national\{0} /savecred ""{1} 1 {2}""", textBox_ere.Text, rcExeToRun, textbox_host.Text.Trim());
                         startInfo.FileName = "cmd";
                     }
+                    break;
+                case "button_RC_W10":
+
+                    startInfo.Arguments = string.Format(@"/c runas /user:national\{0} /savecred ""{1} {2}""", textBox_ere.Text, rcW10ExeToRun, textbox_host.Text.Trim());
+                    startInfo.FileName = "cmd";
+
                     break;
                 case "button_SSH":
                     startInfo.Arguments = string.Format("{0}", textbox_host.Text);
@@ -742,6 +749,7 @@ namespace BBC.BSC.Tool
                 {
                     button_RDP.IsEnabled = con.rdp;
                     button_RC.IsEnabled = con.rdp;
+                    button_RC_W10.IsEnabled = con.rdp;
                     button_VNC.IsEnabled = con.vnc;
                     button_SSH.IsEnabled = con.ssh;
                     button_SSH_ERE.IsEnabled = con.ssh;
