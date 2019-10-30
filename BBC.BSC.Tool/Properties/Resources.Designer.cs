@@ -73,6 +73,16 @@ namespace BBC.BSC.Tool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] rcw10 {
+            get {
+                object obj = ResourceManager.GetObject("rcw10", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] vncx64 {
             get {
                 object obj = ResourceManager.GetObject("vncx64", resourceCulture);
