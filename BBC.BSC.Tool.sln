@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "benchmark", "benchmark\benc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BindingTest", "BindingTest\BindingTest.csproj", "{C66C7945-61FF-4456-A7EA-2ACCD157BB71}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bsc_tool_migrater", "bsc_tool_migrater\bsc_tool_migrater.csproj", "{D335B448-1A2E-407F-B1C1-FEADF28927BE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{C66C7945-61FF-4456-A7EA-2ACCD157BB71}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C66C7945-61FF-4456-A7EA-2ACCD157BB71}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C66C7945-61FF-4456-A7EA-2ACCD157BB71}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D335B448-1A2E-407F-B1C1-FEADF28927BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D335B448-1A2E-407F-B1C1-FEADF28927BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D335B448-1A2E-407F-B1C1-FEADF28927BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D335B448-1A2E-407F-B1C1-FEADF28927BE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

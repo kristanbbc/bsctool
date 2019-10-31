@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("benchmark")]
+[assembly: AssemblyTitle("bsc_tool_migrater")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Microsoft")]
-[assembly: AssemblyProduct("benchmark")]
-[assembly: AssemblyCopyright("Copyright © Microsoft 2019")]
+[assembly: AssemblyCompany("Atos")]
+[assembly: AssemblyProduct("bsc_tool_migrater")]
+[assembly: AssemblyCopyright("Copyright © Atos 2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("d3ba76a4-5027-4f87-aac6-7ead242750f8")]
+[assembly: Guid("d335b448-1a2e-407f-b1c1-feadf28927be")]
 
 // Version information for an assembly consists of the following four values:
 //
