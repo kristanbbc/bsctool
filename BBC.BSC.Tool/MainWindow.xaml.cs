@@ -42,10 +42,6 @@ namespace BBC.BSC.Tool
         private string host_text;
         private string bncsDir = @"\\ws600\vnc\";
         private Logger logger;
-#if !DEBUG
-        private MailTarget mailTarget;
-        private MemoryTarget memoryTarget;
-#endif
 
         private string phoneboxIniPath = @"C:\ProgramData\Broadcast Bionics\PhoneBOX4\client.ini";
         private string phoneboxExePath = @"C:\Program Files (x86)\Broadcast Bionics\PhoneBOX4\Client\PhoneBOX.Client.exe";
@@ -79,17 +75,6 @@ namespace BBC.BSC.Tool
 
             elasticSearchTarget.Uri = @"http://3gbbmdbels1000:9200";
             config.AddRule(LogLevel.Info, LogLevel.Fatal, elasticSearchTarget);
-#if !DEBUG
-            mailTarget = new MailTarget()
-            {
-                To = "kristan.webb@bbc.co.uk",
-                From = string.Format("{0}-{1}-bsctool@bbc.co.uk", Environment.UserName, Environment.MachineName),
-                SmtpServer = "smtp.national.core.bbc.co.uk"
-            };
-            memoryTarget = new MemoryTarget();
-            config.AddRule(LogLevel.Trace, LogLevel.Fatal, memoryTarget);
-            config.AddRule(LogLevel.Warn, LogLevel.Fatal, mailTarget);
-#endif
 
             config.AddRule(LogLevel.Trace, LogLevel.Fatal, consoleTarget);
 
@@ -512,33 +497,6 @@ namespace BBC.BSC.Tool
                     logger.Error("Error disposing :\n{0}", ex.Message);
                     Trace.TraceError(ex.Message);
                 }
-
-#if !DEBUG
-                //send logs as email
-                try
-                {
-
-                    SmtpClient smtpClient = new SmtpClient
-                    {
-                        Host = mailTarget.SmtpServer.ToString()
-                    };
-                    MailMessage mailMessage = new MailMessage();
-                    mailMessage.To.Add(mailTarget.To.ToString());
-                    mailMessage.From = new MailAddress(mailTarget.From.ToString());
-                    mailMessage.Subject = "Full logs from BSC Tool";
-                    mailMessage.Body = string.Join(Environment.NewLine, memoryTarget.Logs);
-                    smtpClient.Send(mailMessage);
-
-
-                }
-                catch (Exception ex)
-                {
-                    logger.Warn(ex);
-                    //temp fix to ensure email is sent
-                    logger.Warn(string.Join(Environment.NewLine, memoryTarget.Logs));
-                }
-
-#endif
             }
         }
 
