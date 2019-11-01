@@ -441,6 +441,10 @@ namespace BBC.BSC.Tool
                 selectedResult = ((MyResults)e.Result).results[0];
 
             }
+            else
+            {
+                selectedResult = null;
+            }
             try
             {
                 if (res.timestamp > lastResultTimestamp)
