@@ -744,23 +744,23 @@ namespace BBC.BSC.Tool
                     button_LogView.IsEnabled = con.diralogview;
                     LastConnectionResult = con.timestamp;
 
-                    button_RC_W10.Foreground = Brushes.White;
-                    button_RC.Foreground = Brushes.White;
-                    button_RDP.Foreground = Brushes.White;
+                    button_RC_W10.Style = (Style)FindResource("MaterialDesignRaisedButton");
+                    button_RC.Style = (Style)FindResource("MaterialDesignRaisedButton");
+                    button_RDP.Style = (Style)FindResource("MaterialDesignRaisedButton");
                     try
                     {
 
                         if (selectedResult.OperatingSystem.Contains("Windows 10"))
                         {
-                            button_RC_W10.Foreground = Brushes.Yellow;
+                            button_RC_W10.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
                         }
                         else if (selectedResult.OperatingSystem.Contains("Windows 7"))
                         {
-                            button_RC.Foreground = Brushes.Yellow;
+                            button_RC.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
                         }
                         else if (selectedResult.OperatingSystem.Contains("Windows Server"))
                         {
-                            button_RDP.Foreground = Brushes.Yellow;
+                            button_RDP.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
                         }
 
 
