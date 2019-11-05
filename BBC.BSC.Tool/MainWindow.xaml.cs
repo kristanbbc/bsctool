@@ -78,8 +78,8 @@ namespace BBC.BSC.Tool
 
             config.AddRule(LogLevel.Trace, LogLevel.Fatal, consoleTarget);
 
-            NLog.LogManager.Configuration = config;
             logger = LogManager.GetCurrentClassLogger();
+            LogManager.Configuration = config;
 
             logger.Info("BSC Tool {0} starting.", FileVersionInfo.GetVersionInfo(System.Reflection.Assembly.GetExecutingAssembly().Location).ProductVersion);
             System.Timers.Timer watcher = new System.Timers.Timer
