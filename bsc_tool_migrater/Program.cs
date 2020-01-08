@@ -12,7 +12,7 @@ namespace bsc_tool_migrater
         static void Main(string[] args)
         {
 //           Process.Start("iexplore.exe", @"http://software.er.bbc.co.uk/bsctool/setup.exe");
-            Process.Start( @"\\bbcws3001\software\bsctool\setup.exe");
+            Process.Start( @"\\3gbbmwsbsc1020\software\bsctool\setup.exe");
         }
     }
 }
