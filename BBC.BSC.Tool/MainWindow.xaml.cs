@@ -985,16 +985,29 @@ namespace BBC.BSC.Tool
             if (phoneBoxConfig != null)
             {
                 logger.Debug("Writing config to {0}\n{1}", phoneboxIniPath, phoneBoxConfig);
-                File.WriteAllLines(phoneboxIniPath, phoneBoxConfig.ToStringArray());
-
-                logger.Info("Attempting to start Phonebox");
                 try
                 {
-                    Process proc = Process.Start(phoneboxExePath);
+
+                    File.WriteAllLines(phoneboxIniPath, phoneBoxConfig.ToStringArray());
+                    logger.Info("Attempting to start Phonebox");
+                    try
+                    {
+                        Process proc = Process.Start(phoneboxExePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error(ex, "Problem starting PhoneBOX");
+                    }
+
                 }
                 catch (Exception ex)
                 {
-                    logger.Error(ex, "Problem starting PhoneBOX");
+                    if (ex.GetType() == typeof(System.UnauthorizedAccessException))
+                    {
+                        MessageBox.Show($"Check file permissions for {phoneboxIniPath}","Problem writing configuration",MessageBoxButton.OK,MessageBoxImage.Error);
+                    }
+                    logger.Error(ex, "Problem writing PhoneBOX ini file - check file permission.");
+
                 }
 
 
