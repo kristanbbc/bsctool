@@ -472,6 +472,7 @@ namespace BBC.BSC.Tool
             {
                 Trace.TraceError(ex.Message);
                 logger.Error("Problem displaying results:\n{0}", ex.Message);
+                App.SendReport(ex);
             }
         }
 
@@ -988,6 +989,7 @@ namespace BBC.BSC.Tool
 
             if (phoneBoxConfig != null)
             {
+                
                 logger.Debug("Writing config to {0}\n{1}", phoneboxIniPath, phoneBoxConfig);
                 try
                 {
@@ -1001,6 +1003,7 @@ namespace BBC.BSC.Tool
                     catch (Exception ex)
                     {
                         logger.Error(ex, "Problem starting PhoneBOX");
+                        App.SendReport(ex);
                     }
 
                 }
@@ -1011,7 +1014,8 @@ namespace BBC.BSC.Tool
                         MessageBox.Show($"Check file permissions for {phoneboxIniPath}","Problem writing configuration",MessageBoxButton.OK,MessageBoxImage.Error);
                     }
                     logger.Error(ex, "Problem writing PhoneBOX ini file - check file permission.");
-
+                    App.SendReport(ex);
+                    
                 }
 
 
