@@ -82,7 +82,7 @@ namespace BBC.BSC.Tool
             LogManager.Configuration = config;
 
             logger.Info("BSC Tool {0} starting.", FileVersionInfo.GetVersionInfo(System.Reflection.Assembly.GetExecutingAssembly().Location).ProductVersion);
-            System.Timers.Timer watcher = new System.Timers.Timer
+            Timer watcher = new Timer
             {
                 Interval = 1000
             };
@@ -408,7 +408,7 @@ namespace BBC.BSC.Tool
                 }
             }
             results.results.Sort((a, b) => a.Hostname.CompareTo(b.Hostname));
-            results.results = results.results.Distinct().ToList<MyResult>();
+            results.results = results.results.Distinct().ToList();
             e.Result = results;
         }
 
@@ -646,7 +646,7 @@ namespace BBC.BSC.Tool
                 //check md5
                 using (MD5 md5 = MD5.Create())
                 {
-                    using (System.IO.FileStream stream = System.IO.File.OpenRead(outputPath))
+                    using (FileStream stream = System.IO.File.OpenRead(outputPath))
                     {
                         existingMD5 = md5.ComputeHash(stream);
                     }
@@ -674,14 +674,13 @@ namespace BBC.BSC.Tool
             else
             {
                 logger.Trace("Tool doesn't exist, writing out new file");
-                using (System.IO.FileStream exeFile = new System.IO.FileStream(outputPath, System.IO.FileMode.Create))
+                using (FileStream exeFile = new FileStream(outputPath, System.IO.FileMode.Create))
                 {
                     exeFile.Write(resource, 0, resource.Length);
                 }
                 logger.Debug("Tool written to {0}, returning true", outputPath);
                 return true;
             }
-            return false;
         }
 
 
@@ -1023,7 +1022,7 @@ namespace BBC.BSC.Tool
             }
         }
 
-        private void Textbox_host_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Textbox_host_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (textbox_host.IsEnabled == true)
             {

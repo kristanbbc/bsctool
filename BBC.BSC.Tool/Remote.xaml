@@ -1,0 +1,21 @@
+﻿<Window x:Class="BBC.BSC.Tool.Remote"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BBC.BSC.Tool"
+        mc:Ignorable="d"
+        Title="Remote" Height="450" Width="800" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <WindowsFormsHost x:Name="rdpHost"  Margin="10" />
+        <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="10">
+            <Button Click="Button_Click" Content="connect" />
+            <Button Content="connect 2" Click="Button_Click_1" />
+        </StackPanel>
+
+    </Grid>
+</Window>
