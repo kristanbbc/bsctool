@@ -167,6 +167,20 @@
 
                 </StackPanel>
             </TabItem>
+            <TabItem Header="Settings">
+                <Grid Margin="10">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource MaterialDesignHeadline6TextBlock}">User settings</TextBlock>
+                        <TextBlock Style="{StaticResource MaterialDesignSubtitle1TextBlock}">Settings are saved automatically</TextBlock>
+                        <Separator Height="10" Margin="0"/>
+                        <StackPanel Orientation="Horizontal" Margin="10">
+                            <Label Style="{StaticResource MaterialDesignLabel}">Eng Account:</Label>
+                            <TextBox x:Name="textBox_settings_ere" Width="250" Text="{local:SettingBinding ere}" VerticalAlignment="Center" TextChanged="TextBox_ere_TextChanged" />
+                        </StackPanel>
+
+                    </StackPanel>
+                </Grid>
+            </TabItem>
         </TabControl>
 
         <Grid Grid.Row="2">
@@ -182,7 +196,9 @@
             <Label x:Name="label2" Content="ERE account:" Grid.Row="1"  HorizontalAlignment="Right" VerticalAlignment="Center" />
 
             <TextBox x:Name="textbox_host"  Grid.Row="0" Grid.Column="1" IsEnabled="False" MouseDoubleClick="Textbox_host_MouseDoubleClick" TextWrapping="Wrap" Text="" VerticalAlignment="Center" Width="200" TextChanged="Textbox_host_TextChanged" FontWeight="Bold"/>
-            <TextBox x:Name="textBox_ere"   Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" Text="{local:SettingBinding ere}" VerticalAlignment="Center" TextChanged="TextBox_ere_TextChanged" />
+            <TextBox x:Name="textBox_ere"   Grid.Row="1" Grid.Column="1" IsEnabled="False" TextWrapping="Wrap" Text="{local:SettingBinding ere}" VerticalAlignment="Center" TextChanged="TextBox_ere_TextChanged" >
+                <TextBox.ToolTip>Setting now in the Settings tab.</TextBox.ToolTip>
+            </TextBox>
 
         </Grid>
         <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.Row="2" Grid.Column="1" Margin="10,0" >
