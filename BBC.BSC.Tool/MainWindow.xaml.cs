@@ -274,20 +274,28 @@ namespace BBC.BSC.Tool
         /// <param name="e"></param>
         private void Do_Watcher(object sender, ElapsedEventArgs e)
         {
-            Dispatcher.Invoke(delegate ()
+            try
             {
-                if (workers.Count > 0)
-                {
-                    logger.Debug("There are {0} workers", workers.Count);
-                    status.Fill = new SolidColorBrush(Colors.Red);
+                Dispatcher.Invoke(delegate ()
+                   {
+                       if (workers.Count > 0)
+                       {
+                           logger.Debug("There are {0} workers", workers.Count);
+                           status.Fill = new SolidColorBrush(Colors.Red);
                     // this.Title = "Busy";
                 }
-                else
-                {
-                    status.Fill = new SolidColorBrush(Colors.Green);
+                       else
+                       {
+                           status.Fill = new SolidColorBrush(Colors.Green);
                     //this.Title = "Finished";
                 }
-            });
+                   });
+            }
+            catch (Exception ex)
+            {
+                logger.Fatal(ex);
+                throw;
+            }
 
         }
 
