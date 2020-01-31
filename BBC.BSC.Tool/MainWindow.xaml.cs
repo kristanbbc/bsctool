@@ -40,7 +40,7 @@ namespace BBC.BSC.Tool
         private Timer searchTimer = new Timer(400);
         private Timer hostTimer = new Timer(400);
         private string host_text;
-        private string bncsDir = @"\\ws600\vnc\";
+        private string bncsDir = @"\\national\bbcere\BSC\VNC\BNCS";
         private Logger logger;
 
         private string phoneboxIniPath = @"C:\ProgramData\Broadcast Bionics\PhoneBOX4\client.ini";
@@ -156,7 +156,7 @@ namespace BBC.BSC.Tool
                 treeViewBNCS.Items.Add(treeViewItem);
 
             }
-            foreach (string item in Directory.GetFiles(@"\\ws600\vnc\"))
+            foreach (string item in Directory.GetFiles(bncsDir))
             {
                 logger.ConditionalTrace("Adding file {0} to BNCS tree", item);
                 TreeViewItem treeViewItem = new TreeViewItem
