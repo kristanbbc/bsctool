@@ -30,7 +30,7 @@ namespace BBC.BSC.Tool
     public partial class MainWindow : Window
     {
         //TODO make more of these configurable?
-        private readonly string catPath = @"http://er.bbc.co.uk/catquery.php?json&query=";
+        private readonly string catPath = @"http://cat.er.bbc.co.uk/catquery.php?json&query=";
         private SearchResultCollection latestRestults;
         private List<BackgroundWorker> workers = new List<BackgroundWorker>();
         private List<BackgroundWorker> connectionWorkers = new List<BackgroundWorker>();
