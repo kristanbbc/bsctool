@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.271
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29709.97
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BBC.BSC.Tool", "BBC.BSC.Tool\BBC.BSC.Tool.csproj", "{F93D39EC-8996-4855-8205-83D9F091486A}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BindingTest", "BindingTest\BindingTest.csproj", "{C66C7945-61FF-4456-A7EA-2ACCD157BB71}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bsc_tool_migrater", "bsc_tool_migrater\bsc_tool_migrater.csproj", "{D335B448-1A2E-407F-B1C1-FEADF28927BE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BBC.BSC.Tool.Server", "BBC.BSC.Tool.Server\BBC.BSC.Tool.Server.csproj", "{0472FC10-151F-4F44-8C43-722EFAD15EB9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{D335B448-1A2E-407F-B1C1-FEADF28927BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D335B448-1A2E-407F-B1C1-FEADF28927BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D335B448-1A2E-407F-B1C1-FEADF28927BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0472FC10-151F-4F44-8C43-722EFAD15EB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0472FC10-151F-4F44-8C43-722EFAD15EB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0472FC10-151F-4F44-8C43-722EFAD15EB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0472FC10-151F-4F44-8C43-722EFAD15EB9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
