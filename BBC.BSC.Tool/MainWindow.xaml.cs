@@ -1,5 +1,6 @@
 ﻿using MaterialDesignThemes.Wpf;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NLog;
 using NLog.Targets;
 using System;
@@ -11,9 +12,11 @@ using System.DirectoryServices;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Mail;
 using System.Net.Sockets;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
@@ -130,6 +133,11 @@ namespace BBC.BSC.Tool
             {
                 tabItemBNCSVNC.IsEnabled = false;
             }
+
+            Dispatcher.Invoke(delegate
+            {
+                UpdateCovid19Allocation();
+            });
 
             // Put Cursor in search box.
             searchIn.Focus();
@@ -1040,6 +1048,116 @@ namespace BBC.BSC.Tool
             else
             {
                 textbox_host.IsEnabled = true;
+            }
+        }
+
+
+        class CovidGetInfoItem
+        {
+            public string info_id { get; set; }
+            public string title { get; set; }
+            public string info { get; set; }
+            public string width { get; set; }
+            public string height { get; set; }
+
+        }
+
+        private void UpdateCovid19Allocation()
+        {
+            logger.Info("Starting Covid-19 update");
+
+            gridCovid19Allocations.Children.Clear();
+            using (var webClient = new WebClient())
+            {
+                try
+                {
+                    webClient.UseDefaultCredentials = true;
+                    string jsonString = webClient.DownloadString("http://ertg.er.bbc.co.uk/infodisplay/get_info.php?id=1");
+                    var json = JObject.Parse(jsonString);
+
+                    logger.Trace(jsonString);
+
+                    //logger.Info(json.ToString());
+
+                    foreach (var item in json)
+                    {
+                        if (int.TryParse(item.Key, out int result))
+                        {
+                            // item is a box
+
+                            StackPanel stack = new StackPanel();
+
+                            CovidGetInfoItem covid = JObject.Parse(item.Value.ToString()).ToObject<CovidGetInfoItem>();
+
+                            TextBlock tbTitle = new TextBlock();
+                            //tbTitle.Text = string.Format($"{covid.info_id}:{covid.title}");
+                            tbTitle.Text = covid.title;
+                            tbTitle.FontWeight = FontWeights.Bold;
+                            stack.Children.Add(tbTitle);
+
+                            TextBlock tbContent = new TextBlock();
+
+                            ///http.*remote\.php\?.*host=(\S*)
+                            string content = Regex.Replace(covid.info, "<[^>]*>", "");
+
+
+                            tbContent.Text = Regex.Replace(content, @"http.*remote\.php\?.*host=[a-zA-Z0-9\-]*", "").Trim();
+                            tbContent.TextWrapping = TextWrapping.WrapWithOverflow;
+                            stack.Children.Add(tbContent);
+
+                            Regex buttonRegex = new Regex(@"http:\/\/er\.bbc\.co\.uk\/tools\/remote\.php\?([a-zA-Z]*=[a-zA-Z]*&)?host=([a-zA-Z0-9\-\.]*)", RegexOptions.Compiled);
+                            foreach (Match match in buttonRegex.Matches(content))
+                            {
+                                //logger.Info($"Match {match.Groups[2]} {covid.info_id}");
+                                Button btn = new Button();
+                                btn.Content = match.Groups[2];
+                                btn.Click += Covid_Button_Click;
+                                stack.Children.Add(btn);
+                                btn = null;
+                            }
+
+
+
+                            Grid.SetColumn(stack, ((int.Parse(covid.info_id) -1) % gridCovid19Allocations.ColumnDefinitions.Count ));
+                            Grid.SetRow(stack, ((int.Parse(covid.info_id)  -1) / (gridCovid19Allocations.RowDefinitions.Count +1) ));
+                            //logger.Info("col:{1} row:{2}      content:{0}", tbContent.Text, Grid.GetColumn(stack), Grid.GetRow(stack));
+
+                            gridCovid19Allocations.Children.Add(stack);
+                            //logger.Info("TITLE:{0}",covid.title);
+                            tbTitle = null;
+                            tbContent = null;
+
+                        }
+
+                    }
+
+                }
+                catch (Exception ex)
+                {
+
+                    logger.Error(ex);
+                }
+
+
+            }
+
+            
+        }
+
+        private void Covid_Button_Click(object sender, RoutedEventArgs e)
+        {
+            textbox_host.Text = ((Button)sender).Content.ToString() ;
+        }
+
+        private void tabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (tabCovid.IsSelected)
+            {
+                Dispatcher.Invoke(delegate
+                {
+                    UpdateCovid19Allocation();
+
+                });
             }
         }
     }

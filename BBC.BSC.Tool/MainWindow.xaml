@@ -167,6 +167,30 @@
 
                 </StackPanel>
             </TabItem>
+            <TabItem Header="COVID-19" x:Name="tabCovid">
+
+                <Border>
+
+
+
+                        <Grid x:Name="gridCovid19Allocations">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+
+                        </Grid>
+
+                    </Border>
+                
+            </TabItem>
             <TabItem Header="Settings">
                 <Grid Margin="10">
                     <StackPanel>
