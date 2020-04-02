@@ -75,7 +75,7 @@
 
         <TabControl x:Name="tabControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Grid.ColumnSpan="2" Grid.Row="1"  
                     Style="{StaticResource MaterialDesignTabControl}" 
-                    BorderBrush="{DynamicResource PrimaryHueDarkBrush}" BorderThickness="1"
+                    BorderBrush="{DynamicResource PrimaryHueDarkBrush}" BorderThickness="1" SelectionChanged="tabControl_SelectionChanged"
                     >
             <TabItem Header="SEARCH">
                 <Grid Background="#FFE5E5E5">
