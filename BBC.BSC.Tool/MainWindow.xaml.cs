@@ -290,19 +290,19 @@ namespace BBC.BSC.Tool
                        {
                            logger.Debug("There are {0} workers", workers.Count);
                            status.Fill = new SolidColorBrush(Colors.Red);
-                    // this.Title = "Busy";
-                }
+                           // this.Title = "Busy";
+                       }
                        else
                        {
                            status.Fill = new SolidColorBrush(Colors.Green);
-                    //this.Title = "Finished";
-                }
+                           //this.Title = "Finished";
+                       }
                    });
             }
             catch (Exception ex)
             {
                 logger.Fatal(ex);
-                throw;
+                //throw;
             }
 
         }
@@ -766,25 +766,29 @@ namespace BBC.BSC.Tool
                     button_RDP.Style = (Style)FindResource("MaterialDesignRaisedButton");
                     try
                     {
+                        if (null != selectedResult.OperatingSystem)
+                        {
 
-                        if (selectedResult.OperatingSystem.Contains("Windows 10"))
-                        {
-                            button_RC_W10.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
-                        }
-                        else if (selectedResult.OperatingSystem.Contains("Windows 7"))
-                        {
-                            button_RC.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
-                        }
-                        else if (selectedResult.OperatingSystem.Contains("Windows Server"))
-                        {
-                            button_RDP.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
-                        }
 
+
+                            if (selectedResult.OperatingSystem.Contains("Windows 10"))
+                            {
+                                button_RC_W10.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
+                            }
+                            else if (selectedResult.OperatingSystem.Contains("Windows 7"))
+                            {
+                                button_RC.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
+                            }
+                            else if (selectedResult.OperatingSystem.Contains("Windows Server"))
+                            {
+                                button_RDP.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
+                            }
+                        }
 
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-
+                        logger.Error(ex);
                         //// throw;
                     }
 
@@ -1005,7 +1009,7 @@ namespace BBC.BSC.Tool
 
             if (phoneBoxConfig != null)
             {
-                
+
                 logger.Debug("Writing config to {0}\n{1}", phoneboxIniPath, phoneBoxConfig);
                 try
                 {
@@ -1027,11 +1031,11 @@ namespace BBC.BSC.Tool
                 {
                     if (ex.GetType() == typeof(System.UnauthorizedAccessException))
                     {
-                        MessageBox.Show($"Check file permissions for {phoneboxIniPath}","Problem writing configuration",MessageBoxButton.OK,MessageBoxImage.Error);
+                        MessageBox.Show($"Check file permissions for {phoneboxIniPath}", "Problem writing configuration", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                     logger.Error(ex, "Problem writing PhoneBOX ini file - check file permission.");
                     App.SendReport(ex);
-                    
+
                 }
 
 
