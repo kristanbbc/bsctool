@@ -554,6 +554,8 @@ namespace BBC.BSC.Tool
             string directory = System.IO.Path.Combine(Environment.CurrentDirectory, "tools");
             string rcExeToRun = @"d:\rc.exe";
             string rcW10ExeToRun = @"\\national\bbcere\BSC\Dump\Apps\sccm-remote\w10\cmrcviewer.exe";
+            string VncExeToRun = Path.Combine(Path.GetTempPath(), "vncx64.exe");
+
 
             switch (((Button)sender).Name)
             {
@@ -588,7 +590,6 @@ namespace BBC.BSC.Tool
                     startInfo.FileName = System.IO.Path.Combine(directory, "putty.exe");
                     break;
                 case "button_VNC":
-                    string VncExeToRun = Path.Combine(Path.GetTempPath(), "vncx64.exe");
                     if (PrepareTool(Properties.Resources.vncx64, VncExeToRun))
                     {
                         startInfo.Arguments = string.Format(@"-username {0} ""{1}""", textBox_ere.Text, textbox_host.Text.Trim());

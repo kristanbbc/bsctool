@@ -206,78 +206,30 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="tools\rcw10\00000409\baserc.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\00000409\climsgs.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\00000409\CmRcViewerRes.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\00000409\CompMgrRes.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\00000409\provmsgs.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\00000409\srvmsgs.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\00000409\_statvw.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\CMCabSigner.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\CmRcViewer.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\compmgr.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\CreateMedia.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\CreateTsMediaAdm.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\DeployToVhd.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\EapConfigUI.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\ExportContent.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\msvcp120.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\msvcr120.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\OfflineServicingLib.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\PatchDownloader.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\ProcessProxy.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\RdpCoreSccm.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\statview.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\sviewdll.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tools\rcw10\wimgapi.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <None Include="tools\rcw10\00000409\baserc.dll" />
+    <None Include="tools\rcw10\00000409\climsgs.dll" />
+    <None Include="tools\rcw10\00000409\CmRcViewerRes.dll" />
+    <None Include="tools\rcw10\00000409\CompMgrRes.dll" />
+    <None Include="tools\rcw10\00000409\provmsgs.dll" />
+    <None Include="tools\rcw10\00000409\srvmsgs.dll" />
+    <None Include="tools\rcw10\00000409\_statvw.dll" />
+    <None Include="tools\rcw10\CMCabSigner.exe" />
+    <None Include="tools\rcw10\CmRcViewer.exe" />
+    <None Include="tools\rcw10\compmgr.exe" />
+    <None Include="tools\rcw10\CreateMedia.exe" />
+    <None Include="tools\rcw10\CreateTsMediaAdm.dll" />
+    <None Include="tools\rcw10\DeployToVhd.exe" />
+    <None Include="tools\rcw10\EapConfigUI.dll" />
+    <None Include="tools\rcw10\ExportContent.dll" />
+    <None Include="tools\rcw10\msvcp120.dll" />
+    <None Include="tools\rcw10\msvcr120.dll" />
+    <None Include="tools\rcw10\OfflineServicingLib.dll" />
+    <None Include="tools\rcw10\PatchDownloader.dll" />
+    <None Include="tools\rcw10\ProcessProxy.exe" />
+    <None Include="tools\rcw10\RdpCoreSccm.dll" />
+    <None Include="tools\rcw10\statview.exe" />
+    <None Include="tools\rcw10\sviewdll.dll" />
+    <None Include="tools\rcw10\wimgapi.dll" />
     <Resource Include="bsctoolicon.ico" />
     <None Include="tools\mstscax.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
