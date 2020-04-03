@@ -134,10 +134,10 @@ namespace BBC.BSC.Tool
                 tabItemBNCSVNC.IsEnabled = false;
             }
 
-            Dispatcher.Invoke(delegate
-            {
-                UpdateInfoGridAllocation();
-            });
+            //Dispatcher.Invoke(delegate
+            //{
+            //    UpdateInfoGridAllocation();
+            //});
 
             // Put Cursor in search box.
             searchIn.Focus();
