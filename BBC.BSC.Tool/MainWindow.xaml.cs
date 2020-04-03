@@ -1,5 +1,6 @@
 ﻿using MaterialDesignThemes.Wpf;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NLog;
 using NLog.Targets;
 using System;
@@ -11,9 +12,11 @@ using System.DirectoryServices;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Mail;
 using System.Net.Sockets;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
@@ -130,6 +133,11 @@ namespace BBC.BSC.Tool
             {
                 tabItemBNCSVNC.IsEnabled = false;
             }
+
+            //Dispatcher.Invoke(delegate
+            //{
+            //    UpdateInfoGridAllocation();
+            //});
 
             // Put Cursor in search box.
             searchIn.Focus();
@@ -282,19 +290,19 @@ namespace BBC.BSC.Tool
                        {
                            logger.Debug("There are {0} workers", workers.Count);
                            status.Fill = new SolidColorBrush(Colors.Red);
-                    // this.Title = "Busy";
-                }
+                           // this.Title = "Busy";
+                       }
                        else
                        {
                            status.Fill = new SolidColorBrush(Colors.Green);
-                    //this.Title = "Finished";
-                }
+                           //this.Title = "Finished";
+                       }
                    });
             }
             catch (Exception ex)
             {
                 logger.Fatal(ex);
-                throw;
+                //throw;
             }
 
         }
@@ -487,8 +495,6 @@ namespace BBC.BSC.Tool
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             Properties.Settings.Default.Save();
-
-
             if (workers.Count > 0)
             {
                 logger.Info("Unable to close as workers still running");
@@ -545,14 +551,14 @@ namespace BBC.BSC.Tool
         private void Connect_Button_Click(object sender, RoutedEventArgs e)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo();
-
             string directory = System.IO.Path.Combine(Environment.CurrentDirectory, "tools");
             string rcExeToRun = @"d:\rc.exe";
             string rcW10ExeToRun = @"\\national\bbcere\BSC\Dump\Apps\sccm-remote\w10\cmrcviewer.exe";
+            string VncExeToRun = Path.Combine(Path.GetTempPath(), "vncx64.exe");
+
 
             switch (((Button)sender).Name)
             {
-
                 case "button_RDP":
                     startInfo.FileName = "cmd";
                     startInfo.Arguments = string.Format(@"/c runas /user:national\{1} /savecred ""mstsc.exe /v:{0}""", textbox_host.Text, textBox_ere.Text);
@@ -584,7 +590,6 @@ namespace BBC.BSC.Tool
                     startInfo.FileName = System.IO.Path.Combine(directory, "putty.exe");
                     break;
                 case "button_VNC":
-                    string VncExeToRun = Path.Combine(Path.GetTempPath(), "vncx64.exe");
                     if (PrepareTool(Properties.Resources.vncx64, VncExeToRun))
                     {
                         startInfo.Arguments = string.Format(@"-username {0} ""{1}""", textBox_ere.Text, textbox_host.Text.Trim());
@@ -613,9 +618,6 @@ namespace BBC.BSC.Tool
                             break;
                         }
                     }
-
-
-
                     break;
                 default:
                     break;
@@ -677,7 +679,6 @@ namespace BBC.BSC.Tool
                     logger.Warn("Tool path exists, but MD5 doesn't match, returning false");
                     return false;
                 }
-
             }
             else
             {
@@ -758,38 +759,33 @@ namespace BBC.BSC.Tool
                     button_RDP.Style = (Style)FindResource("MaterialDesignRaisedButton");
                     try
                     {
-
-                        if (selectedResult.OperatingSystem.Contains("Windows 10"))
+                        if (null != selectedResult.OperatingSystem)
                         {
-                            button_RC_W10.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
+                            if (selectedResult.OperatingSystem.Contains("Windows 10"))
+                            {
+                                button_RC_W10.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
+                            }
+                            else if (selectedResult.OperatingSystem.Contains("Windows 7"))
+                            {
+                                button_RC.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
+                            }
+                            else if (selectedResult.OperatingSystem.Contains("Windows Server"))
+                            {
+                                button_RDP.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
+                            }
                         }
-                        else if (selectedResult.OperatingSystem.Contains("Windows 7"))
-                        {
-                            button_RC.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
-                        }
-                        else if (selectedResult.OperatingSystem.Contains("Windows Server"))
-                        {
-                            button_RDP.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
-                        }
-
-
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-
+                        logger.Error(ex);
                         //// throw;
                     }
-
                 });
             }
-
-
-
         }
 
         private void Do_Test_Connection(object sender, DoWorkEventArgs e)
         {
-
             logger.Info("Testing connection to {0}", e.Argument.ToString());
             using (MyConnection con = new MyConnection())
             {
@@ -833,11 +829,8 @@ namespace BBC.BSC.Tool
                 {
                     con.diralogview = true;
                 }
-
                 e.Result = con;
             }
-
-
         }
 
         private bool IsPortOpen(string host, int port, TimeSpan timeout)
@@ -852,10 +845,8 @@ namespace BBC.BSC.Tool
                     {
                         return false;
                     }
-
                     client.EndConnect(result);
                 }
-
             }
             catch
             {
@@ -870,7 +861,6 @@ namespace BBC.BSC.Tool
             {
                 if (((Button)sender).Content.ToString() == "Load IP")
                 {
-
                     BackgroundWorker tempBw = new BackgroundWorker();
                     tempBw.DoWork += delegate
                         {
@@ -885,14 +875,10 @@ namespace BBC.BSC.Tool
                                 Trace.TraceError(ex.Message);
                                 textbox_host.Text = null;
                             }
-
                         });
 
                         };
                     tempBw.RunWorkerAsync();
-
-
-
                 }
                 else
                 {
@@ -904,9 +890,6 @@ namespace BBC.BSC.Tool
                 Trace.TraceError(ex.Message);
                 textbox_host.Text = "";
             }
-
-
-
         }
 
         private void LvHisotry_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -992,16 +975,11 @@ namespace BBC.BSC.Tool
                     break;
             }
 
-
-
-
             if (phoneBoxConfig != null)
             {
-                
                 logger.Debug("Writing config to {0}\n{1}", phoneboxIniPath, phoneBoxConfig);
                 try
                 {
-
                     File.WriteAllLines(phoneboxIniPath, phoneBoxConfig.ToStringArray());
                     logger.Info("Attempting to start Phonebox");
                     try
@@ -1013,20 +991,16 @@ namespace BBC.BSC.Tool
                         logger.Error(ex, "Problem starting PhoneBOX");
                         App.SendReport(ex);
                     }
-
                 }
                 catch (Exception ex)
                 {
                     if (ex.GetType() == typeof(System.UnauthorizedAccessException))
                     {
-                        MessageBox.Show($"Check file permissions for {phoneboxIniPath}","Problem writing configuration",MessageBoxButton.OK,MessageBoxImage.Error);
+                        MessageBox.Show($"Check file permissions for {phoneboxIniPath}", "Problem writing configuration", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                     logger.Error(ex, "Problem writing PhoneBOX ini file - check file permission.");
                     App.SendReport(ex);
-                    
                 }
-
-
 
             }
         }
@@ -1040,6 +1014,108 @@ namespace BBC.BSC.Tool
             else
             {
                 textbox_host.IsEnabled = true;
+            }
+        }
+
+
+        class InfoDisplayItem
+        {
+            public string info_id { get; set; }
+            public string title { get; set; }
+            public string info { get; set; }
+            public string width { get; set; }
+            public string height { get; set; }
+
+        }
+
+        private void UpdateInfoGridAllocation()
+        {
+            logger.Info("Starting Info Grid update");
+
+            gridInfoDisplay.Children.Clear();
+            using (var webClient = new WebClient())
+            {
+                try
+                {
+                    webClient.UseDefaultCredentials = true;
+                    string jsonString = webClient.DownloadString("http://ertg.er.bbc.co.uk/infodisplay/get_info.php?id=1");
+                    var json = JObject.Parse(jsonString);
+
+                    logger.Trace(jsonString);
+
+                    //logger.Info(json.ToString());
+
+                    foreach (var item in json)
+                    {
+                        if (int.TryParse(item.Key, out int result))
+                        {
+                            // item is a box
+
+                            StackPanel stack = new StackPanel();
+
+                            InfoDisplayItem info = JObject.Parse(item.Value.ToString()).ToObject<InfoDisplayItem>();
+
+                            TextBlock tbTitle = new TextBlock();
+                            tbTitle.Text = info.title;
+                            tbTitle.FontWeight = FontWeights.Bold;
+                            stack.Children.Add(tbTitle);
+
+                            TextBlock tbContent = new TextBlock();
+
+                            string content = Regex.Replace(info.info, "<[^>]*>", "");
+
+                            tbContent.Text = Regex.Replace(content, @"http.*remote\.php\?.*host=[a-zA-Z0-9\-]*", "").Trim();
+                            tbContent.TextWrapping = TextWrapping.WrapWithOverflow;
+                            stack.Children.Add(tbContent);
+
+                            Regex buttonRegex = new Regex(@"http:\/\/er\.bbc\.co\.uk\/tools\/remote\.php\?([a-zA-Z]*=[a-zA-Z]*&)?host=([a-zA-Z0-9\-\.]*)", RegexOptions.Compiled);
+                            foreach (Match match in buttonRegex.Matches(content))
+                            {
+                                Button btn = new Button();
+                                btn.Content = match.Groups[2];
+                                btn.Click += InfoDisplay_Button_Click;
+                                stack.Children.Add(btn);
+                                btn = null;
+                            }
+
+                            Grid.SetColumn(stack, ((int.Parse(info.info_id) - 1) % gridInfoDisplay.ColumnDefinitions.Count));
+                            Grid.SetRow(stack, ((int.Parse(info.info_id) - 1) / (gridInfoDisplay.RowDefinitions.Count + 1)));
+
+                            gridInfoDisplay.Children.Add(stack);
+                            tbTitle = null;
+                            tbContent = null;
+
+                        }
+
+                    }
+
+                }
+                catch (Exception ex)
+                {
+
+                    logger.Error(ex);
+                }
+
+
+            }
+
+
+        }
+
+        private void InfoDisplay_Button_Click(object sender, RoutedEventArgs e)
+        {
+            textbox_host.Text = ((Button)sender).Content.ToString();
+        }
+
+        private void tabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (tabInfoDisplay.IsSelected)
+            {
+                Dispatcher.Invoke(delegate
+                {
+                    UpdateInfoGridAllocation();
+
+                });
             }
         }
     }
