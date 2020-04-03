@@ -495,8 +495,6 @@ namespace BBC.BSC.Tool
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             Properties.Settings.Default.Save();
-
-
             if (workers.Count > 0)
             {
                 logger.Info("Unable to close as workers still running");
@@ -553,14 +551,12 @@ namespace BBC.BSC.Tool
         private void Connect_Button_Click(object sender, RoutedEventArgs e)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo();
-
             string directory = System.IO.Path.Combine(Environment.CurrentDirectory, "tools");
             string rcExeToRun = @"d:\rc.exe";
             string rcW10ExeToRun = @"\\national\bbcere\BSC\Dump\Apps\sccm-remote\w10\cmrcviewer.exe";
 
             switch (((Button)sender).Name)
             {
-
                 case "button_RDP":
                     startInfo.FileName = "cmd";
                     startInfo.Arguments = string.Format(@"/c runas /user:national\{1} /savecred ""mstsc.exe /v:{0}""", textbox_host.Text, textBox_ere.Text);
@@ -621,9 +617,6 @@ namespace BBC.BSC.Tool
                             break;
                         }
                     }
-
-
-
                     break;
                 default:
                     break;
@@ -685,7 +678,6 @@ namespace BBC.BSC.Tool
                     logger.Warn("Tool path exists, but MD5 doesn't match, returning false");
                     return false;
                 }
-
             }
             else
             {
@@ -768,9 +760,6 @@ namespace BBC.BSC.Tool
                     {
                         if (null != selectedResult.OperatingSystem)
                         {
-
-
-
                             if (selectedResult.OperatingSystem.Contains("Windows 10"))
                             {
                                 button_RC_W10.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
@@ -784,24 +773,18 @@ namespace BBC.BSC.Tool
                                 button_RDP.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
                             }
                         }
-
                     }
                     catch (Exception ex)
                     {
                         logger.Error(ex);
                         //// throw;
                     }
-
                 });
             }
-
-
-
         }
 
         private void Do_Test_Connection(object sender, DoWorkEventArgs e)
         {
-
             logger.Info("Testing connection to {0}", e.Argument.ToString());
             using (MyConnection con = new MyConnection())
             {
@@ -845,11 +828,8 @@ namespace BBC.BSC.Tool
                 {
                     con.diralogview = true;
                 }
-
                 e.Result = con;
             }
-
-
         }
 
         private bool IsPortOpen(string host, int port, TimeSpan timeout)
@@ -864,10 +844,8 @@ namespace BBC.BSC.Tool
                     {
                         return false;
                     }
-
                     client.EndConnect(result);
                 }
-
             }
             catch
             {
@@ -882,7 +860,6 @@ namespace BBC.BSC.Tool
             {
                 if (((Button)sender).Content.ToString() == "Load IP")
                 {
-
                     BackgroundWorker tempBw = new BackgroundWorker();
                     tempBw.DoWork += delegate
                         {
@@ -897,14 +874,10 @@ namespace BBC.BSC.Tool
                                 Trace.TraceError(ex.Message);
                                 textbox_host.Text = null;
                             }
-
                         });
 
                         };
                     tempBw.RunWorkerAsync();
-
-
-
                 }
                 else
                 {
@@ -916,9 +889,6 @@ namespace BBC.BSC.Tool
                 Trace.TraceError(ex.Message);
                 textbox_host.Text = "";
             }
-
-
-
         }
 
         private void LvHisotry_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1004,16 +974,11 @@ namespace BBC.BSC.Tool
                     break;
             }
 
-
-
-
             if (phoneBoxConfig != null)
             {
-
                 logger.Debug("Writing config to {0}\n{1}", phoneboxIniPath, phoneBoxConfig);
                 try
                 {
-
                     File.WriteAllLines(phoneboxIniPath, phoneBoxConfig.ToStringArray());
                     logger.Info("Attempting to start Phonebox");
                     try
@@ -1025,7 +990,6 @@ namespace BBC.BSC.Tool
                         logger.Error(ex, "Problem starting PhoneBOX");
                         App.SendReport(ex);
                     }
-
                 }
                 catch (Exception ex)
                 {
@@ -1035,10 +999,7 @@ namespace BBC.BSC.Tool
                     }
                     logger.Error(ex, "Problem writing PhoneBOX ini file - check file permission.");
                     App.SendReport(ex);
-
                 }
-
-
 
             }
         }
@@ -1116,8 +1077,8 @@ namespace BBC.BSC.Tool
                                 btn = null;
                             }
 
-                            Grid.SetColumn(stack, ((int.Parse(info.info_id) -1) % gridInfoDisplay.ColumnDefinitions.Count ));
-                            Grid.SetRow(stack, ((int.Parse(info.info_id)  -1) / (gridInfoDisplay.RowDefinitions.Count +1) ));
+                            Grid.SetColumn(stack, ((int.Parse(info.info_id) - 1) % gridInfoDisplay.ColumnDefinitions.Count));
+                            Grid.SetRow(stack, ((int.Parse(info.info_id) - 1) / (gridInfoDisplay.RowDefinitions.Count + 1)));
 
                             gridInfoDisplay.Children.Add(stack);
                             tbTitle = null;
@@ -1137,12 +1098,12 @@ namespace BBC.BSC.Tool
 
             }
 
-            
+
         }
 
         private void InfoDisplay_Button_Click(object sender, RoutedEventArgs e)
         {
-            textbox_host.Text = ((Button)sender).Content.ToString() ;
+            textbox_host.Text = ((Button)sender).Content.ToString();
         }
 
         private void tabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
