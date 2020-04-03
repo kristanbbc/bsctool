@@ -136,7 +136,7 @@ namespace BBC.BSC.Tool
 
             Dispatcher.Invoke(delegate
             {
-                UpdateCovid19Allocation();
+                UpdateInfoGridAllocation();
             });
 
             // Put Cursor in search box.
@@ -1056,7 +1056,7 @@ namespace BBC.BSC.Tool
         }
 
 
-        class CovidGetInfoItem
+        class InfoDisplayItem
         {
             public string info_id { get; set; }
             public string title { get; set; }
@@ -1066,11 +1066,11 @@ namespace BBC.BSC.Tool
 
         }
 
-        private void UpdateCovid19Allocation()
+        private void UpdateInfoGridAllocation()
         {
-            logger.Info("Starting Covid-19 update");
+            logger.Info("Starting Info Grid update");
 
-            gridCovid19Allocations.Children.Clear();
+            gridInfoDisplay.Children.Clear();
             using (var webClient = new WebClient())
             {
                 try
@@ -1091,19 +1091,16 @@ namespace BBC.BSC.Tool
 
                             StackPanel stack = new StackPanel();
 
-                            CovidGetInfoItem covid = JObject.Parse(item.Value.ToString()).ToObject<CovidGetInfoItem>();
+                            InfoDisplayItem info = JObject.Parse(item.Value.ToString()).ToObject<InfoDisplayItem>();
 
                             TextBlock tbTitle = new TextBlock();
-                            //tbTitle.Text = string.Format($"{covid.info_id}:{covid.title}");
-                            tbTitle.Text = covid.title;
+                            tbTitle.Text = info.title;
                             tbTitle.FontWeight = FontWeights.Bold;
                             stack.Children.Add(tbTitle);
 
                             TextBlock tbContent = new TextBlock();
 
-                            ///http.*remote\.php\?.*host=(\S*)
-                            string content = Regex.Replace(covid.info, "<[^>]*>", "");
-
+                            string content = Regex.Replace(info.info, "<[^>]*>", "");
 
                             tbContent.Text = Regex.Replace(content, @"http.*remote\.php\?.*host=[a-zA-Z0-9\-]*", "").Trim();
                             tbContent.TextWrapping = TextWrapping.WrapWithOverflow;
@@ -1112,22 +1109,17 @@ namespace BBC.BSC.Tool
                             Regex buttonRegex = new Regex(@"http:\/\/er\.bbc\.co\.uk\/tools\/remote\.php\?([a-zA-Z]*=[a-zA-Z]*&)?host=([a-zA-Z0-9\-\.]*)", RegexOptions.Compiled);
                             foreach (Match match in buttonRegex.Matches(content))
                             {
-                                //logger.Info($"Match {match.Groups[2]} {covid.info_id}");
                                 Button btn = new Button();
                                 btn.Content = match.Groups[2];
-                                btn.Click += Covid_Button_Click;
+                                btn.Click += InfoDisplay_Button_Click;
                                 stack.Children.Add(btn);
                                 btn = null;
                             }
 
+                            Grid.SetColumn(stack, ((int.Parse(info.info_id) -1) % gridInfoDisplay.ColumnDefinitions.Count ));
+                            Grid.SetRow(stack, ((int.Parse(info.info_id)  -1) / (gridInfoDisplay.RowDefinitions.Count +1) ));
 
-
-                            Grid.SetColumn(stack, ((int.Parse(covid.info_id) -1) % gridCovid19Allocations.ColumnDefinitions.Count ));
-                            Grid.SetRow(stack, ((int.Parse(covid.info_id)  -1) / (gridCovid19Allocations.RowDefinitions.Count +1) ));
-                            //logger.Info("col:{1} row:{2}      content:{0}", tbContent.Text, Grid.GetColumn(stack), Grid.GetRow(stack));
-
-                            gridCovid19Allocations.Children.Add(stack);
-                            //logger.Info("TITLE:{0}",covid.title);
+                            gridInfoDisplay.Children.Add(stack);
                             tbTitle = null;
                             tbContent = null;
 
@@ -1148,18 +1140,18 @@ namespace BBC.BSC.Tool
             
         }
 
-        private void Covid_Button_Click(object sender, RoutedEventArgs e)
+        private void InfoDisplay_Button_Click(object sender, RoutedEventArgs e)
         {
             textbox_host.Text = ((Button)sender).Content.ToString() ;
         }
 
         private void tabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (tabCovid.IsSelected)
+            if (tabInfoDisplay.IsSelected)
             {
                 Dispatcher.Invoke(delegate
                 {
-                    UpdateCovid19Allocation();
+                    UpdateInfoGridAllocation();
 
                 });
             }

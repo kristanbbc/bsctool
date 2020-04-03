@@ -167,13 +167,13 @@
 
                 </StackPanel>
             </TabItem>
-            <TabItem Header="COVID-19" x:Name="tabCovid">
+            <TabItem Header="Info Display" x:Name="tabInfoDisplay">
 
                 <Border>
 
 
 
-                        <Grid x:Name="gridCovid19Allocations">
+                        <Grid x:Name="gridInfoDisplay">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition/>
                                 <ColumnDefinition/>
