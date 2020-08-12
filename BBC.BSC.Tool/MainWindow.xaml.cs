@@ -629,18 +629,21 @@ namespace BBC.BSC.Tool
                 Process proc = Process.Start(startInfo);
 
             }
-            if (!lvHistory.Items.Contains(textbox_host.Text.Trim()))
+            if (lvHistory.Items.Contains(textbox_host.Text.Trim()))
             {
-                lvHistory.Items.Insert(0, textbox_host.Text.Trim());
-
-                List<string> tempHist = new List<string>();
-                foreach (string item in lvHistory.Items)
-                {
-                    tempHist.Add(item);
-                }
-                Properties.Settings.Default.history = String.Join(";", tempHist);
-                Properties.Settings.Default.Save();
+                lvHistory.Items.RemoveAt(lvHistory.Items.IndexOf(textbox_host.Text.Trim()));
             }
+
+            lvHistory.Items.Insert(0, textbox_host.Text.Trim());
+
+            List<string> tempHist = new List<string>();
+            foreach (string item in lvHistory.Items)
+            {
+                tempHist.Add(item);
+            }
+            Properties.Settings.Default.history = String.Join(";", tempHist);
+            Properties.Settings.Default.Save();
+
 
         }
 
