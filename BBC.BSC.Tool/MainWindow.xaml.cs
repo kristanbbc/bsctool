@@ -109,7 +109,7 @@ namespace BBC.BSC.Tool
                 {
                     continue;
                 }
-                lvHisotry.Items.Add(item);
+                lvHistory.Items.Add(item);
             }
 
 
@@ -629,18 +629,21 @@ namespace BBC.BSC.Tool
                 Process proc = Process.Start(startInfo);
 
             }
-            if (!lvHisotry.Items.Contains(textbox_host.Text.Trim()))
+            if (lvHistory.Items.Contains(textbox_host.Text.Trim()))
             {
-                lvHisotry.Items.Insert(0, textbox_host.Text.Trim());
-
-                List<string> tempHist = new List<string>();
-                foreach (string item in lvHisotry.Items)
-                {
-                    tempHist.Add(item);
-                }
-                Properties.Settings.Default.history = String.Join(";", tempHist);
-                Properties.Settings.Default.Save();
+                lvHistory.Items.RemoveAt(lvHistory.Items.IndexOf(textbox_host.Text.Trim()));
             }
+
+            lvHistory.Items.Insert(0, textbox_host.Text.Trim());
+
+            List<string> tempHist = new List<string>();
+            foreach (string item in lvHistory.Items)
+            {
+                tempHist.Add(item);
+            }
+            Properties.Settings.Default.history = String.Join(";", tempHist);
+            Properties.Settings.Default.Save();
+
 
         }
 
@@ -759,21 +762,22 @@ namespace BBC.BSC.Tool
                     button_RDP.Style = (Style)FindResource("MaterialDesignRaisedButton");
                     try
                     {
-                        if (null != selectedResult.OperatingSystem)
-                        {
-                            if (selectedResult.OperatingSystem.Contains("Windows 10"))
+                        if (null != selectedResult)
+                            if (null != selectedResult.OperatingSystem)
                             {
-                                button_RC_W10.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
+                                if (selectedResult.OperatingSystem.Contains("Windows 10"))
+                                {
+                                    button_RC_W10.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
+                                }
+                                else if (selectedResult.OperatingSystem.Contains("Windows 7"))
+                                {
+                                    button_RC.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
+                                }
+                                else if (selectedResult.OperatingSystem.Contains("Windows Server"))
+                                {
+                                    button_RDP.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
+                                }
                             }
-                            else if (selectedResult.OperatingSystem.Contains("Windows 7"))
-                            {
-                                button_RC.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
-                            }
-                            else if (selectedResult.OperatingSystem.Contains("Windows Server"))
-                            {
-                                button_RDP.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
-                            }
-                        }
                     }
                     catch (Exception ex)
                     {
@@ -892,7 +896,7 @@ namespace BBC.BSC.Tool
             }
         }
 
-        private void LvHisotry_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void LvHistory_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             textbox_host.Text = e.AddedItems[0].ToString();
         }
@@ -1068,8 +1072,8 @@ namespace BBC.BSC.Tool
                             tbContent.TextWrapping = TextWrapping.WrapWithOverflow;
                             stack.Children.Add(tbContent);
 
-                            Regex buttonRegex = new Regex(@"http:\/\/er\.bbc\.co\.uk\/tools\/remote\.php\?([a-zA-Z]*=[a-zA-Z]*&)?host=([a-zA-Z0-9\-\.]*)", RegexOptions.Compiled);
-                            foreach (Match match in buttonRegex.Matches(content))
+                            Regex buttonRegex = new Regex(@"http:\\?\/\\?\/er\.bbc\.co\.uk\\?\/tools\\?\/remote\.php\?([a-zA-Z]*=[a-zA-Z]*&)?host=([a-zA-Z0-9\-\.]*)", RegexOptions.Compiled);
+                            foreach (Match match in buttonRegex.Matches(info.info))
                             {
                                 Button btn = new Button();
                                 btn.Content = match.Groups[2];
