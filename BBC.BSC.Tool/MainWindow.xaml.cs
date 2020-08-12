@@ -762,21 +762,22 @@ namespace BBC.BSC.Tool
                     button_RDP.Style = (Style)FindResource("MaterialDesignRaisedButton");
                     try
                     {
-                        if (null != selectedResult.OperatingSystem)
-                        {
-                            if (selectedResult.OperatingSystem.Contains("Windows 10"))
+                        if (null != selectedResult)
+                            if (null != selectedResult.OperatingSystem)
                             {
-                                button_RC_W10.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
+                                if (selectedResult.OperatingSystem.Contains("Windows 10"))
+                                {
+                                    button_RC_W10.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
+                                }
+                                else if (selectedResult.OperatingSystem.Contains("Windows 7"))
+                                {
+                                    button_RC.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
+                                }
+                                else if (selectedResult.OperatingSystem.Contains("Windows Server"))
+                                {
+                                    button_RDP.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
+                                }
                             }
-                            else if (selectedResult.OperatingSystem.Contains("Windows 7"))
-                            {
-                                button_RC.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
-                            }
-                            else if (selectedResult.OperatingSystem.Contains("Windows Server"))
-                            {
-                                button_RDP.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
-                            }
-                        }
                     }
                     catch (Exception ex)
                     {
