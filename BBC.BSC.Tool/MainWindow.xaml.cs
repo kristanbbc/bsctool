@@ -1073,7 +1073,7 @@ namespace BBC.BSC.Tool
                             stack.Children.Add(tbContent);
 
                             Regex buttonRegex = new Regex(@"http:\\?\/\\?\/er\.bbc\.co\.uk\\?\/tools\\?\/remote\.php\?([a-zA-Z]*=[a-zA-Z]*&)?host=([a-zA-Z0-9\-\.]*)", RegexOptions.Compiled);
-                            foreach (Match match in buttonRegex.Matches(content))
+                            foreach (Match match in buttonRegex.Matches(info.info))
                             {
                                 Button btn = new Button();
                                 btn.Content = match.Groups[2];
