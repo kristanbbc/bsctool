@@ -109,7 +109,7 @@ namespace BBC.BSC.Tool
                 {
                     continue;
                 }
-                lvHisotry.Items.Add(item);
+                lvHistory.Items.Add(item);
             }
 
 
@@ -629,12 +629,12 @@ namespace BBC.BSC.Tool
                 Process proc = Process.Start(startInfo);
 
             }
-            if (!lvHisotry.Items.Contains(textbox_host.Text.Trim()))
+            if (!lvHistory.Items.Contains(textbox_host.Text.Trim()))
             {
-                lvHisotry.Items.Insert(0, textbox_host.Text.Trim());
+                lvHistory.Items.Insert(0, textbox_host.Text.Trim());
 
                 List<string> tempHist = new List<string>();
-                foreach (string item in lvHisotry.Items)
+                foreach (string item in lvHistory.Items)
                 {
                     tempHist.Add(item);
                 }
