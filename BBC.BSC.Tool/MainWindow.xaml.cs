@@ -1068,7 +1068,7 @@ namespace BBC.BSC.Tool
                             tbContent.TextWrapping = TextWrapping.WrapWithOverflow;
                             stack.Children.Add(tbContent);
 
-                            Regex buttonRegex = new Regex(@"http:\/\/er\.bbc\.co\.uk\/tools\/remote\.php\?([a-zA-Z]*=[a-zA-Z]*&)?host=([a-zA-Z0-9\-\.]*)", RegexOptions.Compiled);
+                            Regex buttonRegex = new Regex(@"http:\\?\/\\?\/er\.bbc\.co\.uk\\?\/tools\\?\/remote\.php\?([a-zA-Z]*=[a-zA-Z]*&)?host=([a-zA-Z0-9\-\.]*)", RegexOptions.Compiled);
                             foreach (Match match in buttonRegex.Matches(content))
                             {
                                 Button btn = new Button();
