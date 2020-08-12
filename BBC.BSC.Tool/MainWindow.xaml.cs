@@ -892,7 +892,7 @@ namespace BBC.BSC.Tool
             }
         }
 
-        private void LvHisotry_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void LvHistory_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             textbox_host.Text = e.AddedItems[0].ToString();
         }
