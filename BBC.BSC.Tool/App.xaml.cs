@@ -44,7 +44,11 @@ namespace BBC.BSC.Tool
             {
                 DeveloperMessage = developerMessage,
                 AnalyzeWithDoctorDump = false,
-                FromEmail = "bsctool@bbc.co.uk",
+                CaptureScreen = true,
+                IncludeScreenshot = true,
+                EmailRequired =false,
+                 
+                FromEmail = Environment.UserName + "-bsctool@bbc.co.uk",
                 SmtpHost = "smtp.national.core.bbc.co.uk"
             };
             reportCrash.Silent = silent;

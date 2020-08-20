@@ -898,7 +898,11 @@ namespace BBC.BSC.Tool
 
         private void LvHistory_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            textbox_host.Text = e.AddedItems[0].ToString();
+            if (null != ((ListView)sender).SelectedValue)
+            {
+                textbox_host.Text = ((ListView)sender).SelectedValue.ToString();
+            }
+
         }
 
         private void Expander_Expanded(object sender, RoutedEventArgs e)
