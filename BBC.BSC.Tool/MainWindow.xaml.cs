@@ -902,7 +902,6 @@ namespace BBC.BSC.Tool
             {
                 textbox_host.Text = ((ListView)sender).SelectedValue.ToString();
             }
-            //textbox_host.Text = e.AddedItems[0].ToString();
 
         }
 
