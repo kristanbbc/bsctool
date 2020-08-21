@@ -250,7 +250,6 @@
     <None Include="tools\rdpencom.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="tools\VNC-Viewer-6.19.107-Windows-64bit.exe" />
   </ItemGroup>
   <ItemGroup>
     <COMReference Include="MSTSCLib">
