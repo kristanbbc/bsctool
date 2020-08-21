@@ -125,6 +125,6 @@
     <value>..\tools\rcw10.zip;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="vncx64" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\tools\vnc-viewer-6.19.107-windows-64bit.exe;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>..\tools\VNC-Viewer-6.20.529-Windows-64bit.exe;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>
