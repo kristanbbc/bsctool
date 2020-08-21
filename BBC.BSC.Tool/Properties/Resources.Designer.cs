@@ -63,6 +63,16 @@ namespace BBC.BSC.Tool.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] putty {
+            get {
+                object obj = ResourceManager.GetObject("putty", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] rc {
             get {
                 object obj = ResourceManager.GetObject("rc", resourceCulture);
