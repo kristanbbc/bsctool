@@ -8,5 +8,11 @@
     <Setting Name="history" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="temppath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">%TEMP%\</Value>
+    </Setting>
+    <Setting Name="spare" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

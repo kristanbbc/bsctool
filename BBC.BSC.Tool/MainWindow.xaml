@@ -201,6 +201,11 @@
                             <Label Style="{StaticResource MaterialDesignLabel}">Eng Account:</Label>
                             <TextBox x:Name="textBox_settings_ere" Width="250" Text="{local:SettingBinding ere}" VerticalAlignment="Center" TextChanged="TextBox_ere_TextChanged" />
                         </StackPanel>
+                        <Separator Height="10" Margin="0"/>
+                        <StackPanel Orientation="Horizontal" Margin="10">
+                            <Label Style="{StaticResource MaterialDesignLabel}">Temporary path for tools:</Label>
+                            <TextBox x:Name="textBox_settings_temp" Width="250" Text="{local:SettingBinding temppath}" VerticalAlignment="Center" TextChanged="textBox_settings_temp_TextChanged" />
+                        </StackPanel>
 
                     </StackPanel>
                 </Grid>

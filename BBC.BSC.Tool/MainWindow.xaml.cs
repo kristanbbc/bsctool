@@ -1,4 +1,5 @@
-﻿using MaterialDesignThemes.Wpf;
+﻿using BBC.BSC.Tool.Properties;
+using MaterialDesignThemes.Wpf;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -552,9 +553,11 @@ namespace BBC.BSC.Tool
         {
             ProcessStartInfo startInfo = new ProcessStartInfo();
             string directory = System.IO.Path.Combine(Environment.CurrentDirectory, "tools");
-            string rcExeToRun = @"d:\rc.exe";
+            string tempPath = Environment.ExpandEnvironmentVariables(Properties.Settings.Default.temppath);
+            logger.Trace("Temporary path is set to {0}", tempPath);
+            string rcExeToRun = Path.Combine(tempPath, "rc.exe");
             string rcW10ExeToRun = @"\\national\bbcere\BSC\Dump\Apps\sccm-remote\w10\cmrcviewer.exe";
-            string VncExeToRun = Path.Combine(Path.GetTempPath(), "vncx64.exe");
+            string VncExeToRun = Path.Combine(tempPath, "vncx64.exe");
 
 
             switch (((Button)sender).Name)
@@ -1125,6 +1128,12 @@ namespace BBC.BSC.Tool
 
                 });
             }
+        }
+
+        private void textBox_settings_temp_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            Properties.Settings.Default.temppath = ((TextBox)sender).Text;
+            Properties.Settings.Default.Save();
         }
     }
     internal class PhoneBoxConfig
