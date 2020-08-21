@@ -682,19 +682,31 @@ namespace BBC.BSC.Tool
                 }
                 else
                 {
-                    logger.Warn("Tool path exists, but MD5 doesn't match, returning false");
-                    return false;
+                    logger.Warn("Tool path exists, but MD5 doesn't match, remove file and retest");
+                    File.Delete(outputPath);
+                    
+                    PrepareTool(resource, outputPath);
+
+                    // return false;
                 }
             }
             else
             {
-                logger.Trace("Tool doesn't exist, writing out new file");
-                using (System.IO.FileStream exeFile = new System.IO.FileStream(outputPath, System.IO.FileMode.Create))
+                try
                 {
-                    exeFile.Write(resource, 0, resource.Length);
+                    logger.Trace("Tool doesn't exist, writing out new file");
+                    using (System.IO.FileStream exeFile = new System.IO.FileStream(outputPath, System.IO.FileMode.Create))
+                    {
+                        exeFile.Write(resource, 0, resource.Length);
+                    }
+                    logger.Debug("Tool written to {0}, returning true", outputPath);
+                    return true;
                 }
-                logger.Debug("Tool written to {0}, returning true", outputPath);
-                return true;
+                catch (Exception ex)
+                {
+                    logger.Error("Problem writing out tool. {0}", ex.Message);
+                }
+
             }
             return false;
         }
