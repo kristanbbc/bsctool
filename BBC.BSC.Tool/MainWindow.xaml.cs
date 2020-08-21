@@ -51,6 +51,9 @@ namespace BBC.BSC.Tool
         public MainWindow()
         {
             InitializeComponent();
+            Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+
+            this.Title = "BSC Tool - Version " + version;
             NLog.Config.LoggingConfiguration config = new NLog.Config.LoggingConfiguration();
             ColoredConsoleTarget consoleTarget = new ColoredConsoleTarget
             {

@@ -35,7 +35,7 @@
     <WebPage>index.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
     <ApplicationRevision>46</ApplicationRevision>
-    <ApplicationVersion>1.6.3.%2a</ApplicationVersion>
+    <ApplicationVersion>1.6.4.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -211,6 +211,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <None Include="tools\VNC-Viewer-6.20.529-Windows-64bit.exe" />
     <None Include="tools\rcw10\00000409\baserc.dll" />
     <None Include="tools\rcw10\00000409\climsgs.dll" />
     <None Include="tools\rcw10\00000409\CmRcViewerRes.dll" />
