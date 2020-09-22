@@ -60,7 +60,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>B1D236C666E687AAA1DFA6777D53324A55BF7B86</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>5BF6AC3788FCBD6B47C0E33F6BD467D0CB533A12</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestKeyFile>
@@ -70,7 +70,7 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>bsctoolicon.ico</ApplicationIcon>
@@ -193,6 +193,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="BBC.BSC.Tool_1_TemporaryKey.pfx" />
+    <None Include="BBC.BSC.Tool_2_TemporaryKey.pfx" />
     <None Include="BBC.BSC.Tool_TemporaryKey.pfx" />
     <None Include="clickonce.pfx" />
     <None Include="packages.config" />
