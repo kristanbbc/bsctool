@@ -60,7 +60,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>433A86D1D9B9FB8768F32C681A1078DC03BAB541</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>B1D236C666E687AAA1DFA6777D53324A55BF7B86</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestKeyFile>
@@ -155,6 +155,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="MyConnection.cs" />
+    <Compile Include="MyResults.cs" />
+    <Compile Include="PhoneBoxConfig.cs" />
+    <Compile Include="SettingBindingExtension.cs" />
+    <Compile Include="UiHelper.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -169,6 +174,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MyResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
