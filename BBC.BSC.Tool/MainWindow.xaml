@@ -75,7 +75,7 @@
         <TabControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Grid.ColumnSpan="2"
                     Grid.Column="0" Grid.Row="1"  
                     Style="{StaticResource MaterialDesignTabControl}" 
-                    BorderBrush="{DynamicResource PrimaryHueDarkBrush}" BorderThickness="1" SelectionChanged="TabControl_SelectionChanged"
+                    BorderBrush="{DynamicResource PrimaryHueDarkBrush}" BorderThickness="1" 
         >
             <TabItem Header="SEARCH">
                 <Grid Background="#FFE5E5E5">
@@ -166,28 +166,6 @@
                     <Button Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource CornerRadius}">VTS</Button>
 
                 </StackPanel>
-            </TabItem>
-            <TabItem Header="Info Display" x:Name="TabInfoDisplay">
-
-                <Border>
-
-                        <Grid x:Name="GridInfoDisplay">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition/>
-                                <RowDefinition/>
-                                <RowDefinition/>
-                            </Grid.RowDefinitions>
-
-                        </Grid>
-
-                    </Border>
-                
             </TabItem>
             <TabItem Header="Settings">
                 <Grid Margin="10">
