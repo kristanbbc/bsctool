@@ -14,8 +14,7 @@
         FontFamily="{DynamicResource MaterialDesignFont}"
         
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        xmlns:sys="clr-namespace:System;assembly=mscorlib"
-        
+
         Title="BSC Tool" Height="600" Width="800" Topmost="False" Closing="Window_Closing" Icon="bsctoolicon.ico"
         >
 
@@ -29,7 +28,7 @@
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <CornerRadius x:Key="cornerRadius">8</CornerRadius>
+            <CornerRadius x:Key="CornerRadius">8</CornerRadius>
 
         </ResourceDictionary>
 
@@ -55,8 +54,8 @@
         </Grid.RowDefinitions>
         <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Stretch"  Grid.Row="2" Stroke="{DynamicResource PrimaryHueDarkBrush}" VerticalAlignment="Stretch"  Grid.ColumnSpan="2" Margin="0"/>
 
-        <Expander Grid.ColumnSpan="2" Header="Click to open help" BorderBrush="{DynamicResource PrimaryHueDarkBrush}" BorderThickness="1" Expanded="Expander_Expanded" Collapsed="Expander_Collapsed">
-            <TextBlock x:Name="textBlock" HorizontalAlignment="Stretch" Margin="10,5" TextWrapping="Wrap" VerticalAlignment="Stretch"  >
+        <Expander Grid.Row="0" Grid.ColumnSpan="2" Grid.Column="0" Header="Click to open help" BorderBrush="{DynamicResource PrimaryHueDarkBrush}" BorderThickness="1" Expanded="Expander_Expanded" Collapsed="Expander_Collapsed">
+            <TextBlock HorizontalAlignment="Stretch" Margin="10,5" TextWrapping="Wrap" VerticalAlignment="Stretch"  >
                 <TextBlock Style="{DynamicResource MaterialDesignTitleTextBlock}">Connecting</TextBlock><LineBreak/>
                 <Run Text="To start type a computer name in the search box and the results will be shown below."/><LineBreak/>
                 <Run Text="You can search just the asset name: e.g. N334123, the full host name or even keywords. (Both AD and the CAT are searched.)"/><LineBreak/>
@@ -73,10 +72,11 @@
         </Expander>
 
 
-        <TabControl x:Name="tabControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Grid.ColumnSpan="2" Grid.Row="1"  
+        <TabControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Grid.ColumnSpan="2"
+                    Grid.Column="0" Grid.Row="1"  
                     Style="{StaticResource MaterialDesignTabControl}" 
-                    BorderBrush="{DynamicResource PrimaryHueDarkBrush}" BorderThickness="1" SelectionChanged="tabControl_SelectionChanged"
-                    >
+                    BorderBrush="{DynamicResource PrimaryHueDarkBrush}" BorderThickness="1" 
+        >
             <TabItem Header="SEARCH">
                 <Grid Background="#FFE5E5E5">
                     <Grid.ColumnDefinitions>
@@ -88,12 +88,13 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition/>
                     </Grid.RowDefinitions>
-                    <Rectangle x:Name="status" Fill="AliceBlue" HorizontalAlignment="Center" Margin="10" Height="24" Grid.Row="2" Stroke="Black" VerticalAlignment="Top" Width="25"/>
-                    <TextBox x:Name="searchIn" HorizontalAlignment="Stretch"  Margin="10" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" TextChanged="Text_Changed" Grid.Row="0" Grid.Column="1" />
-                    <Label x:Name="label3" Content="Search term:" HorizontalAlignment="Right" Margin="8" VerticalAlignment="Center" />
-                    <Label x:Name="label4" Content="Search results:" HorizontalAlignment="Right" Margin="8" Grid.Row="1" VerticalAlignment="Top"/>
+                    <Rectangle x:Name="Status" Fill="AliceBlue" HorizontalAlignment="Center" Margin="10" Height="24" Grid.Row="2" Stroke="Black" VerticalAlignment="Top" Width="25"/>
+                    <TextBox x:Name="SearchIn" HorizontalAlignment="Stretch"  Margin="10" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" TextChanged="Text_Changed" Grid.Row="0" Grid.Column="1" />
+                    <Label Grid.Row="0" Grid.Column="0" Content="Search term:" HorizontalAlignment="Right" Margin="8" VerticalAlignment="Center" />
+                    <Label Content="Search results:" HorizontalAlignment="Right" Margin="8" Grid.Row="1"
+                           Grid.Column="0" VerticalAlignment="Top"/>
 
-                    <ListView x:Name="searchResults" 
+                    <ListView x:Name="SearchResults" 
                               HorizontalAlignment="Stretch" 
                               Margin="10" 
                               VerticalAlignment="Stretch" 
@@ -103,7 +104,7 @@
                         <ListView.View>
                             <GridView>
 
-                                <GridViewColumn Header="Hostname" DisplayMemberBinding="{Binding Hostname}"/>
+                                <GridViewColumn Header="Hostname" DisplayMemberBinding="{Binding Hostname}" Width="0"  />
                                 <!--<GridViewColumn Header="IP" DisplayMemberBinding="{Binding ip}" Width="100"/>-->
                                 <GridViewColumn Header="Load Hostname" >
                                     <GridViewColumn.CellTemplate>
@@ -138,15 +139,15 @@
             <TabItem Header="History">
                 <Grid Background="#FFE5E5E5">
 
-                    <ListView x:Name="lvHistory" SelectionChanged="LvHistory_SelectionChanged" AlternationCount="1">
+                    <ListView x:Name="LvHistory" SelectionChanged="LvHistory_SelectionChanged" AlternationCount="1">
 
 
                     </ListView>
                 </Grid>
             </TabItem>
-            <TabItem Header="BNCS VNC Links" x:Name="tabItemBNCSVNC">
+            <TabItem Header="BNCS VNC Links" x:Name="TabItemBncsVnc">
                 <Grid>
-                    <TreeView x:Name="treeViewBNCS"/>
+                    <TreeView x:Name="TreeViewBncs"/>
 
                 </Grid>
             </TabItem>
@@ -154,42 +155,17 @@
                 <StackPanel Margin="10" x:Name="PhoneBoxButtons">
                     <TextBlock Style="{DynamicResource MaterialDesignTitleTextBlock}" Margin="5">Click button to swich PhoneBox settings:</TextBlock>
                     <DockPanel LastChildFill="True" Margin="30,0">
-                        <Button DockPanel.Dock="Top" Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource cornerRadius}">North</Button>
-                        <Button DockPanel.Dock="Bottom" Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource cornerRadius}">South</Button>
+                        <Button DockPanel.Dock="Top" Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource CornerRadius}">North</Button>
+                        <Button DockPanel.Dock="Bottom" Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource CornerRadius}">South</Button>
 
-                        <Button DockPanel.Dock="Right" Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource cornerRadius}">East</Button>
-                        <Button DockPanel.Dock="Left" Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource cornerRadius}">West</Button>
-                        <Button Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource cornerRadius}">Midlands</Button>
+                        <Button DockPanel.Dock="Right" Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource CornerRadius}">East</Button>
+                        <Button DockPanel.Dock="Left" Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource CornerRadius}">West</Button>
+                        <Button Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource CornerRadius}">Midlands</Button>
 
                     </DockPanel>
-                    <Button Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource cornerRadius}">VTS</Button>
-
+                    <Button Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource CornerRadius}">VTS</Button>
 
                 </StackPanel>
-            </TabItem>
-            <TabItem Header="Info Display" x:Name="tabInfoDisplay">
-
-                <Border>
-
-
-
-                        <Grid x:Name="gridInfoDisplay">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition/>
-                                <RowDefinition/>
-                                <RowDefinition/>
-                            </Grid.RowDefinitions>
-
-                        </Grid>
-
-                    </Border>
-                
             </TabItem>
             <TabItem Header="Settings">
                 <Grid Margin="10">
@@ -199,7 +175,7 @@
                         <Separator Height="10" Margin="0"/>
                         <StackPanel Orientation="Horizontal" Margin="10">
                             <Label Style="{StaticResource MaterialDesignLabel}">Eng Account:</Label>
-                            <TextBox x:Name="textBox_settings_ere" Width="250" Text="{local:SettingBinding ere}" VerticalAlignment="Center" TextChanged="TextBox_ere_TextChanged" />
+                            <TextBox Width="250" Text="{local:SettingBinding ere}" VerticalAlignment="Center" TextChanged="TextBox_ere_TextChanged" />
                         </StackPanel>
 
                     </StackPanel>
@@ -207,7 +183,7 @@
             </TabItem>
         </TabControl>
 
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="2" Grid.Column="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
                 <ColumnDefinition />
@@ -216,31 +192,28 @@
                 <RowDefinition />
                 <RowDefinition />
             </Grid.RowDefinitions>
-            <Label x:Name="label1" Content="Connecting to:"  Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Center"  FontWeight="Bold" MouseDoubleClick="Textbox_host_MouseDoubleClick" />
-            <Label x:Name="label2" Content="ERE account:" Grid.Row="1"  HorizontalAlignment="Right" VerticalAlignment="Center" />
+            <Label Content="Connecting to:"  Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center"  FontWeight="Bold" MouseDoubleClick="TextBox_host_MouseDoubleClick" />
+            <Label Content="ERE account:" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center" />
 
-            <TextBox x:Name="textbox_host"  Grid.Row="0" Grid.Column="1" IsEnabled="False" MouseDoubleClick="Textbox_host_MouseDoubleClick" TextWrapping="Wrap" Text="" VerticalAlignment="Center" Width="200" TextChanged="Textbox_host_TextChanged" FontWeight="Bold"/>
-            <TextBox x:Name="textBox_ere"   Grid.Row="1" Grid.Column="1" IsEnabled="False" TextWrapping="Wrap" Text="{local:SettingBinding ere}" VerticalAlignment="Center" TextChanged="TextBox_ere_TextChanged" >
+            <TextBox x:Name="TextBoxHost"  Grid.Row="0" Grid.Column="1" IsEnabled="False" MouseDoubleClick="TextBox_host_MouseDoubleClick" TextWrapping="Wrap" Text="" VerticalAlignment="Center" Width="200" TextChanged="TextBox_host_TextChanged" FontWeight="Bold"/>
+            <TextBox x:Name="TextBoxEre"   Grid.Row="1" Grid.Column="1" IsEnabled="False" TextWrapping="Wrap" Text="{local:SettingBinding ere}" VerticalAlignment="Center" TextChanged="TextBox_ere_TextChanged" >
                 <TextBox.ToolTip>Setting now in the Settings tab.</TextBox.ToolTip>
             </TextBox>
 
         </Grid>
         <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.Row="2" Grid.Column="1" Margin="10,0" >
-            <Button x:Name="button_RDP" Content="RDP" Click="Connect_Button_Click" Margin="4" IsEnabled="False"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
-            <Button x:Name="button_RC" Content="RC W7"  Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
-            <Button x:Name="button_RC_W10" Content="RC W10"  Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
-            <Button x:Name="button_VNC" Content="VNC" Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
-            <Button x:Name="button_SSH" Content="SSH"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
-            <Button x:Name="button_SSH_ERE" Content="SSH ERE"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
-            <Button x:Name="button_TELNET" Content="TELNET"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
-            <Button x:Name="button_HTTP" Content="HTTP"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
-            <Button x:Name="button_HTTPS" Content="HTTPS" Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
-            <Button x:Name="button_LogView" Content="LogView" Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource cornerRadius}"/>
+            <Button x:Name="ButtonRdp" Content="RDP" Click="Connect_Button_Click" Margin="4" IsEnabled="False"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <Button x:Name="ButtonRc" Content="RC W7"  Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <Button x:Name="ButtonRcW10" Content="RC W10"  Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <Button x:Name="ButtonVnc" Content="VNC" Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <Button x:Name="ButtonSsh" Content="SSH"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <Button x:Name="ButtonSshEre" Content="SSH ERE"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <Button x:Name="ButtonTelnet" Content="TELNET"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <Button x:Name="ButtonHttp" Content="HTTP"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <Button x:Name="ButtonHttps" Content="HTTPS" Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <Button x:Name="ButtonLogView" Content="LogView" Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
 
         </WrapPanel>
-
-
-
 
     </Grid>
 </Window>

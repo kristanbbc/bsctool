@@ -1,9 +1,4 @@
-﻿using MaterialDesignThemes.Wpf;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using NLog;
-using NLog.Targets;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -12,65 +7,77 @@ using System.DirectoryServices;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Net.Mail;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
-//using System.Threading;
+using BBC.BSC.Tool.Properties;
+using MaterialDesignThemes.Wpf;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using NLog;
+using NLog.Config;
+using NLog.Targets;
+using NLog.Targets.ElasticSearch;
+using Timer = System.Timers.Timer;
 
 namespace BBC.BSC.Tool
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow
     {
         //TODO make more of these configurable?
-        private readonly string catPath = @"http://cat.er.bbc.co.uk/catquery.php?json&query=";
-        private SearchResultCollection latestRestults;
-        private List<BackgroundWorker> workers = new List<BackgroundWorker>();
-        private List<BackgroundWorker> connectionWorkers = new List<BackgroundWorker>();
-        private DateTime LastConnectionResult = DateTime.Now;
-        private DateTime lastResultTimestamp;
-        private readonly string ldapPath = @"LDAP://ldap.national.core.bbc.co.uk";
-        private Timer searchTimer = new Timer(400);
-        private Timer hostTimer = new Timer(400);
-        private string host_text;
-        private string bncsDir = @"\\national\bbcere\BSC\VNC\BNCS";
-        private Logger logger;
+        private const string CatPath = @"http://cat.er.bbc.co.uk/catquery.php?json&query=";
 
-        private string phoneboxIniPath = @"C:\ProgramData\Broadcast Bionics\PhoneBOX4\client.ini";
-        private string phoneboxExePath = @"C:\Program Files (x86)\Broadcast Bionics\PhoneBOX4\Client\PhoneBOX.Client.exe";
+        private readonly List<BackgroundWorker> workers = new List<BackgroundWorker>();
+        // ReSharper disable once CollectionNeverQueried.Local
+        private readonly List<BackgroundWorker> connectionWorkers = new List<BackgroundWorker>();
+        private DateTime lastConnectionResult = DateTime.Now;
+        private DateTime lastResultTimestamp;
+        private const string LdapPath = @"LDAP://ldap.national.core.bbc.co.uk";
+        private readonly Timer searchTimer = new Timer(400);
+        private readonly Timer hostTimer = new Timer(400);
+        private string hostText;
+        private const string BncsDir = @"\\national\bbcere\BSC\VNC\BNCS";
+        private readonly Logger logger;
+
+        private const string PhoneboxIniPath = @"C:\ProgramData\Broadcast Bionics\PhoneBOX4\client.ini";
+        private const string PhoneboxExePath = @"C:\Program Files (x86)\Broadcast Bionics\PhoneBOX4\Client\PhoneBOX.Client.exe";
+
+
         public MainWindow()
         {
             InitializeComponent();
-            Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            Version version = Assembly.GetExecutingAssembly().GetName().Version;
 
-            this.Title = "BSC Tool - Version " + version;
-            NLog.Config.LoggingConfiguration config = new NLog.Config.LoggingConfiguration();
-            ColoredConsoleTarget consoleTarget = new ColoredConsoleTarget
+            Title = "BSC Tool - Version " + version;
+            var config = new LoggingConfiguration();
+            var consoleTarget = new ColoredConsoleTarget
             {
+                // ReSharper disable once StringLiteralTypo
                 Layout = "${time} ${pad:padding=3:inner=${threadid}} ${message} ${exception:format=tostring}"
             };
-            NLog.Targets.ElasticSearch.ElasticSearchTarget elasticSearchTarget = new NLog.Targets.ElasticSearch.ElasticSearchTarget
+            var elasticSearchTarget = new ElasticSearchTarget
             {
                 Index = "bsctool1",
                 IncludeAllProperties = true
             };
-            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "user", Layout = "${windows-identity:userName=True:domain=False}" });
-            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "host", Layout = "${machinename}" });
-            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "thread", Layout = "${threadid}" });
-            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "threadname", Layout = "${threadname}" });
-            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "version", Layout = "${assembly-version}" });
+            elasticSearchTarget.Fields.Add(new Field { Name = "user", Layout = "${windows-identity:userName=True:domain=False}" });
+            elasticSearchTarget.Fields.Add(new Field { Name = "host", Layout = "${machinename}" });
+            elasticSearchTarget.Fields.Add(new Field { Name = "thread", Layout = "${threadid}" });
+            elasticSearchTarget.Fields.Add(new Field { Name = "threadname", Layout = "${threadname}" });
+            elasticSearchTarget.Fields.Add(new Field { Name = "version", Layout = "${assembly-version}" });
 #if DEBUG
-            elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "build", Layout = "DEBUG" });
+            elasticSearchTarget.Fields.Add(new Field { Name = "build", Layout = "DEBUG" });
 
 #else
             elasticSearchTarget.Fields.Add(new NLog.Targets.ElasticSearch.Field() { Name = "build", Layout = "RELEASE" });
@@ -87,54 +94,45 @@ namespace BBC.BSC.Tool
             logger = LogManager.GetCurrentClassLogger();
             LogManager.Configuration = config;
 
-            logger.Info("BSC Tool {0} starting.", FileVersionInfo.GetVersionInfo(System.Reflection.Assembly.GetExecutingAssembly().Location).ProductVersion);
-            System.Timers.Timer watcher = new System.Timers.Timer
+            logger.Info("BSC Tool {0} starting.", FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion);
+            var watcher = new Timer
             {
                 Interval = 1000
             };
             watcher.Elapsed += Do_Watcher;
             watcher.Enabled = true;
-            System.Threading.ThreadPool.GetMinThreads(out int w, out int c);
+            ThreadPool.GetMinThreads(out var w, out var c);
 
             // Write the numbers of minimum threads
             logger.Debug("Minumium number of threads available {0}, {1}", w, c);
 
-            System.Threading.ThreadPool.SetMinThreads(20, 10);
+            ThreadPool.SetMinThreads(20, 10);
             hostTimer.Elapsed += Host_Timer_Elapsed;
             searchTimer.Elapsed += Search_Timer_Elapsed;
             DataContext = this;
-            searchResults.ItemsSource = Results;
 
-
-            foreach (string item in Properties.Settings.Default.history.Split(';'))
+            foreach (var item in Settings.Default.history.Split(';'))
             {
-                if (item == "System.Windows.Controls.ItemCollection")
-                {
-                    continue;
-                }
-                lvHistory.Items.Add(item);
+                if (item != "System.Windows.Controls.ItemCollection") LvHistory.Items.Add(item);
             }
 
 
             //If PhoneBox not installed don't enable tab
-            if (!File.Exists(phoneboxExePath))
+            if (!File.Exists(PhoneboxExePath))
             {
                 PhoneBoxSwitcherTab.IsEnabled = false;
-                foreach (Button item in UIHelper.FindVisualChildren<Button>(PhoneBoxButtons))
+                foreach (var item in UiHelper.FindVisualChildren<Button>(PhoneBoxButtons))
                 {
                     item.IsEnabled = false;
                 }
             }
-            if (Directory.Exists(bncsDir))
+            if (Directory.Exists(BncsDir))
             {
-                Dispatcher.Invoke(delegate
-                {
-                    BuildWs600View();
-                });
+                Dispatcher.Invoke(BuildWs600View);
             }
             else
             {
-                tabItemBNCSVNC.IsEnabled = false;
+                TabItemBncsVnc.IsEnabled = false;
             }
 
             //Dispatcher.Invoke(delegate
@@ -143,86 +141,78 @@ namespace BBC.BSC.Tool
             //});
 
             // Put Cursor in search box.
-            searchIn.Focus();
+            SearchIn.Focus();
         }
 
 
         private void BuildWs600View()
         {
-            foreach (string item in Directory.GetDirectories(bncsDir))
+            foreach (var item in Directory.GetDirectories(BncsDir))
             {
                 logger.ConditionalTrace("Adding directory {0} to BNCS tree", item);
-                TreeViewItem treeViewItem = new TreeViewItem
+                var treeViewItem = new TreeViewItem
                 {
                     Header = Path.GetFileNameWithoutExtension(item),
                     Tag = item
                 };
-                StackPanel stack = new StackPanel { Orientation = Orientation.Horizontal };
+                var stack = new StackPanel { Orientation = Orientation.Horizontal };
                 stack.Children.Add(new PackIcon { Kind = PackIconKind.Folder });
-                stack.Children.Add(new Label() { Content = Path.GetFileNameWithoutExtension(item) });
+                stack.Children.Add(new Label { Content = Path.GetFileNameWithoutExtension(item) });
                 treeViewItem.Header = stack;
                 treeViewItem.Items.Add(null);
-                treeViewItem.Expanded += new RoutedEventHandler(TreeViewBNCS_Expanded);
+                treeViewItem.Expanded += TreeViewBNCS_Expanded;
 
-                treeViewBNCS.Items.Add(treeViewItem);
+                TreeViewBncs.Items.Add(treeViewItem);
 
             }
-            foreach (string item in Directory.GetFiles(bncsDir))
+            foreach (var item in Directory.GetFiles(BncsDir))
             {
                 logger.ConditionalTrace("Adding file {0} to BNCS tree", item);
-                TreeViewItem treeViewItem = new TreeViewItem
+                var treeViewItem = new TreeViewItem
                 {
                     Header = Path.GetFileNameWithoutExtension(item),
                     Tag = item
                 };
-                StackPanel stack = new StackPanel { Orientation = Orientation.Horizontal };
-                string ext = Path.GetExtension(item).Substring(1).ToLower();
-                PackIconKind packIconKind = ext == "vnc" ? PackIconKind.Computer : (
-                ext == "url" || ext == "lnk" ? PackIconKind.Web : PackIconKind.HelpBox);
-                stack.Children.Add(new PackIcon { Kind = packIconKind });
-                stack.Children.Add(new Label() { Content = Path.GetFileNameWithoutExtension(item) });
+                var stack = new StackPanel { Orientation = Orientation.Horizontal };
+                var ext = Path.GetExtension(item).Substring(1).ToLower();
+                stack.Children.Add(new PackIcon() { Kind = GetPackIconKind(ext) });
+                stack.Children.Add(new Label { Content = Path.GetFileNameWithoutExtension(item) });
                 treeViewItem.Header = stack;
                 treeViewItem.MouseDoubleClick += TreeViewBNCS_DoubleClicked;
-                treeViewBNCS.Items.Add(treeViewItem);
+                TreeViewBncs.Items.Add(treeViewItem);
             }
         }
 
         private void TreeViewBNCS_DoubleClicked(object sender, MouseButtonEventArgs e)
         {
-            TreeViewItem tvSender = (TreeViewItem)sender;
-
-
-            FileInfo fileInfo = new FileInfo(tvSender.Tag.ToString());
-            ProcessStartInfo startInfo = new ProcessStartInfo();
+            var tvSender = (TreeViewItem)sender;
+            
+            var fileInfo = new FileInfo(tvSender.Tag.ToString());
+            var startInfo = new ProcessStartInfo();
 
             switch (fileInfo.Extension.ToLower().Substring(1))
             {
                 case "vnc":
-                    string VncExeToRun = Path.Combine(Path.GetTempPath(), "vncx64.exe");
-                    if (PrepareTool(Properties.Resources.vncx64, VncExeToRun))
+                    var vncExeToRun = Path.Combine(Path.GetTempPath(), "vncx64.exe");
+                    if (PrepareTool(Properties.Resources.vncx64, vncExeToRun))
                     {
-                        startInfo.Arguments = string.Format(@" ""{0}"" ", tvSender.Tag.ToString());
-                        startInfo.FileName = VncExeToRun;
+                        startInfo.Arguments = $"\"{tvSender.Tag}\"";
+                        startInfo.FileName = vncExeToRun;
                     }
-
                     break;
                 case "url":
-                    startInfo.FileName = string.Format("{0}", tvSender.Tag.ToString());
-
+                    startInfo.FileName = $"\"{tvSender.Tag}\"";
 
                     break;
                 default:
-                    startInfo.FileName = string.Format("{0}", tvSender.Tag.ToString());
+                    startInfo.FileName = $"\" { tvSender.Tag} \"";
 
                     break;
             }
 
-            if (startInfo.FileName.Length > 0)
-            {
-                logger.Info("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
-                Process proc = Process.Start(startInfo);
-
-            }
+            if (startInfo.FileName.Length <= 0) return;
+            logger.Info("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
+            Process.Start(startInfo);
 
         }
 
@@ -230,53 +220,69 @@ namespace BBC.BSC.Tool
         {
             Dispatcher.Invoke(delegate
             {
-                TreeViewItem tvSender = (TreeViewItem)sender;
-                if (tvSender.Items.Count == 1 && tvSender.Items[0] == null)
+                var tvSender = (TreeViewItem)sender;
+                if (tvSender.Items.Count != 1 || tvSender.Items[0] != null) return;
+
+                tvSender.Items.Clear();
+
+                foreach (string item in Directory.GetDirectories(tvSender.Tag.ToString()))
                 {
-                    tvSender.Items.Clear();
-
-                    foreach (string item in Directory.GetDirectories(tvSender.Tag.ToString()))
+                    logger.ConditionalTrace("Adding directory {0} to BNCS tree", item);
+                    var treeViewItem = new TreeViewItem
                     {
-                        logger.ConditionalTrace("Adding directory {0} to BNCS tree", item);
-                        TreeViewItem treeViewItem = new TreeViewItem
-                        {
-                            Header = Path.GetFileNameWithoutExtension(item),
-                            Tag = item
-                        };
+                        Header = Path.GetFileNameWithoutExtension(item),
+                        Tag = item
+                    };
 
-                        StackPanel stack = new StackPanel { Orientation = Orientation.Horizontal };
-                        stack.Children.Add(new PackIcon { Kind = PackIconKind.Folder });
-                        stack.Children.Add(new Label() { Content = Path.GetFileNameWithoutExtension(item) });
-                        treeViewItem.Header = stack;
-                        treeViewItem.Items.Add(null);
-                        treeViewItem.Expanded += new RoutedEventHandler(TreeViewBNCS_Expanded);
+                    var stack = new StackPanel { Orientation = Orientation.Horizontal };
+                    stack.Children.Add(new PackIcon { Kind = PackIconKind.Folder });
+                    stack.Children.Add(new Label { Content = Path.GetFileNameWithoutExtension(item) });
+                    treeViewItem.Header = stack;
+                    treeViewItem.Items.Add(null);
+                    treeViewItem.Expanded += TreeViewBNCS_Expanded;
 
-                        tvSender.Items.Add(treeViewItem);
+                    tvSender.Items.Add(treeViewItem);
 
-                    }
-                    foreach (string item in Directory.GetFiles(tvSender.Tag.ToString()))
+                }
+                foreach (string item in Directory.GetFiles(tvSender.Tag.ToString()))
+                {
+                    logger.ConditionalTrace("Adding file {0} to BNCS tree", item);
+                    var treeViewItem = new TreeViewItem
                     {
-                        logger.ConditionalTrace("Adding file {0} to BNCS tree", item);
-                        TreeViewItem treeViewItem = new TreeViewItem
-                        {
-                            Header = Path.GetFileNameWithoutExtension(item),
-                            Tag = item
-                        };
-                        StackPanel stack = new StackPanel { Orientation = Orientation.Horizontal };
-                        string ext = Path.GetExtension(item).Substring(1).ToLower();
-                        PackIconKind packIconKind = ext == "vnc" ? PackIconKind.Computer : (
-                        ext == "url" ? PackIconKind.Web : (
-                        ext == "lnk" ? PackIconKind.FolderNetwork : (
-                        ext == "rdp" ? PackIconKind.ComputerClassic : PackIconKind.HelpBox)));
-                        stack.Children.Add(new PackIcon { Kind = packIconKind });
-                        stack.Children.Add(new Label() { Content = Path.GetFileNameWithoutExtension(item) });
-                        treeViewItem.Header = stack;
-                        treeViewItem.MouseDoubleClick += TreeViewBNCS_DoubleClicked;
+                        Header = Path.GetFileNameWithoutExtension(item),
+                        Tag = item
+                    };
+                    var stack = new StackPanel { Orientation = Orientation.Horizontal };
+                    var ext = Path.GetExtension(item).Substring(1).ToLower();
+                    stack.Children.Add(new PackIcon { Kind = GetPackIconKind(ext) });
+                    stack.Children.Add(new Label { Content = Path.GetFileNameWithoutExtension(item) });
+                    treeViewItem.Header = stack;
+                    treeViewItem.MouseDoubleClick += TreeViewBNCS_DoubleClicked;
 
-                        tvSender.Items.Add(treeViewItem);
-                    }
+                    tvSender.Items.Add(treeViewItem);
                 }
             });
+        }
+
+        private static PackIconKind GetPackIconKind(string ext)
+        {
+            PackIconKind packIconKind;
+            switch (ext)
+            {
+                case "vnc":
+                    packIconKind = PackIconKind.Computer;
+                    break;
+                case "url":
+                    packIconKind = PackIconKind.Web;
+                    break;
+                case "lnk":
+                    packIconKind = PackIconKind.FolderNetwork;
+                    break;
+                default:
+                    packIconKind = PackIconKind.HelpBox;
+                    break;
+            }
+            return packIconKind;
         }
 
 
@@ -287,20 +293,20 @@ namespace BBC.BSC.Tool
         {
             try
             {
-                Dispatcher.Invoke(delegate ()
-                   {
-                       if (workers.Count > 0)
-                       {
-                           logger.Debug("There are {0} workers", workers.Count);
-                           status.Fill = new SolidColorBrush(Colors.Red);
-                           // this.Title = "Busy";
-                       }
-                       else
-                       {
-                           status.Fill = new SolidColorBrush(Colors.Green);
-                           //this.Title = "Finished";
-                       }
-                   });
+                Dispatcher.Invoke(delegate
+                {
+                    if (workers.Count > 0)
+                    {
+                        logger.Debug("There are {0} workers", workers.Count);
+                        Status.Fill = new SolidColorBrush(Colors.Red);
+                        // this.Title = "Busy";
+                    }
+                    else
+                    {
+                        Status.Fill = new SolidColorBrush(Colors.Green);
+                        //this.Title = "Finished";
+                    }
+                });
             }
             catch (Exception ex)
             {
@@ -310,25 +316,25 @@ namespace BBC.BSC.Tool
 
         }
 
-        private List<CatRestult> catRestults = new List<CatRestult>();
-        private class CatRestult
+        private List<CatResult> catResults = new List<CatResult>();
+        private class CatResult
         {
             [JsonProperty("host_name")]
             public string HostName;
             [JsonProperty("also_known_as")]
             public string AlsoKnownAs;
             [JsonProperty("ip")]
-            public string IP;
+            public string Ip;
             [JsonProperty("os")]
-            public string OS;
+            public string Os;
 
         }
 
         private void Do_Search(object sender, DoWorkEventArgs e)
         {
-            Dispatcher.Invoke(delegate ()
+            Dispatcher.Invoke(delegate
             {
-                status.Fill = new SolidColorBrush(Colors.Red);
+                Status.Fill = new SolidColorBrush(Colors.Red);
             });
             MyResults results = new MyResults();
             if (e.Argument.ToString().Length < 4)
@@ -340,37 +346,38 @@ namespace BBC.BSC.Tool
                 logger.Info("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
                 try
                 {
-                    string catQuery = string.Format("{1}SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip, CONCAT(os,  \" \",os_version) as os FROM " +
+                    var catQuery =
+                        $"{CatPath}SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip, CONCAT(os,  \" \",os_version) as os FROM " +
                         "network INNER JOIN asset ON network.asset_id = asset.asset_id " +
                         "left join asset_os on asset.asset_id = asset_os.asset_id left join os on asset_os.os_id = os.os_id left join os_version on asset_os.os_version_id = os_version.os_version_id " +
-                        "WHERE life_cycle_status_id = 4 AND (lower(host_name like '%{0}%') OR IP = inet_aton('{0}') OR lower(also_known_as) LIKE '%{0}%')",
-                        e.Argument.ToString().Replace("*", "%").ToLower(),
-                        catPath);
+                        $"WHERE life_cycle_status_id = 4 AND (lower(host_name like '%{e.Argument.ToString().Replace("*", "%").ToLower()}%') OR IP = inet_aton('{e.Argument.ToString().Replace("*", "%").ToLower()}') OR lower(also_known_as) LIKE '%{e.Argument.ToString().Replace("*", "%").ToLower()}%')";
 
-                    string json_data = string.Empty;
+                    string jsonData;
                     logger.Info("Running query against CAT with\n{0}", catQuery);
-                    using (WebClient w = new WebClient())
+                    using (var w = new WebClient())
                     {
                         w.UseDefaultCredentials = true;
-                        json_data = w.DownloadString(catQuery);
+                        jsonData = w.DownloadString(catQuery);
                     }
 
-                    catRestults = !string.IsNullOrEmpty(json_data) ? JsonConvert.DeserializeObject<List<CatRestult>>(json_data) : null;
-                    logger.Info("Got {0} results from CAT", catRestults.Count());
-
-                    foreach (CatRestult item in catRestults)
+                    if (!string.IsNullOrEmpty(jsonData))
                     {
-                        results.results.Add(new MyResult
-                        {
-                            Source = "CAT",
-                            Hostname = item.HostName.ToUpper(),
-                            Description = item.AlsoKnownAs,
-                            OperatingSystem = item.OS,
-                            Ip = item.IP
-                        });
+                        catResults = JsonConvert.DeserializeObject<List<CatResult>>(jsonData);
+                        logger.Info("Got {0} results from CAT", catResults?.Count);
+
+                        if (catResults != null)
+                            foreach (var item in catResults)
+                            {
+                                results.Results.Add(new MyResult
+                                {
+                                    Source = "CAT",
+                                    Hostname = item.HostName.ToUpper(),
+                                    Description = item.AlsoKnownAs,
+                                    OperatingSystem = item.Os,
+                                    Ip = item.Ip
+                                });
+                            }
                     }
-
-
                 }
                 catch (Exception ex)
                 {
@@ -378,15 +385,15 @@ namespace BBC.BSC.Tool
                     Trace.TraceError(ex.Message);
                 }
 
-                /// Start AD search
+                // Start AD search
                 try
                 {
-                    using (DirectoryEntry dEntry = new DirectoryEntry(ldapPath))
+                    using (DirectoryEntry dEntry = new DirectoryEntry(LdapPath))
                     using (DirectorySearcher dSearcher = new DirectorySearcher(dEntry)
                     {
                         // (|(cn=*334810*)(displayname=*334810*)(cn=PC-*334810*)(cn=B1-D0*334810*)(cn=B1-L0*334810*)(cn=61-D0*334810*)(cn=61-L0*334810*)(cn=71-D0*334810*)(cn=71-L0*334810*)(cn=91-D0*334810*)(cn=91-L0*334810*)(cn=F1-D0*334810*)(cn=F1-L0*334810*)(cn=MC-*334810*)(sn=*334810*)(samAccountName=*334810*)(mail=*334810*)(proxyaddresses=smtp:*334810*)(ou=*334810*)(&(objectcategory=printqueue)(printername=*334810*)))
                         //Filter = string.Format("(&(objectClass=computer)(cn={0}*))", e.Argument.ToString()),
-                        Filter = string.Format("(&(!userAccountControl:1.2.840.113556.1.4.803:=2)(objectClass=computer)(|(cn={0}*)(displayname={0}*)(cn=PC-{0}*)(cn=B1-D0{0}*)(cn=B1-L0{0}*)(cn=31-D0{0}*)(cn=31*-D0{0}*)(cn=61-D0{0}*)(cn=61-L0{0}*)(cn=71-D0{0}*)(cn=71-L0{0}*)(cn=91-D0{0}*)(cn=91-L0{0}*)(cn=F1-D0{0}*)(cn=F1-L0{0}*)(cn=MC-{0}*)(sn={0}*)(samAccountName={0}*)))", e.Argument.ToString()),
+                        Filter = string.Format("(&(!userAccountControl:1.2.840.113556.1.4.803:=2)(objectClass=computer)(|(cn={0}*)(displayname={0}*)(cn=PC-{0}*)(cn=B1-D0{0}*)(cn=B1-L0{0}*)(cn=31-D0{0}*)(cn=31*-D0{0}*)(cn=61-D0{0}*)(cn=61-L0{0}*)(cn=71-D0{0}*)(cn=71-L0{0}*)(cn=91-D0{0}*)(cn=91-L0{0}*)(cn=F1-D0{0}*)(cn=F1-L0{0}*)(cn=MC-{0}*)(sn={0}*)(samAccountName={0}*)))", e.Argument),
                         //PageSize = 20,
                         //ServerTimeLimit = TimeSpan.FromSeconds(15),
                         //ServerPageTimeLimit = TimeSpan.FromSeconds(15),
@@ -398,16 +405,15 @@ namespace BBC.BSC.Tool
                         dSearcher.PropertiesToLoad.Add("name");
                         dSearcher.PropertiesToLoad.Add("description");
                         dSearcher.PropertiesToLoad.Add("operatingsystem");
-                        using (SearchResultCollection sResults = dSearcher.FindAll())
+                        using (var sResults = dSearcher.FindAll())
                         {
-                            latestRestults = sResults;
                             logger.Info("Found {0} results in Active Directory", sResults.Count);
                             foreach (SearchResult item in sResults)
                             {
                                 logger.ConditionalTrace("AD: found: {0}", item.Properties["name"][0].ToString().ToUpper());
-                                if (!results.results.Any(n => n.Hostname == item.Properties["name"][0].ToString().ToUpper()))
+                                if (results.Results.All(n => n.Hostname != item.Properties["name"][0].ToString().ToUpper()))
                                 {
-                                    results.AddResult(new MyResult()
+                                    results.AddResult(new MyResult
                                     {
                                         Hostname = item.Properties["name"][0].ToString().ToUpper(),
                                         Description = CleanResultProperty(item, "description"),
@@ -426,8 +432,8 @@ namespace BBC.BSC.Tool
                     logger.Warn("LDAP query error: {0}", ex.Message);
                 }
             }
-            results.results.Sort((a, b) => a.Hostname.CompareTo(b.Hostname));
-            results.results = results.results.Distinct().ToList<MyResult>();
+            results.Results.Sort((a, b) => string.Compare(a.Hostname, b.Hostname, StringComparison.Ordinal));
+            results.Results = results.Results.Distinct().ToList();
             e.Result = results;
         }
 
@@ -438,54 +444,47 @@ namespace BBC.BSC.Tool
 
         private void Text_Changed(object sender, TextChangedEventArgs e)
         {
-            logger.ConditionalTrace("search text changed: {0}", searchIn.Text.Trim());
-            search_text = searchIn.Text;
+            logger.ConditionalTrace("search text changed: {0}", SearchIn.Text.Trim());
+            searchText = SearchIn.Text;
             searchTimer.Stop();
             searchTimer.Start();
-            textbox_host.Text = searchIn.Text;
+            TextBoxHost.Text = SearchIn.Text;
         }
 
-        public List<MyResult> Results;
 
         private MyResult selectedResult = new MyResult();
 
         private void DisplayResults(object sender, RunWorkerCompletedEventArgs e)
         {
-            //TODO add logging in this void
+            logger.Trace("Start displaying results, stopping and disposing background worker");
             workers.Remove((BackgroundWorker)sender);
             ((BackgroundWorker)sender).Dispose();
-            MyResults res = (MyResults)e.Result;
-            if (res.results.Count > 0)
-            {
-                selectedResult = ((MyResults)e.Result).results[0];
-
-            }
-            else
-            {
-                selectedResult = null;
-            }
+            var res = (MyResults)e.Result;
+            logger.Trace($"There are {res.Results.Count} results");
+            // If results returned select first in list.
+            selectedResult = res.Results.Count > 0 ? ((MyResults)e.Result).Results[0] : null;
             try
             {
-                if (res.timestamp > lastResultTimestamp)
+                // If results older than currently displayed (earlier queries take longer) then drop results
+                if (res.Timestamp <= lastResultTimestamp) return;
+                logger.Trace("Results newer so continue processing");
+                Dispatcher.Invoke(delegate
                 {
-                    Dispatcher.Invoke(delegate ()
+                    logger.Trace("Copying results to result collection.");
+                    var results = new ObservableCollection<MyResult>();
+                    foreach (var item in res.Results)
                     {
-                        ObservableCollection<MyResult> Results = new ObservableCollection<MyResult>();
-                        foreach (MyResult item in res.results)
-                        {
-                            Results.Add(item);
-                        }
-                        searchResults.ItemsSource = null;
-                        searchResults.ItemsSource = Results;
+                        results.Add(item);
+                    }
+                    SearchResults.ItemsSource = null;
+                    SearchResults.ItemsSource = results;
 
-                        if (res.results.Count == 1)
-                        {
-                            textbox_host.Text = res.results[0].Hostname;
-                        }
-                        //searchResults.Items.Refresh();
-                    });
-                    lastResultTimestamp = res.timestamp;
-                }
+                    if (res.Results.Count != 1) return;
+                    logger.Trace("Single result so make selected");
+                    TextBoxHost.Text = res.Results[0].Hostname;
+                    //searchResults.Items.Refresh();
+                });
+                lastResultTimestamp = res.Timestamp;
             }
             catch (Exception ex)
             {
@@ -497,12 +496,11 @@ namespace BBC.BSC.Tool
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            Properties.Settings.Default.Save();
+            Settings.Default.Save();
             if (workers.Count > 0)
             {
                 logger.Info("Unable to close as workers still running");
                 e.Cancel = true;
-                return;
             }
             else
             {
@@ -526,14 +524,14 @@ namespace BBC.BSC.Tool
         {
             try
             {
-                textbox_host.Text = ((MyResult)((ListBox)sender).SelectedValue).Hostname.ToString();
+                TextBoxHost.Text = ((MyResult)((ListBox)sender).SelectedValue).Hostname;
             }
             catch (Exception ex)
             {
                 logger.Trace(ex);
 
                 Trace.TraceError(ex.Message);
-                textbox_host.Text = "";
+                TextBoxHost.Text = "";
             }
         }
 
@@ -541,69 +539,71 @@ namespace BBC.BSC.Tool
         {
             try
             {
-                textbox_host.Text = ((MyResult)((ListBox)sender).SelectedValue).Hostname.ToString();
+                TextBoxHost.Text = ((MyResult)((ListBox)sender)?.SelectedValue)?.Hostname ?? string.Empty;
             }
             catch (Exception ex)
             {
                 logger.Trace(ex);
-
                 Trace.TraceError(ex.Message);
             }
         }
 
         private void Connect_Button_Click(object sender, RoutedEventArgs e)
         {
-            ProcessStartInfo startInfo = new ProcessStartInfo();
-            string directory = System.IO.Path.Combine(Environment.CurrentDirectory, "tools");
-            string rcExeToRun = @"d:\rc.exe";
-            string rcW10ExeToRun = @"\\national\bbcere\BSC\Dump\Apps\sccm-remote\w10\cmrcviewer.exe";
-            string VncExeToRun = Path.Combine(Path.GetTempPath(), "vncx64.exe");
+            var startInfo = new ProcessStartInfo();
+            var directory = Path.Combine(Environment.CurrentDirectory, "tools");
+            const string rcExeToRun = @"d:\rc.exe";
+            const string rcW10ExeToRun = @"\\national\bbcere\BSC\Dump\Apps\sccm-remote\w10\cmrcviewer.exe";
+            var vncExeToRun = Path.Combine(Path.GetTempPath(), "vncx64.exe");
 
 
             switch (((Button)sender).Name)
             {
                 case "button_RDP":
                     startInfo.FileName = "cmd";
-                    startInfo.Arguments = string.Format(@"/c runas /user:national\{1} /savecred ""mstsc.exe /v:{0}""", textbox_host.Text, textBox_ere.Text);
+                    startInfo.Arguments =
+                        $"/c runas /user:national\\{TextBoxEre.Text} /savecred \"mstsc.exe /v:{TextBoxHost.Text}\"";
                     break;
 
                 case "button_RC":
                     if (PrepareTool(Properties.Resources.rc, rcExeToRun))
                     {
-                        startInfo.Arguments = string.Format(@"/c runas /user:national\{0} /savecred ""{1} 1 {2}""", textBox_ere.Text, rcExeToRun, textbox_host.Text.Trim());
+                        startInfo.Arguments =
+                            $"/c runas /user:national\\{TextBoxEre.Text} /savecred \"{rcExeToRun} 1 {TextBoxHost.Text.Trim()}\"";
                         startInfo.FileName = "cmd";
                     }
                     break;
                 case "button_RC_W10":
 
-                    startInfo.Arguments = string.Format(@"/c runas /user:national\{0} /savecred ""{1} {2}""", textBox_ere.Text, rcW10ExeToRun, textbox_host.Text.Trim());
+                    startInfo.Arguments =
+                        $"/c runas /user:national\\{TextBoxEre.Text} /savecred \"{rcW10ExeToRun} {TextBoxHost.Text.Trim()}\"";
                     startInfo.FileName = "cmd";
 
                     break;
                 case "button_SSH":
-                    startInfo.Arguments = string.Format("{0}", textbox_host.Text);
-                    startInfo.FileName = System.IO.Path.Combine(directory, "putty.exe");
+                    startInfo.Arguments = $"{TextBoxHost.Text}";
+                    startInfo.FileName = Path.Combine(directory, "putty.exe");
                     break;
                 case "button_SSH_ERE":
-                    startInfo.Arguments = string.Format("{1}@{0}", textbox_host.Text, textBox_ere.Text.Trim());
-                    startInfo.FileName = System.IO.Path.Combine(directory, "putty.exe");
+                    startInfo.Arguments = $"{TextBoxEre.Text.Trim()}@{TextBoxHost.Text}";
+                    startInfo.FileName = Path.Combine(directory, "putty.exe");
                     break;
                 case "button_TELNET":
-                    startInfo.Arguments = string.Format("-telnet -P 23 {0}", textbox_host.Text);
-                    startInfo.FileName = System.IO.Path.Combine(directory, "putty.exe");
+                    startInfo.Arguments = $"-telnet -P 23 {TextBoxHost.Text}";
+                    startInfo.FileName = Path.Combine(directory, "putty.exe");
                     break;
                 case "button_VNC":
-                    if (PrepareTool(Properties.Resources.vncx64, VncExeToRun))
+                    if (PrepareTool(Properties.Resources.vncx64, vncExeToRun))
                     {
-                        startInfo.Arguments = string.Format(@"-username {0} ""{1}""", textBox_ere.Text, textbox_host.Text.Trim());
-                        startInfo.FileName = VncExeToRun;
+                        startInfo.Arguments = $"-username {TextBoxEre.Text} \"{TextBoxHost.Text.Trim()}\"";
+                        startInfo.FileName = vncExeToRun;
                     }
                     break;
                 case "button_HTTP":
-                    startInfo.FileName = string.Format("http://{0}:80/", textbox_host.Text.Trim());
+                    startInfo.FileName = $"http://{TextBoxHost.Text.Trim()}:80/";
                     break;
                 case "button_HTTPS":
-                    startInfo.FileName = string.Format("https://{0}:443/", textbox_host.Text.Trim());
+                    startInfo.FileName = $"https://{TextBoxHost.Text.Trim()}:443/";
                     break;
                 case "button_LogView":
                     string[] logViewPaths =
@@ -614,38 +614,34 @@ namespace BBC.BSC.Tool
                     };
                     foreach (string item in logViewPaths)
                     {
-                        if (File.Exists(item))
-                        {
-                            startInfo.FileName = item;
-                            startInfo.Arguments = string.Format("/ho:{0}", textbox_host.Text.Trim());
-                            break;
-                        }
+                        if (!File.Exists(item)) continue;
+                        startInfo.FileName = item;
+                        startInfo.Arguments = $"/ho:{TextBoxHost.Text.Trim()}";
+                        break;
                     }
-                    break;
-                default:
                     break;
             }
 
             if (startInfo.FileName.Length > 0)
             {
                 logger.Info("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
-                Process proc = Process.Start(startInfo);
+                Process.Start(startInfo);
 
             }
-            if (lvHistory.Items.Contains(textbox_host.Text.Trim()))
+            if (LvHistory.Items.Contains(TextBoxHost.Text.Trim()))
             {
-                lvHistory.Items.RemoveAt(lvHistory.Items.IndexOf(textbox_host.Text.Trim()));
+                LvHistory.Items.RemoveAt(LvHistory.Items.IndexOf(TextBoxHost.Text.Trim()));
             }
 
-            lvHistory.Items.Insert(0, textbox_host.Text.Trim());
+            LvHistory.Items.Insert(0, TextBoxHost.Text.Trim());
 
-            List<string> tempHist = new List<string>();
-            foreach (string item in lvHistory.Items)
+            var tempHist = new List<string>();
+            foreach (string item in LvHistory.Items)
             {
                 tempHist.Add(item);
             }
-            Properties.Settings.Default.history = String.Join(";", tempHist);
-            Properties.Settings.Default.Save();
+            Settings.Default.history = string.Join(";", tempHist);
+            Settings.Default.Save();
 
 
         }
@@ -654,48 +650,45 @@ namespace BBC.BSC.Tool
         private bool PrepareTool(byte[] resource, string outputPath)
         {
             logger.Trace("Preparing tool to path {0}", outputPath);
-            byte[] existingMD5;
-            byte[] resourceMD5;
-            if (System.IO.File.Exists(outputPath))
+            if (File.Exists(outputPath))
             {
                 logger.Trace("Tool path already exists.");
                 //check md5
-                using (MD5 md5 = MD5.Create())
+                byte[] existingMd5;
+                using (var md5 = MD5.Create())
                 {
-                    using (System.IO.FileStream stream = System.IO.File.OpenRead(outputPath))
+                    using (var stream = File.OpenRead(outputPath))
                     {
-                        existingMD5 = md5.ComputeHash(stream);
+                        existingMd5 = md5.ComputeHash(stream);
                     }
                 }
 
                 //md5 of embedded resource
-                using (MD5 md5 = System.Security.Cryptography.MD5.Create())
+                byte[] resourceMd5;
+                using (var md5 = MD5.Create())
                 {
                     md5.TransformFinalBlock(resource, 0, resource.Length);
-                    resourceMD5 = md5.Hash;
+                    resourceMd5 = md5.Hash;
                 }
 
-                if (System.Text.Encoding.Default.GetString(existingMD5) == System.Text.Encoding.Default.GetString(resourceMD5))
+                if (Encoding.Default.GetString(existingMd5) == Encoding.Default.GetString(resourceMd5))
                 {
                     logger.Trace("Tool path exists and MD5 matches, returning true");
                     return true;
                 }
-                else
-                {
-                    logger.Warn("Tool path exists, but MD5 doesn't match, remove file and retest");
-                    File.Delete(outputPath);
-                    
-                    PrepareTool(resource, outputPath);
 
-                    // return false;
-                }
+                logger.Warn("Tool path exists, but MD5 doesn't match, remove file and retest");
+                File.Delete(outputPath);
+
+                PrepareTool(resource, outputPath);
+                // return false;
             }
             else
             {
                 try
                 {
                     logger.Trace("Tool doesn't exist, writing out new file");
-                    using (System.IO.FileStream exeFile = new System.IO.FileStream(outputPath, System.IO.FileMode.Create))
+                    using (FileStream exeFile = new FileStream(outputPath, FileMode.Create))
                     {
                         exeFile.Write(resource, 0, resource.Length);
                     }
@@ -706,7 +699,6 @@ namespace BBC.BSC.Tool
                 {
                     logger.Error("Problem writing out tool. {0}", ex.Message);
                 }
-
             }
             return false;
         }
@@ -715,84 +707,83 @@ namespace BBC.BSC.Tool
 
         private void TextBox_ere_TextChanged(object sender, TextChangedEventArgs e)
         {
-            Properties.Settings.Default.ere = ((TextBox)sender).Text;
-            Properties.Settings.Default.Save();
+            Settings.Default.ere = ((TextBox)sender).Text;
+            Settings.Default.Save();
         }
 
 
-        private void Textbox_host_TextChanged(object sender, TextChangedEventArgs e)
+        private void TextBox_host_TextChanged(object sender, TextChangedEventArgs e)
         {
-            logger.ConditionalTrace("host text changed: {0}", textbox_host.Text.Trim());
-            host_text = textbox_host.Text.Trim();
+            logger.ConditionalTrace("host text changed: {0}", TextBoxHost.Text.Trim());
+            hostText = TextBoxHost.Text.Trim();
             hostTimer.Stop();
             hostTimer.Start();
         }
 
-        private string search_text;
+        private string searchText;
 
         private void Search_Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            logger.Trace("search timer elapsed: {0}", search_text);
+            logger.Trace("search timer elapsed: {0}", searchText);
             searchTimer.Stop();
-            BackgroundWorker worker = new BackgroundWorker();
+            var worker = new BackgroundWorker();
             worker.DoWork += Do_Search;
             worker.RunWorkerCompleted += DisplayResults;
             workers.Add(worker);
-            worker.RunWorkerAsync(search_text);
+            worker.RunWorkerAsync(searchText);
         }
 
 
         private void Host_Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            logger.Debug("host timer elapsed: {0}", host_text);
+            logger.Debug("host timer elapsed: {0}", hostText);
             hostTimer.Stop();
-            BackgroundWorker connectionWorker = new BackgroundWorker();
+            var connectionWorker = new BackgroundWorker();
             connectionWorker.DoWork += Do_Test_Connection;
             connectionWorker.RunWorkerCompleted += Complete_Test_Connection;
             connectionWorkers.Add(connectionWorker);
-            connectionWorker.RunWorkerAsync(argument: host_text);
+            connectionWorker.RunWorkerAsync(argument: hostText);
         }
 
         private void Complete_Test_Connection(object sender, RunWorkerCompletedEventArgs e)
         {
-            MyConnection con = (MyConnection)e.Result;
-            if (LastConnectionResult < con.timestamp)
+            var con = (MyConnection)e.Result;
+            logger.Trace("Conection test to {1} completed at {0}", con.Timestamp, con.Host);
+            if (lastConnectionResult < con.Timestamp)
             {
-                Dispatcher.Invoke(delegate ()
+                Dispatcher.Invoke(delegate
                 {
-                    button_RDP.IsEnabled = con.rdp;
-                    button_RC.IsEnabled = con.rdp;
-                    button_RC_W10.IsEnabled = con.rdp;
-                    button_VNC.IsEnabled = con.vnc;
-                    button_SSH.IsEnabled = con.ssh;
-                    button_SSH_ERE.IsEnabled = con.ssh;
-                    button_HTTP.IsEnabled = con.http;
-                    button_HTTPS.IsEnabled = con.https;
-                    button_TELNET.IsEnabled = con.telnet;
-                    button_LogView.IsEnabled = con.diralogview;
-                    LastConnectionResult = con.timestamp;
+                    logger.Trace("setting all buttons as per results");
+                    ButtonRdp.IsEnabled = con.Rdp;
+                    ButtonRc.IsEnabled = con.Rdp;
+                    ButtonRcW10.IsEnabled = con.Rdp;
+                    ButtonVnc.IsEnabled = con.Vnc;
+                    ButtonSsh.IsEnabled = con.Ssh;
+                    ButtonSshEre.IsEnabled = con.Ssh;
+                    ButtonHttp.IsEnabled = con.Http;
+                    ButtonHttps.IsEnabled = con.Https;
+                    ButtonTelnet.IsEnabled = con.Telnet;
+                    ButtonLogView.IsEnabled = con.DiraLogView;
+                    lastConnectionResult = con.Timestamp;
 
-                    button_RC_W10.Style = (Style)FindResource("MaterialDesignRaisedButton");
-                    button_RC.Style = (Style)FindResource("MaterialDesignRaisedButton");
-                    button_RDP.Style = (Style)FindResource("MaterialDesignRaisedButton");
+                    ButtonRcW10.Style = (Style)FindResource("MaterialDesignRaisedButton");
+                    ButtonRc.Style = (Style)FindResource("MaterialDesignRaisedButton");
+                    ButtonRdp.Style = (Style)FindResource("MaterialDesignRaisedButton");
                     try
                     {
-                        if (null != selectedResult)
-                            if (null != selectedResult.OperatingSystem)
-                            {
-                                if (selectedResult.OperatingSystem.Contains("Windows 10"))
-                                {
-                                    button_RC_W10.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
-                                }
-                                else if (selectedResult.OperatingSystem.Contains("Windows 7"))
-                                {
-                                    button_RC.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
-                                }
-                                else if (selectedResult.OperatingSystem.Contains("Windows Server"))
-                                {
-                                    button_RDP.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
-                                }
-                            }
+                        if (selectedResult?.OperatingSystem == null) return;
+                        if (selectedResult.OperatingSystem.Contains("Windows 10"))
+                        {
+                            ButtonRcW10.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
+                        }
+                        else if (selectedResult.OperatingSystem.Contains("Windows 7"))
+                        {
+                            ButtonRc.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
+                        }
+                        else if (selectedResult.OperatingSystem.Contains("Windows Server"))
+                        {
+                            ButtonRdp.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -806,60 +797,62 @@ namespace BBC.BSC.Tool
         private void Do_Test_Connection(object sender, DoWorkEventArgs e)
         {
             logger.Info("Testing connection to {0}", e.Argument.ToString());
-            using (MyConnection con = new MyConnection())
+            using (var con = new MyConnection())
             {
+                con.Host = e.Argument.ToString();
+                // If short don't test
                 if (e.Argument.ToString().Length < 4)
                 {
                     e.Result = con;
                     return;
                 }
-                int timeout = 100;
+                const int timeout = 100;
 
                 if (IsPortOpen(e.Argument.ToString(), 3389, TimeSpan.FromMilliseconds(timeout)))
                 {
-                    con.rdp = true;
+                    con.Rdp = true;
                 }
 
                 if (IsPortOpen(e.Argument.ToString(), 5900, TimeSpan.FromMilliseconds(timeout)))
                 {
-                    con.vnc = true;
+                    con.Vnc = true;
                 }
 
                 if (IsPortOpen(e.Argument.ToString(), 22, TimeSpan.FromMilliseconds(timeout)))
                 {
-                    con.ssh = true;
+                    con.Ssh = true;
                 }
 
                 if (IsPortOpen(e.Argument.ToString(), 23, TimeSpan.FromMilliseconds(timeout)))
                 {
-                    con.telnet = true;
+                    con.Telnet = true;
                 }
 
                 if (IsPortOpen(e.Argument.ToString(), 80, TimeSpan.FromMilliseconds(timeout)))
                 {
-                    con.http = true;
+                    con.Http = true;
                 }
 
                 if (IsPortOpen(e.Argument.ToString(), 443, TimeSpan.FromMilliseconds(timeout)))
                 {
-                    con.https = true;
+                    con.Https = true;
                 }
                 if (IsPortOpen(e.Argument.ToString(), 5100, TimeSpan.FromMilliseconds(timeout)))
                 {
-                    con.diralogview = true;
+                    con.DiraLogView = true;
                 }
                 e.Result = con;
             }
         }
 
-        private bool IsPortOpen(string host, int port, TimeSpan timeout)
+        private static bool IsPortOpen(string host, int port, TimeSpan timeout)
         {
             try
             {
-                using (TcpClient client = new TcpClient())
+                using (var client = new TcpClient())
                 {
-                    IAsyncResult result = client.BeginConnect(host, port, null, null);
-                    bool success = result.AsyncWaitHandle.WaitOne(timeout);
+                    var result = client.BeginConnect(host, port, null, null);
+                    var success = result.AsyncWaitHandle.WaitOne(timeout);
                     if (!success)
                     {
                         return false;
@@ -880,34 +873,34 @@ namespace BBC.BSC.Tool
             {
                 if (((Button)sender).Content.ToString() == "Load IP")
                 {
-                    BackgroundWorker tempBw = new BackgroundWorker();
+                    var tempBw = new BackgroundWorker();
                     tempBw.DoWork += delegate
                         {
-                            Dispatcher.Invoke(delegate ()
-                        {
-                            try
+                            Dispatcher.Invoke(delegate
                             {
-                                textbox_host.Text = System.Net.Dns.GetHostEntry(((Button)sender).Tag.ToString()).AddressList[0].ToString();
-                            }
-                            catch (Exception ex)
-                            {
-                                Trace.TraceError(ex.Message);
-                                textbox_host.Text = null;
-                            }
-                        });
+                                try
+                                {
+                                    TextBoxHost.Text = Dns.GetHostEntry(((Button)sender).Tag.ToString()).AddressList[0].ToString();
+                                }
+                                catch (Exception ex)
+                                {
+                                    Trace.TraceError(ex.Message);
+                                    TextBoxHost.Text = "";
+                                }
+                            });
 
                         };
                     tempBw.RunWorkerAsync();
                 }
                 else
                 {
-                    textbox_host.Text = ((Button)sender).Content.ToString();
+                    TextBoxHost.Text = ((Button)sender).Content.ToString();
                 }
             }
             catch (Exception ex)
             {
                 Trace.TraceError(ex.Message);
-                textbox_host.Text = "";
+                TextBoxHost.Text = "";
             }
         }
 
@@ -915,7 +908,7 @@ namespace BBC.BSC.Tool
         {
             if (null != ((ListView)sender).SelectedValue)
             {
-                textbox_host.Text = ((ListView)sender).SelectedValue.ToString();
+                TextBoxHost.Text = ((ListView)sender).SelectedValue.ToString();
             }
 
         }
@@ -933,11 +926,11 @@ namespace BBC.BSC.Tool
 
         private void Button_Phonebox_Click(object sender, RoutedEventArgs e)
         {
-            logger.Info("Phonbox button pressed with content {0}", ((Button)sender).Content);
+            logger.Info("Phonebox button pressed with content {0}", ((Button)sender).Content);
 
-            if (!File.Exists(phoneboxIniPath))
+            if (!File.Exists(PhoneboxIniPath))
             {
-                logger.Error("Phonebox ini file doesn't exist at {0}. Not switching.", phoneboxIniPath);
+                logger.Error("Phonebox ini file doesn't exist at {0}. Not switching.", PhoneboxIniPath);
                 return;
             }
             if (Process.GetProcessesByName("PhoneBOX.Client").Count() != 0)
@@ -947,7 +940,8 @@ namespace BBC.BSC.Tool
                 return;
             }
 
-            PhoneBoxConfig phoneBoxConfig = new PhoneBoxConfig();
+            var phoneBoxConfig = new PhoneBoxConfig();
+            // TODO make configuration
             switch (((Button)sender).Content)
             {
                 case "West":
@@ -998,295 +992,40 @@ namespace BBC.BSC.Tool
                     break;
             }
 
-            if (phoneBoxConfig != null)
+            if (phoneBoxConfig == null) return;
+            logger.Debug("Writing config to {0}\n{1}", PhoneboxIniPath, phoneBoxConfig);
+            try
             {
-                logger.Debug("Writing config to {0}\n{1}", phoneboxIniPath, phoneBoxConfig);
+                File.WriteAllLines(PhoneboxIniPath, phoneBoxConfig.ToStringArray());
+                logger.Info("Attempting to start Phonebox");
                 try
                 {
-                    File.WriteAllLines(phoneboxIniPath, phoneBoxConfig.ToStringArray());
-                    logger.Info("Attempting to start Phonebox");
-                    try
-                    {
-                        Process proc = Process.Start(phoneboxExePath);
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.Error(ex, "Problem starting PhoneBOX");
-                        App.SendReport(ex);
-                    }
+                    Process.Start(PhoneboxExePath);
                 }
                 catch (Exception ex)
                 {
-                    if (ex.GetType() == typeof(System.UnauthorizedAccessException))
-                    {
-                        MessageBox.Show($"Check file permissions for {phoneboxIniPath}", "Problem writing configuration", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                    logger.Error(ex, "Problem writing PhoneBOX ini file - check file permission.");
+                    logger.Error(ex, "Problem starting PhoneBOX");
                     App.SendReport(ex);
                 }
-
             }
-        }
-
-        private void Textbox_host_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            if (textbox_host.IsEnabled == true)
+            catch (Exception ex)
             {
-                textbox_host.IsEnabled = false;
-            }
-            else
-            {
-                textbox_host.IsEnabled = true;
-            }
-        }
-
-
-        class InfoDisplayItem
-        {
-            public string info_id { get; set; }
-            public string title { get; set; }
-            public string info { get; set; }
-            public string width { get; set; }
-            public string height { get; set; }
-
-        }
-
-        private void UpdateInfoGridAllocation()
-        {
-            logger.Info("Starting Info Grid update");
-
-            gridInfoDisplay.Children.Clear();
-            using (var webClient = new WebClient())
-            {
-                try
+                if (ex.GetType() == typeof(UnauthorizedAccessException))
                 {
-                    webClient.UseDefaultCredentials = true;
-                    string jsonString = webClient.DownloadString("http://ertg.er.bbc.co.uk/infodisplay/get_info.php?id=1");
-                    var json = JObject.Parse(jsonString);
-
-                    logger.Trace(jsonString);
-
-                    //logger.Info(json.ToString());
-
-                    foreach (var item in json)
-                    {
-                        if (int.TryParse(item.Key, out int result))
-                        {
-                            // item is a box
-
-                            StackPanel stack = new StackPanel();
-
-                            InfoDisplayItem info = JObject.Parse(item.Value.ToString()).ToObject<InfoDisplayItem>();
-
-                            TextBlock tbTitle = new TextBlock();
-                            tbTitle.Text = info.title;
-                            tbTitle.FontWeight = FontWeights.Bold;
-                            stack.Children.Add(tbTitle);
-
-                            TextBlock tbContent = new TextBlock();
-
-                            string content = Regex.Replace(info.info, "<[^>]*>", "");
-
-                            tbContent.Text = Regex.Replace(content, @"http.*remote\.php\?.*host=[a-zA-Z0-9\-]*", "").Trim();
-                            tbContent.TextWrapping = TextWrapping.WrapWithOverflow;
-                            stack.Children.Add(tbContent);
-
-                            Regex buttonRegex = new Regex(@"http:\\?\/\\?\/er\.bbc\.co\.uk\\?\/tools\\?\/remote\.php\?([a-zA-Z]*=[a-zA-Z]*&)?host=([a-zA-Z0-9\-\.]*)", RegexOptions.Compiled);
-                            foreach (Match match in buttonRegex.Matches(info.info))
-                            {
-                                Button btn = new Button();
-                                btn.Content = match.Groups[2];
-                                btn.Click += InfoDisplay_Button_Click;
-                                stack.Children.Add(btn);
-                                btn = null;
-                            }
-
-                            Grid.SetColumn(stack, ((int.Parse(info.info_id) - 1) % gridInfoDisplay.ColumnDefinitions.Count));
-                            Grid.SetRow(stack, ((int.Parse(info.info_id) - 1) / (gridInfoDisplay.RowDefinitions.Count + 1)));
-
-                            gridInfoDisplay.Children.Add(stack);
-                            tbTitle = null;
-                            tbContent = null;
-
-                        }
-
-                    }
-
+                    MessageBox.Show($"Check file permissions for {PhoneboxIniPath}", "Problem writing configuration", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
-                catch (Exception ex)
-                {
-
-                    logger.Error(ex);
-                }
-
-
-            }
-
-
-        }
-
-        private void InfoDisplay_Button_Click(object sender, RoutedEventArgs e)
-        {
-            textbox_host.Text = ((Button)sender).Content.ToString();
-        }
-
-        private void tabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (tabInfoDisplay.IsSelected)
-            {
-                Dispatcher.Invoke(delegate
-                {
-                    UpdateInfoGridAllocation();
-
-                });
-            }
-        }
-    }
-    internal class PhoneBoxConfig
-    {
-        public string ServerAddress { get; set; }
-        public string ServerBackupAddress { get; set; }
-        public string OasisAddress { get; set; }
-        public string OasisBackupAddress { get; set; }
-
-        public override string ToString()
-        {
-            return string.Format(@"[server]
-backupaddress = {1}
-address = {0}
-[oasis]
-address = {2}
-backupaddress = {3}
-",
-                ServerAddress,
-                ServerBackupAddress,
-                OasisAddress,
-                OasisBackupAddress);
-        }
-        public string[] ToStringArray()
-        {
-            return new string[] {
-                $"[server]",
-                $"backupaddress = {ServerBackupAddress}",
-                $"address = {ServerAddress}",
-                $"[oasis]",
-                $"address = {OasisAddress}",
-                $"backupaddress = {OasisBackupAddress}"
-            };
-
-        }
-    }
-
-    internal class MyResults
-    {
-
-        public DateTime timestamp
-        {
-            get;
-        }
-        public List<MyResult> results = new List<MyResult>();
-
-        public MyResults()
-        {
-            timestamp = DateTime.Now;
-        }
-        public void AddResult(MyResult result)
-        {
-            results.Add(result);
-        }
-
-
-
-    }
-    public class MyResult
-    {
-        public string Source { get; set; }
-        public string Hostname { get; set; }
-        public string Ip { get; set; }
-        public string Description { get; set; }
-        public string OperatingSystem { get; set; }
-        public MyResult()
-        {
-
-        }
-        public MyResult(string HOSTNAME, string SOURCE = null)
-        {
-            Hostname = HOSTNAME;
-            Source = SOURCE;
-        }
-        public MyResult(string HOSTNAME, string IP, string SOURCE = null)
-        {
-            Hostname = HOSTNAME;
-            Ip = IP;
-            Source = SOURCE;
-        }
-
-    };
-    internal class MyConnection : IDisposable
-    {
-        public DateTime timestamp = DateTime.Now;
-        public bool rdp = false;
-        public bool vnc = false;
-        public bool ssh = false;
-        public bool http = false;
-        public bool https = false;
-        public bool telnet = false;
-        public bool diralogview = false;
-
-        public void Dispose()
-        {
-            //    this.rdp = null;
-            //    this.vnc = null;
-            //    this.ssh = null;
-            //    this.http = null;
-            //    this.telnet = null;
-        }
-    }
-
-
-    public class SettingBindingExtension : Binding
-    {
-        public SettingBindingExtension()
-        {
-            Initialize();
-        }
-
-        public SettingBindingExtension(string path)
-            : base(path)
-        {
-            Initialize();
-        }
-
-        private void Initialize()
-        {
-            Source = Properties.Settings.Default;
-            Mode = BindingMode.TwoWay;
-        }
-    }
-
-    public static class UIHelper
-    {
-
-        public static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent)
-        where T : DependencyObject
-        {
-            int childrenCount = VisualTreeHelper.GetChildrenCount(parent);
-            for (int i = 0; i < childrenCount; i++)
-            {
-                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
-
-                T childType = child as T;
-                if (childType != null)
-                {
-                    yield return (T)child;
-                }
-
-                foreach (T other in FindVisualChildren<T>(child))
-                {
-                    yield return other;
-                }
+                logger.Error(ex, "Problem writing PhoneBOX ini file - check file permission.");
+                App.SendReport(ex);
             }
         }
 
+        private void TextBox_host_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            TextBoxHost.IsEnabled = !TextBoxHost.IsEnabled;
+        }
+
+
+     
+       
     }
 }
