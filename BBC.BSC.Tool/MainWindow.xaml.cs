@@ -278,6 +278,9 @@ namespace BBC.BSC.Tool
                 case "lnk":
                     packIconKind = PackIconKind.FolderNetwork;
                     break;
+                case "rdp":
+                    packIconKind = PackIconKind.Server;
+                    break;
                 default:
                     packIconKind = PackIconKind.HelpBox;
                     break;
