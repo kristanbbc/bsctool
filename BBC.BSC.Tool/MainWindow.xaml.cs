@@ -205,7 +205,7 @@ namespace BBC.BSC.Tool
 
                     break;
                 default:
-                    startInfo.FileName = $"\" { tvSender.Tag} \"";
+                    startInfo.FileName = tvSender.Tag.ToString(); // $"\" { tvSender.Tag} \"";
 
                     break;
             }
