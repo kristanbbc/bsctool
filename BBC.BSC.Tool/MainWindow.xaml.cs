@@ -809,7 +809,7 @@ namespace BBC.BSC.Tool
                     e.Result = con;
                     return;
                 }
-                const int timeout = 100;
+                const int timeout = 200;
 
                 if (IsPortOpen(e.Argument.ToString(), 3389, TimeSpan.FromMilliseconds(timeout)))
                 {
