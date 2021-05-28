@@ -560,15 +560,15 @@ namespace BBC.BSC.Tool
             var vncExeToRun = Path.Combine(Path.GetTempPath(), "vncx64.exe");
 
 
-            switch (((Button)sender).Name)
+            switch (((Button)sender).Tag)
             {
-                case "button_RDP":
+                case "RDP":
                     startInfo.FileName = "cmd";
                     startInfo.Arguments =
                         $"/c runas /user:national\\{TextBoxEre.Text} /savecred \"mstsc.exe /v:{TextBoxHost.Text}\"";
                     break;
 
-                case "button_RC":
+                case "RC7":
                     if (PrepareTool(Properties.Resources.rc, rcExeToRun))
                     {
                         startInfo.Arguments =
@@ -576,39 +576,39 @@ namespace BBC.BSC.Tool
                         startInfo.FileName = "cmd";
                     }
                     break;
-                case "button_RC_W10":
+                case "RC10":
 
                     startInfo.Arguments =
                         $"/c runas /user:national\\{TextBoxEre.Text} /savecred \"{rcW10ExeToRun} {TextBoxHost.Text.Trim()}\"";
                     startInfo.FileName = "cmd";
 
                     break;
-                case "button_SSH":
+                case "SSH":
                     startInfo.Arguments = $"{TextBoxHost.Text}";
                     startInfo.FileName = Path.Combine(directory, "putty.exe");
                     break;
-                case "button_SSH_ERE":
+                case "SSHERE":
                     startInfo.Arguments = $"{TextBoxEre.Text.Trim()}@{TextBoxHost.Text}";
                     startInfo.FileName = Path.Combine(directory, "putty.exe");
                     break;
-                case "button_TELNET":
+                case "TELNET":
                     startInfo.Arguments = $"-telnet -P 23 {TextBoxHost.Text}";
                     startInfo.FileName = Path.Combine(directory, "putty.exe");
                     break;
-                case "button_VNC":
+                case "VNC":
                     if (PrepareTool(Properties.Resources.vncx64, vncExeToRun))
                     {
                         startInfo.Arguments = $"-username {TextBoxEre.Text} \"{TextBoxHost.Text.Trim()}\"";
                         startInfo.FileName = vncExeToRun;
                     }
                     break;
-                case "button_HTTP":
+                case "HTTP":
                     startInfo.FileName = $"http://{TextBoxHost.Text.Trim()}:80/";
                     break;
-                case "button_HTTPS":
+                case "HTTPS":
                     startInfo.FileName = $"https://{TextBoxHost.Text.Trim()}:443/";
                     break;
-                case "button_LogView":
+                case "LOGVIEW":
                     string[] logViewPaths =
                     {
                         @"C:\Program Files (x86)\dira\diraBasics\LogView.exe",
