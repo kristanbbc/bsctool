@@ -54,6 +54,8 @@ namespace BBC.BSC.Tool
         private const string PhoneboxExePath = @"C:\Program Files (x86)\Broadcast Bionics\PhoneBOX4\Client\PhoneBOX.Client.exe";
 
 
+        public vCenter.VmList.Root cachedVcenter;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -186,7 +188,7 @@ namespace BBC.BSC.Tool
         private void TreeViewBNCS_DoubleClicked(object sender, MouseButtonEventArgs e)
         {
             var tvSender = (TreeViewItem)sender;
-            
+
             var fileInfo = new FileInfo(tvSender.Tag.ToString());
             var startInfo = new ProcessStartInfo();
 
@@ -333,6 +335,7 @@ namespace BBC.BSC.Tool
 
         }
 
+
         private void Do_Search(object sender, DoWorkEventArgs e)
         {
             Dispatcher.Invoke(delegate
@@ -347,6 +350,34 @@ namespace BBC.BSC.Tool
             else
             {
                 logger.Info("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
+
+                if (null != cachedVcenter)
+                {
+                    logger.Info("loading cached vCenter results ({0} total)", cachedVcenter.Value.Count);
+
+                    try
+                    {
+                        foreach (var item in cachedVcenter.Value)
+                        {
+                           //logger.Trace("vCenter item being tested {0} contains {1}", item.Name, e.Argument.ToString());
+                            if (item.Name.ToLower().Contains(e.Argument.ToString()))
+                            {
+                                logger.Trace("vCenter Cache - adding {0} to results list", item.Name);
+                                results.Results.Add(new MyResult { Hostname = item.Name, Source = "vCenter", Tag = item.Vm, Description = "From vCenter" });
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+
+                        logger.Warn("Error running query against vCenter:\n{0}", ex.Message);
+                        Trace.TraceError(ex.Message);
+                    }
+
+
+                }
+
+
                 try
                 {
                     var catQuery =
@@ -622,6 +653,9 @@ namespace BBC.BSC.Tool
                         startInfo.Arguments = $"/ho:{TextBoxHost.Text.Trim()}";
                         break;
                     }
+                    break;
+                case "VMRC":
+                    VCenter.VCenter.LaunchVmrc(TextBoxHost.Text.Trim(), cachedVcenter);
                     break;
             }
 
@@ -1027,8 +1061,10 @@ namespace BBC.BSC.Tool
             TextBoxHost.IsEnabled = !TextBoxHost.IsEnabled;
         }
 
+        private void VCenter_Click(object sender, RoutedEventArgs e)
+        {
+            cachedVcenter = VCenter.VCenter.CacheResults();
 
-     
-       
+        }
     }
 }

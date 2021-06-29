@@ -181,6 +181,12 @@
                     </StackPanel>
                 </Grid>
             </TabItem>
+
+
+            <TabItem Header="Expiermental">
+                <Button Click="VCenter_Click" Content="Cache vCenter VMs" />
+            </TabItem>
+            
         </TabControl>
 
         <Grid Grid.Row="2" Grid.Column="0">
@@ -212,7 +218,7 @@
             <Button x:Name="ButtonHttp" Tag="HTTP" Content="HTTP"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
             <Button x:Name="ButtonHttps" Tag="HTTPS" Content="HTTPS" Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
             <Button x:Name="ButtonLogView" Tag="LOGVIEW" Content="LogView" Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
-
+            <Button x:Name="ButtonVmrc" Tag="VMRC" Content="VMRC" Click="Connect_Button_Click" IsEnabled="True" Margin="4" materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}" />
         </WrapPanel>
 
     </Grid>
