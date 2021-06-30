@@ -319,19 +319,8 @@ namespace BBC.BSC.Tool
 
         }
 
-        private List<CatResult> catResults = new List<CatResult>();
-        private class CatResult
-        {
-            [JsonProperty("host_name")]
-            public string HostName;
-            [JsonProperty("also_known_as")]
-            public string AlsoKnownAs;
-            [JsonProperty("ip")]
-            public string Ip;
-            [JsonProperty("os")]
-            public string Os;
-
-        }
+        private List<Modules.CatResult> catResults = new List<Modules.CatResult>();
+       
 
         private void Do_Search(object sender, DoWorkEventArgs e)
         {
@@ -365,7 +354,7 @@ namespace BBC.BSC.Tool
 
                     if (!string.IsNullOrEmpty(jsonData))
                     {
-                        catResults = JsonConvert.DeserializeObject<List<CatResult>>(jsonData);
+                        catResults = JsonConvert.DeserializeObject<List<Modules.CatResult>>(jsonData);
                         logger.Info("Got {0} results from CAT", catResults?.Count);
 
                         if (catResults != null)
