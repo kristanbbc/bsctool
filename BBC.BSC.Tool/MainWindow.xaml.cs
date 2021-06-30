@@ -175,7 +175,7 @@ namespace BBC.BSC.Tool
                 };
                 var stack = new StackPanel { Orientation = Orientation.Horizontal };
                 var ext = Path.GetExtension(item).Substring(1).ToLower();
-                stack.Children.Add(new PackIcon() { Kind = GetPackIconKind(ext) });
+                stack.Children.Add(new PackIcon() { Kind = Modules.BNCS.GetPackIconKind(ext) });
                 stack.Children.Add(new Label { Content = Path.GetFileNameWithoutExtension(item) });
                 treeViewItem.Header = stack;
                 treeViewItem.MouseDoubleClick += TreeViewBNCS_DoubleClicked;
@@ -254,7 +254,7 @@ namespace BBC.BSC.Tool
                     };
                     var stack = new StackPanel { Orientation = Orientation.Horizontal };
                     var ext = Path.GetExtension(item).Substring(1).ToLower();
-                    stack.Children.Add(new PackIcon { Kind = GetPackIconKind(ext) });
+                    stack.Children.Add(new PackIcon { Kind = Modules.BNCS.GetPackIconKind(ext) });
                     stack.Children.Add(new Label { Content = Path.GetFileNameWithoutExtension(item) });
                     treeViewItem.Header = stack;
                     treeViewItem.MouseDoubleClick += TreeViewBNCS_DoubleClicked;
@@ -264,29 +264,7 @@ namespace BBC.BSC.Tool
             });
         }
 
-        private static PackIconKind GetPackIconKind(string ext)
-        {
-            PackIconKind packIconKind;
-            switch (ext)
-            {
-                case "vnc":
-                    packIconKind = PackIconKind.Computer;
-                    break;
-                case "url":
-                    packIconKind = PackIconKind.Web;
-                    break;
-                case "lnk":
-                    packIconKind = PackIconKind.FolderNetwork;
-                    break;
-                case "rdp":
-                    packIconKind = PackIconKind.Server;
-                    break;
-                default:
-                    packIconKind = PackIconKind.HelpBox;
-                    break;
-            }
-            return packIconKind;
-        }
+        
 
 
         /// <summary>Updates the status box if running searches are still happening.</summary>
