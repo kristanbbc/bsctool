@@ -1,7 +1,6 @@
 ﻿using BBC.BSC.Tool.Properties;
 using MaterialDesignThemes.Wpf;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NLog;
 using NLog.Targets;
 using System;
@@ -17,20 +16,13 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using BBC.BSC.Tool.Properties;
-using MaterialDesignThemes.Wpf;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using NLog;
 using NLog.Config;
-using NLog.Targets;
 using NLog.Targets.ElasticSearch;
 using Timer = System.Timers.Timer;
 
