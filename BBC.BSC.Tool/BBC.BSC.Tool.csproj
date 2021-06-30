@@ -158,7 +158,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="MyConnection.cs" />
-    <Compile Include="MyResults.cs" />
+    <Compile Include="Results\MyResults.cs" />
     <Compile Include="PhoneBoxConfig.cs" />
     <Compile Include="SettingBindingExtension.cs" />
     <Compile Include="UiHelper.cs" />
@@ -176,7 +176,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MyResult.cs" />
+    <Compile Include="Results\MyResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

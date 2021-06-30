@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace BBC.BSC.Tool
+namespace BBC.BSC.Tool.Results
 {
-    internal class MyResults
+    public class MyResults
     {
         public DateTime Timestamp
         {

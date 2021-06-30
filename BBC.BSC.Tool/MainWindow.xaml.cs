@@ -339,7 +339,7 @@ namespace BBC.BSC.Tool
             {
                 Status.Fill = new SolidColorBrush(Colors.Red);
             });
-            MyResults results = new MyResults();
+            Results.MyResults results = new Results.MyResults();
             if (e.Argument.ToString().Length < 4)
             {
                 e.Result = null;
@@ -371,7 +371,7 @@ namespace BBC.BSC.Tool
                         if (catResults != null)
                             foreach (var item in catResults)
                             {
-                                results.Results.Add(new MyResult
+                                results.Results.Add(new Results.MyResult
                                 {
                                     Source = "CAT",
                                     Hostname = item.HostName.ToUpper(),
@@ -416,7 +416,7 @@ namespace BBC.BSC.Tool
                                 logger.ConditionalTrace("AD: found: {0}", item.Properties["name"][0].ToString().ToUpper());
                                 if (results.Results.All(n => n.Hostname != item.Properties["name"][0].ToString().ToUpper()))
                                 {
-                                    results.AddResult(new MyResult
+                                    results.AddResult(new Results.MyResult
                                     {
                                         Hostname = item.Properties["name"][0].ToString().ToUpper(),
                                         Description = CleanResultProperty(item, "description"),
@@ -455,17 +455,17 @@ namespace BBC.BSC.Tool
         }
 
 
-        private MyResult selectedResult = new MyResult();
+        private Results.MyResult selectedResult = new Results.MyResult();
 
         private void DisplayResults(object sender, RunWorkerCompletedEventArgs e)
         {
             logger.Trace("Start displaying results, stopping and disposing background worker");
             workers.Remove((BackgroundWorker)sender);
             ((BackgroundWorker)sender).Dispose();
-            var res = (MyResults)e.Result;
+            var res = (Results.MyResults)e.Result;
             logger.Trace($"There are {res.Results.Count} results");
             // If results returned select first in list.
-            selectedResult = res.Results.Count > 0 ? ((MyResults)e.Result).Results[0] : null;
+            selectedResult = res.Results.Count > 0 ? ((Results.MyResults)e.Result).Results[0] : null;
             try
             {
                 // If results older than currently displayed (earlier queries take longer) then drop results
@@ -474,7 +474,7 @@ namespace BBC.BSC.Tool
                 Dispatcher.Invoke(delegate
                 {
                     logger.Trace("Copying results to result collection.");
-                    var results = new ObservableCollection<MyResult>();
+                    var results = new ObservableCollection<Results.MyResult>();
                     foreach (var item in res.Results)
                     {
                         results.Add(item);
@@ -527,7 +527,7 @@ namespace BBC.BSC.Tool
         {
             try
             {
-                TextBoxHost.Text = ((MyResult)((ListBox)sender).SelectedValue).Hostname;
+                TextBoxHost.Text = ((Results.MyResult)((ListBox)sender).SelectedValue).Hostname;
             }
             catch (Exception ex)
             {
@@ -542,7 +542,7 @@ namespace BBC.BSC.Tool
         {
             try
             {
-                TextBoxHost.Text = ((MyResult)((ListBox)sender)?.SelectedValue)?.Hostname ?? string.Empty;
+                TextBoxHost.Text = ((Results.MyResult)((ListBox)sender)?.SelectedValue)?.Hostname ?? string.Empty;
             }
             catch (Exception ex)
             {
