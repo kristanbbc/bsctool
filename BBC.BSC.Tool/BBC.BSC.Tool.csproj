@@ -159,9 +159,10 @@
     </ApplicationDefinition>
     <Compile Include="Modules\BNCS.cs" />
     <Compile Include="Modules\CAT.cs" />
+    <Compile Include="Modules\PhoneBox.cs" />
     <Compile Include="MyConnection.cs" />
     <Compile Include="Results\MyResults.cs" />
-    <Compile Include="PhoneBoxConfig.cs" />
+    <Compile Include="Modules\PhoneBoxConfig.cs" />
     <Compile Include="SettingBindingExtension.cs" />
     <Compile Include="UiHelper.cs" />
     <Page Include="MainWindow.xaml">

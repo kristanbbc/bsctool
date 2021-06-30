@@ -910,59 +910,13 @@ namespace BBC.BSC.Tool
                 return;
             }
 
-            var phoneBoxConfig = new PhoneBoxConfig();
-            // TODO make configuration
-            switch (((Button)sender).Content)
+            Modules.PhoneBoxConfig phoneBoxConfig = Modules.PhoneBox.GetPhoneBoxConfig(((Button)sender).Content.ToString());
+
+            if (phoneBoxConfig == null)
             {
-                case "West":
-                    phoneBoxConfig.ServerAddress = "3GBV2APPBXBW01";
-                    phoneBoxConfig.ServerBackupAddress = "3GBV1APPBXBW02";
-                    phoneBoxConfig.OasisAddress = "3GBV2APOAS1002";
-                    phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS1002";
-                    break;
-
-                case "South":
-                    phoneBoxConfig.ServerAddress = "3GBV2APPBXBS01";
-                    phoneBoxConfig.ServerBackupAddress = "3GBV1APPBXBS02";
-                    phoneBoxConfig.OasisAddress = "3GBV2APOAS1002";
-                    phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS1002";
-                    break;
-
-                case "North":
-                    phoneBoxConfig.ServerAddress = "3GBV1APPBXBN01";
-                    phoneBoxConfig.ServerBackupAddress = "3GBV2APPBXBN02";
-                    phoneBoxConfig.OasisAddress = "3GBV1APOAS1001";
-                    phoneBoxConfig.OasisBackupAddress = "3GBV2APOAS1001";
-                    break;
-
-                case "Midlands":
-                    phoneBoxConfig.ServerAddress = "3GBV1APPBXBM01";
-                    phoneBoxConfig.ServerBackupAddress = "3GBV2APPBXBM02";
-                    phoneBoxConfig.OasisAddress = "3GBV1APOAS1001";
-                    phoneBoxConfig.OasisBackupAddress = "3GBV2APOAS1001";
-                    break;
-
-                case "East":
-                    phoneBoxConfig.ServerAddress = "3GBV2APPBXBE01";
-                    phoneBoxConfig.ServerBackupAddress = "3GBV1APPBXBE02";
-                    phoneBoxConfig.OasisAddress = "3GBV2APOAS1002";
-                    phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS1002";
-                    break;
-
-                case "VTS":
-                    phoneBoxConfig.ServerAddress = "3GBV1APPBX6001"; // "10.32.13.220";
-                    phoneBoxConfig.ServerBackupAddress = "3GBV1APPBX6002";// "10.32.13.221";
-                    phoneBoxConfig.OasisAddress = "3GBV1APOAS6001"; // "10.32.13.222";
-                    phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS6002";
-                    break;
-
-                default:
-                    logger.Error("Unknonw phonebox site given");
-                    phoneBoxConfig = null;
-                    break;
+                logger.Error("Unknonw phonebox site given");
+                return;
             }
-
-            if (phoneBoxConfig == null) return;
             logger.Debug("Writing config to {0}\n{1}", PhoneboxIniPath, phoneBoxConfig);
             try
             {

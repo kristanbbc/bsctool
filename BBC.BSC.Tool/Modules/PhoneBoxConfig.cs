@@ -1,6 +1,6 @@
-﻿namespace BBC.BSC.Tool
+﻿namespace BBC.BSC.Tool.Modules
 {
-    internal class PhoneBoxConfig
+    public class PhoneBoxConfig
     {
         public string ServerAddress { get; set; }
         public string ServerBackupAddress { get; set; }
