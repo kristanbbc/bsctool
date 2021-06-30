@@ -715,6 +715,12 @@ namespace BBC.BSC.Tool
             connectionWorker.RunWorkerAsync(argument: hostText);
         }
 
+        private void Do_Test_Connection(object sender, DoWorkEventArgs e)
+        {
+            logger.Info("Testing connection to {0}", e.Argument.ToString());
+            Modules.ConnectionTester.TestHostConnections(e);
+        }
+
         private void Complete_Test_Connection(object sender, RunWorkerCompletedEventArgs e)
         {
             var con = (MyConnection)e.Result;
@@ -764,78 +770,7 @@ namespace BBC.BSC.Tool
             }
         }
 
-        private void Do_Test_Connection(object sender, DoWorkEventArgs e)
-        {
-            logger.Info("Testing connection to {0}", e.Argument.ToString());
-            using (var con = new MyConnection())
-            {
-                con.Host = e.Argument.ToString();
-                // If short don't test
-                if (e.Argument.ToString().Length < 4)
-                {
-                    e.Result = con;
-                    return;
-                }
-                const int timeout = 200;
-
-                if (IsPortOpen(e.Argument.ToString(), 3389, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.Rdp = true;
-                }
-
-                if (IsPortOpen(e.Argument.ToString(), 5900, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.Vnc = true;
-                }
-
-                if (IsPortOpen(e.Argument.ToString(), 22, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.Ssh = true;
-                }
-
-                if (IsPortOpen(e.Argument.ToString(), 23, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.Telnet = true;
-                }
-
-                if (IsPortOpen(e.Argument.ToString(), 80, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.Http = true;
-                }
-
-                if (IsPortOpen(e.Argument.ToString(), 443, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.Https = true;
-                }
-                if (IsPortOpen(e.Argument.ToString(), 5100, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.DiraLogView = true;
-                }
-                e.Result = con;
-            }
-        }
-
-        private static bool IsPortOpen(string host, int port, TimeSpan timeout)
-        {
-            try
-            {
-                using (var client = new TcpClient())
-                {
-                    var result = client.BeginConnect(host, port, null, null);
-                    var success = result.AsyncWaitHandle.WaitOne(timeout);
-                    if (!success)
-                    {
-                        return false;
-                    }
-                    client.EndConnect(result);
-                }
-            }
-            catch
-            {
-                return false;
-            }
-            return true;
-        }
+        
 
         private void Load_Result_Button_Click(object sender, RoutedEventArgs e)
         {
