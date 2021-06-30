@@ -674,14 +674,6 @@ namespace BBC.BSC.Tool
         }
 
 
-
-        private void TextBox_ere_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            Settings.Default.ere = ((TextBox)sender).Text;
-            Settings.Default.Save();
-        }
-
-
         private void TextBox_host_TextChanged(object sender, TextChangedEventArgs e)
         {
             logger.ConditionalTrace("host text changed: {0}", TextBoxHost.Text.Trim());

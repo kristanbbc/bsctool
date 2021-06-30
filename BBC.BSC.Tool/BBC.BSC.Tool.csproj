@@ -157,6 +157,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="GUI\Settings.xaml.cs">
+      <DependentUpon>Settings.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Modules\BNCS.cs" />
     <Compile Include="Modules\CAT.cs" />
     <Compile Include="Modules\ConnectionTester.cs" />
@@ -166,6 +169,10 @@
     <Compile Include="Modules\PhoneBoxConfig.cs" />
     <Compile Include="SettingBindingExtension.cs" />
     <Compile Include="UiHelper.cs" />
+    <Page Include="GUI\Settings.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

@@ -14,7 +14,7 @@
         FontFamily="{DynamicResource MaterialDesignFont}"
         
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-
+        xmlns:gui="clr-namespace:BBC.BSC.Tool.GUI"
         Title="BSC Tool" Height="600" Width="800" Topmost="False" Closing="Window_Closing" Icon="bsctoolicon.ico"
         >
 
@@ -168,18 +168,7 @@
                 </StackPanel>
             </TabItem>
             <TabItem Header="Settings">
-                <Grid Margin="10">
-                    <StackPanel>
-                        <TextBlock Style="{StaticResource MaterialDesignHeadline6TextBlock}">User settings</TextBlock>
-                        <TextBlock Style="{StaticResource MaterialDesignSubtitle1TextBlock}">Settings are saved automatically</TextBlock>
-                        <Separator Height="10" Margin="0"/>
-                        <StackPanel Orientation="Horizontal" Margin="10">
-                            <Label Style="{StaticResource MaterialDesignLabel}">Eng Account:</Label>
-                            <TextBox Width="250" Text="{local:SettingBinding ere}" VerticalAlignment="Center" TextChanged="TextBox_ere_TextChanged" />
-                        </StackPanel>
-
-                    </StackPanel>
-                </Grid>
+                <gui:Settings/>
             </TabItem>
         </TabControl>
 
@@ -196,7 +185,7 @@
             <Label Content="ERE account:" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center" />
 
             <TextBox x:Name="TextBoxHost"  Grid.Row="0" Grid.Column="1" IsEnabled="False" MouseDoubleClick="TextBox_host_MouseDoubleClick" TextWrapping="Wrap" Text="" VerticalAlignment="Center" Width="200" TextChanged="TextBox_host_TextChanged" FontWeight="Bold"/>
-            <TextBox x:Name="TextBoxEre"   Grid.Row="1" Grid.Column="1" IsEnabled="False" TextWrapping="Wrap" Text="{local:SettingBinding ere}" VerticalAlignment="Center" TextChanged="TextBox_ere_TextChanged" >
+            <TextBox x:Name="TextBoxEre"   Grid.Row="1" Grid.Column="1" IsEnabled="False" TextWrapping="Wrap" Text="{local:SettingBinding ere}" VerticalAlignment="Center"  >
                 <TextBox.ToolTip>Setting now in the Settings tab.</TextBox.ToolTip>
             </TextBox>
 
