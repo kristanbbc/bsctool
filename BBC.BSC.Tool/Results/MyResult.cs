@@ -1,4 +1,4 @@
-﻿namespace BBC.BSC.Tool
+﻿namespace BBC.BSC.Tool.Results
 {
     public class MyResult
     {

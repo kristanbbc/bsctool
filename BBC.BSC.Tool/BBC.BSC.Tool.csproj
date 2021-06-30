@@ -165,13 +165,24 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="GUI\Settings.xaml.cs">
+      <DependentUpon>Settings.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\BNCS.cs" />
+    <Compile Include="Modules\CAT.cs" />
+    <Compile Include="Modules\ConnectionTester.cs" />
+    <Compile Include="Modules\PhoneBox.cs" />
     <Compile Include="MyConnection.cs" />
-    <Compile Include="MyResults.cs" />
-    <Compile Include="PhoneBoxConfig.cs" />
+    <Compile Include="Results\MyResults.cs" />
+    <Compile Include="Modules\PhoneBoxConfig.cs" />
     <Compile Include="SettingBindingExtension.cs" />
     <Compile Include="UiHelper.cs" />
     <Compile Include="vCenter\VCenter.cs" />
     <Compile Include="vCenter\VmList.cs" />
+    <Page Include="GUI\Settings.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -186,7 +197,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MyResult.cs" />
+    <Compile Include="Results\MyResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

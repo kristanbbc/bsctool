@@ -177,7 +177,7 @@ namespace BBC.BSC.Tool
                 };
                 var stack = new StackPanel { Orientation = Orientation.Horizontal };
                 var ext = Path.GetExtension(item).Substring(1).ToLower();
-                stack.Children.Add(new PackIcon() { Kind = GetPackIconKind(ext) });
+                stack.Children.Add(new PackIcon() { Kind = Modules.BNCS.GetPackIconKind(ext) });
                 stack.Children.Add(new Label { Content = Path.GetFileNameWithoutExtension(item) });
                 treeViewItem.Header = stack;
                 treeViewItem.MouseDoubleClick += TreeViewBNCS_DoubleClicked;
@@ -256,7 +256,7 @@ namespace BBC.BSC.Tool
                     };
                     var stack = new StackPanel { Orientation = Orientation.Horizontal };
                     var ext = Path.GetExtension(item).Substring(1).ToLower();
-                    stack.Children.Add(new PackIcon { Kind = GetPackIconKind(ext) });
+                    stack.Children.Add(new PackIcon { Kind = Modules.BNCS.GetPackIconKind(ext) });
                     stack.Children.Add(new Label { Content = Path.GetFileNameWithoutExtension(item) });
                     treeViewItem.Header = stack;
                     treeViewItem.MouseDoubleClick += TreeViewBNCS_DoubleClicked;
@@ -266,29 +266,7 @@ namespace BBC.BSC.Tool
             });
         }
 
-        private static PackIconKind GetPackIconKind(string ext)
-        {
-            PackIconKind packIconKind;
-            switch (ext)
-            {
-                case "vnc":
-                    packIconKind = PackIconKind.Computer;
-                    break;
-                case "url":
-                    packIconKind = PackIconKind.Web;
-                    break;
-                case "lnk":
-                    packIconKind = PackIconKind.FolderNetwork;
-                    break;
-                case "rdp":
-                    packIconKind = PackIconKind.Server;
-                    break;
-                default:
-                    packIconKind = PackIconKind.HelpBox;
-                    break;
-            }
-            return packIconKind;
-        }
+        
 
 
         /// <summary>Updates the status box if running searches are still happening.</summary>
@@ -321,19 +299,8 @@ namespace BBC.BSC.Tool
 
         }
 
-        private List<CatResult> catResults = new List<CatResult>();
-        private class CatResult
-        {
-            [JsonProperty("host_name")]
-            public string HostName;
-            [JsonProperty("also_known_as")]
-            public string AlsoKnownAs;
-            [JsonProperty("ip")]
-            public string Ip;
-            [JsonProperty("os")]
-            public string Os;
-
-        }
+        private List<Modules.CatResult> catResults = new List<Modules.CatResult>();
+       
 
 
         private void Do_Search(object sender, DoWorkEventArgs e)
@@ -342,7 +309,7 @@ namespace BBC.BSC.Tool
             {
                 Status.Fill = new SolidColorBrush(Colors.Red);
             });
-            MyResults results = new MyResults();
+            Results.MyResults results = new Results.MyResults();
             if (e.Argument.ToString().Length < 4)
             {
                 e.Result = null;
@@ -396,13 +363,13 @@ namespace BBC.BSC.Tool
 
                     if (!string.IsNullOrEmpty(jsonData))
                     {
-                        catResults = JsonConvert.DeserializeObject<List<CatResult>>(jsonData);
+                        catResults = JsonConvert.DeserializeObject<List<Modules.CatResult>>(jsonData);
                         logger.Info("Got {0} results from CAT", catResults?.Count);
 
                         if (catResults != null)
                             foreach (var item in catResults)
                             {
-                                results.Results.Add(new MyResult
+                                results.Results.Add(new Results.MyResult
                                 {
                                     Source = "CAT",
                                     Hostname = item.HostName.ToUpper(),
@@ -447,7 +414,7 @@ namespace BBC.BSC.Tool
                                 logger.ConditionalTrace("AD: found: {0}", item.Properties["name"][0].ToString().ToUpper());
                                 if (results.Results.All(n => n.Hostname != item.Properties["name"][0].ToString().ToUpper()))
                                 {
-                                    results.AddResult(new MyResult
+                                    results.AddResult(new Results.MyResult
                                     {
                                         Hostname = item.Properties["name"][0].ToString().ToUpper(),
                                         Description = CleanResultProperty(item, "description"),
@@ -486,17 +453,17 @@ namespace BBC.BSC.Tool
         }
 
 
-        private MyResult selectedResult = new MyResult();
+        private Results.MyResult selectedResult = new Results.MyResult();
 
         private void DisplayResults(object sender, RunWorkerCompletedEventArgs e)
         {
             logger.Trace("Start displaying results, stopping and disposing background worker");
             workers.Remove((BackgroundWorker)sender);
             ((BackgroundWorker)sender).Dispose();
-            var res = (MyResults)e.Result;
+            var res = (Results.MyResults)e.Result;
             logger.Trace($"There are {res.Results.Count} results");
             // If results returned select first in list.
-            selectedResult = res.Results.Count > 0 ? ((MyResults)e.Result).Results[0] : null;
+            selectedResult = res.Results.Count > 0 ? ((Results.MyResults)e.Result).Results[0] : null;
             try
             {
                 // If results older than currently displayed (earlier queries take longer) then drop results
@@ -505,7 +472,7 @@ namespace BBC.BSC.Tool
                 Dispatcher.Invoke(delegate
                 {
                     logger.Trace("Copying results to result collection.");
-                    var results = new ObservableCollection<MyResult>();
+                    var results = new ObservableCollection<Results.MyResult>();
                     foreach (var item in res.Results)
                     {
                         results.Add(item);
@@ -558,7 +525,7 @@ namespace BBC.BSC.Tool
         {
             try
             {
-                TextBoxHost.Text = ((MyResult)((ListBox)sender).SelectedValue).Hostname;
+                TextBoxHost.Text = ((Results.MyResult)((ListBox)sender).SelectedValue).Hostname;
             }
             catch (Exception ex)
             {
@@ -573,7 +540,7 @@ namespace BBC.BSC.Tool
         {
             try
             {
-                TextBoxHost.Text = ((MyResult)((ListBox)sender)?.SelectedValue)?.Hostname ?? string.Empty;
+                TextBoxHost.Text = ((Results.MyResult)((ListBox)sender)?.SelectedValue)?.Hostname ?? string.Empty;
             }
             catch (Exception ex)
             {
@@ -741,14 +708,6 @@ namespace BBC.BSC.Tool
         }
 
 
-
-        private void TextBox_ere_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            Settings.Default.ere = ((TextBox)sender).Text;
-            Settings.Default.Save();
-        }
-
-
         private void TextBox_host_TextChanged(object sender, TextChangedEventArgs e)
         {
             logger.ConditionalTrace("host text changed: {0}", TextBoxHost.Text.Trim());
@@ -780,6 +739,12 @@ namespace BBC.BSC.Tool
             connectionWorker.RunWorkerCompleted += Complete_Test_Connection;
             connectionWorkers.Add(connectionWorker);
             connectionWorker.RunWorkerAsync(argument: hostText);
+        }
+
+        private void Do_Test_Connection(object sender, DoWorkEventArgs e)
+        {
+            logger.Info("Testing connection to {0}", e.Argument.ToString());
+            Modules.ConnectionTester.TestHostConnections(e);
         }
 
         private void Complete_Test_Connection(object sender, RunWorkerCompletedEventArgs e)
@@ -831,78 +796,7 @@ namespace BBC.BSC.Tool
             }
         }
 
-        private void Do_Test_Connection(object sender, DoWorkEventArgs e)
-        {
-            logger.Info("Testing connection to {0}", e.Argument.ToString());
-            using (var con = new MyConnection())
-            {
-                con.Host = e.Argument.ToString();
-                // If short don't test
-                if (e.Argument.ToString().Length < 4)
-                {
-                    e.Result = con;
-                    return;
-                }
-                const int timeout = 200;
-
-                if (IsPortOpen(e.Argument.ToString(), 3389, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.Rdp = true;
-                }
-
-                if (IsPortOpen(e.Argument.ToString(), 5900, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.Vnc = true;
-                }
-
-                if (IsPortOpen(e.Argument.ToString(), 22, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.Ssh = true;
-                }
-
-                if (IsPortOpen(e.Argument.ToString(), 23, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.Telnet = true;
-                }
-
-                if (IsPortOpen(e.Argument.ToString(), 80, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.Http = true;
-                }
-
-                if (IsPortOpen(e.Argument.ToString(), 443, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.Https = true;
-                }
-                if (IsPortOpen(e.Argument.ToString(), 5100, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.DiraLogView = true;
-                }
-                e.Result = con;
-            }
-        }
-
-        private static bool IsPortOpen(string host, int port, TimeSpan timeout)
-        {
-            try
-            {
-                using (var client = new TcpClient())
-                {
-                    var result = client.BeginConnect(host, port, null, null);
-                    var success = result.AsyncWaitHandle.WaitOne(timeout);
-                    if (!success)
-                    {
-                        return false;
-                    }
-                    client.EndConnect(result);
-                }
-            }
-            catch
-            {
-                return false;
-            }
-            return true;
-        }
+        
 
         private void Load_Result_Button_Click(object sender, RoutedEventArgs e)
         {
@@ -977,59 +871,13 @@ namespace BBC.BSC.Tool
                 return;
             }
 
-            var phoneBoxConfig = new PhoneBoxConfig();
-            // TODO make configuration
-            switch (((Button)sender).Content)
+            Modules.PhoneBoxConfig phoneBoxConfig = Modules.PhoneBox.GetPhoneBoxConfig(((Button)sender).Content.ToString());
+
+            if (phoneBoxConfig == null)
             {
-                case "West":
-                    phoneBoxConfig.ServerAddress = "3GBV2APPBXBW01";
-                    phoneBoxConfig.ServerBackupAddress = "3GBV1APPBXBW02";
-                    phoneBoxConfig.OasisAddress = "3GBV2APOAS1002";
-                    phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS1002";
-                    break;
-
-                case "South":
-                    phoneBoxConfig.ServerAddress = "3GBV2APPBXBS01";
-                    phoneBoxConfig.ServerBackupAddress = "3GBV1APPBXBS02";
-                    phoneBoxConfig.OasisAddress = "3GBV2APOAS1002";
-                    phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS1002";
-                    break;
-
-                case "North":
-                    phoneBoxConfig.ServerAddress = "3GBV1APPBXBN01";
-                    phoneBoxConfig.ServerBackupAddress = "3GBV2APPBXBN02";
-                    phoneBoxConfig.OasisAddress = "3GBV1APOAS1001";
-                    phoneBoxConfig.OasisBackupAddress = "3GBV2APOAS1001";
-                    break;
-
-                case "Midlands":
-                    phoneBoxConfig.ServerAddress = "3GBV1APPBXBM01";
-                    phoneBoxConfig.ServerBackupAddress = "3GBV2APPBXBM02";
-                    phoneBoxConfig.OasisAddress = "3GBV1APOAS1001";
-                    phoneBoxConfig.OasisBackupAddress = "3GBV2APOAS1001";
-                    break;
-
-                case "East":
-                    phoneBoxConfig.ServerAddress = "3GBV2APPBXBE01";
-                    phoneBoxConfig.ServerBackupAddress = "3GBV1APPBXBE02";
-                    phoneBoxConfig.OasisAddress = "3GBV2APOAS1002";
-                    phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS1002";
-                    break;
-
-                case "VTS":
-                    phoneBoxConfig.ServerAddress = "3GBV1APPBX6001"; // "10.32.13.220";
-                    phoneBoxConfig.ServerBackupAddress = "3GBV1APPBX6002";// "10.32.13.221";
-                    phoneBoxConfig.OasisAddress = "3GBV1APOAS6001"; // "10.32.13.222";
-                    phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS6002";
-                    break;
-
-                default:
-                    logger.Error("Unknonw phonebox site given");
-                    phoneBoxConfig = null;
-                    break;
+                logger.Error("Unknonw phonebox site given");
+                return;
             }
-
-            if (phoneBoxConfig == null) return;
             logger.Debug("Writing config to {0}\n{1}", PhoneboxIniPath, phoneBoxConfig);
             try
             {
