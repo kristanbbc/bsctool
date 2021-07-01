@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bsc_tool_migrater", "bsc_to
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Jenkins", "Jenkins", "{EB86965E-EEB8-4213-9400-9D5FE3407E02}"
 	ProjectSection(SolutionItems) = preProject
-		JenkinsFile.txt = JenkinsFile.txt
+		Jenkinsfile = Jenkinsfile
 	EndProjectSection
 EndProject
 Global
