@@ -54,7 +54,7 @@ namespace BBC.BSC.Tool
         private const string PhoneboxExePath = @"C:\Program Files (x86)\Broadcast Bionics\PhoneBOX4\Client\PhoneBOX.Client.exe";
 
 
-        public vCenter.VmList.Root cachedVcenter;
+        public static VCenter.VmList.Root cachedVcenter;
 
         public MainWindow()
         {
@@ -792,6 +792,8 @@ namespace BBC.BSC.Tool
                         logger.Error(ex);
                         //// throw;
                     }
+                  
+                    ButtonVmrc.IsEnabled = null != selectedResult.Tag;
                 });
             }
         }
@@ -909,10 +911,5 @@ namespace BBC.BSC.Tool
             TextBoxHost.IsEnabled = !TextBoxHost.IsEnabled;
         }
 
-        private void VCenter_Click(object sender, RoutedEventArgs e)
-        {
-            cachedVcenter = VCenter.VCenter.CacheResults();
-
-        }
     }
 }
