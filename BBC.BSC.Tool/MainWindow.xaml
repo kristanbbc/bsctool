@@ -173,7 +173,7 @@
 
 
             <TabItem Header="Expiermental">
-                <Button Click="VCenter_Click" Content="Cache vCenter VMs" />
+                <gui:VCenter/>
             </TabItem>
             
         </TabControl>

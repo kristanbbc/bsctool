@@ -168,6 +168,9 @@
     <Compile Include="GUI\Settings.xaml.cs">
       <DependentUpon>Settings.xaml</DependentUpon>
     </Compile>
+    <Compile Include="GUI\VCenter.xaml.cs">
+      <DependentUpon>VCenter.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Modules\BNCS.cs" />
     <Compile Include="Modules\CAT.cs" />
     <Compile Include="Modules\ConnectionTester.cs" />
@@ -180,6 +183,10 @@
     <Compile Include="vCenter\VCenter.cs" />
     <Compile Include="vCenter\VmList.cs" />
     <Page Include="GUI\Settings.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="GUI\VCenter.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
