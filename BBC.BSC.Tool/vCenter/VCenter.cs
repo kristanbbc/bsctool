@@ -17,16 +17,29 @@ namespace BBC.BSC.Tool.VCenter
         //TODO: connect to multiple vCenters!
 
 
+        private Dictionary<string, Uri> vcenters;
+
         private const string BaseUrl = "https://vcent.er.bbc.co.uk/rest";
-        static string VCenterToken = null;
+        private static string VCenterToken = null;
         private const string appName = "BBC.BSC.Tool.vCenter";
-        public vCenter.VmList.Root cachedResults = null;
+        public VmList.Root cachedResults = null;
 
         public VCenter()
         {
             //initiator
 
+            vcenters.Add("vlrc1", new Uri("https://vcenter1.er.bbc.co.uk/rest"));
+            vcenters.Add("vlrc2", new Uri("https://vcenter2.er.bbc.co.uk/rest"));
+
+
+            foreach (var item in vcenters)
+            {
+
+            }
         }
+
+
+
 
         public class TokenClass
         {
@@ -35,7 +48,7 @@ namespace BBC.BSC.Tool.VCenter
         }
 
 
-        public static vCenter.VmList.Root CacheResults()
+        public static VmList.Root CacheResults()
         {
             RestClient restClient = new RestClient(BaseUrl);
             //TODO: test token and refresh if expired
@@ -71,7 +84,7 @@ namespace BBC.BSC.Tool.VCenter
             var request = new RestRequest("vcenter/vm", Method.GET);
             request.AddHeader("vmware-api-session-id", VCenterToken);
 
-            var output = restClient.Execute<vCenter.VmList.Root>(request);
+            var output = restClient.Execute<VmList.Root>(request);
 
             return output.Data;
 
@@ -87,9 +100,9 @@ namespace BBC.BSC.Tool.VCenter
         }
 
 
-        public static void LaunchVmrc(string name, vCenter.VmList.Root results)
+        public static void LaunchVmrc(string name, VmList.Root results)
         {
-            vCenter.VmList.Value vm = results.Value.SingleOrDefault(v => v.Name == name);
+            VmList.Value vm = results.Value.SingleOrDefault(v => v.Name == name);
 
             if (null != vm)
             {

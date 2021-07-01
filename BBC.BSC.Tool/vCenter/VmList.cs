@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace BBC.BSC.Tool.vCenter
+namespace BBC.BSC.Tool.VCenter
 {
     public class VmList
     {
