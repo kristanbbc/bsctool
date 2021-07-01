@@ -330,7 +330,7 @@ namespace BBC.BSC.Tool
                             if (item.Name.ToLower().Contains(e.Argument.ToString()))
                             {
                                 logger.Trace("vCenter Cache - adding {0} to results list", item.Name);
-                                results.Results.Add(new MyResult { Hostname = item.Name, Source = "vCenter", Tag = item.Vm, Description = "From vCenter" });
+                                results.Results.Add(new Results.MyResult { Hostname = item.Name, Source = "vCenter", Tag = item.Vm, Description = "From vCenter" });
                             }
                         }
                     }
