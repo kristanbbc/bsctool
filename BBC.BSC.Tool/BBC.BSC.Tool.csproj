@@ -163,6 +163,7 @@
     <Compile Include="GUI\Settings.xaml.cs">
       <DependentUpon>Settings.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Logging.cs" />
     <Compile Include="Modules\BNCS.cs" />
     <Compile Include="Modules\CAT.cs" />
     <Compile Include="Modules\ConnectionTester.cs" />
