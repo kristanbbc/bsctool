@@ -1,9 +1,7 @@
-﻿using Meziantou.Framework.Win32;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Security;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -22,14 +20,20 @@ namespace BBC.BSC.Tool.GUI
         private const string appName = "BBC.BSC.Tool.vCenter";
 
 
-        private void VCenter_Click(object sender, RoutedEventArgs e)
+        private  async void VCenter_Click(object sender, RoutedEventArgs e)
         {
-            MainWindow.cachedVcenter = Tool.VCenter.VCenter.CacheResults();
+            ((Button)sender).IsEnabled = false;
 
+            await Task.Run(() => MainWindow.cachedVcenter = Tool.VCenter.VCenter.CacheResults());
+
+
+            ((Button)sender).IsEnabled = true;
         }
 
-        private void Install_Vmrc_Click(object sender, RoutedEventArgs e)
+        private async void Install_Vmrc_Click(object sender, RoutedEventArgs e)
         {
+            ((Button)sender).IsEnabled = false;
+
 
             try
             {
@@ -45,7 +49,7 @@ namespace BBC.BSC.Tool.GUI
                 //startInfo.FileName = Path.Combine(@"d:\", "vmrc.exe");
                 startInfo.UseShellExecute = true;
                 startInfo.Verb = "RunAs";
-                Process.Start(startInfo);
+               await Task.Run(() => Process.Start(startInfo));
 
             }
             catch (System.ComponentModel.Win32Exception ex)
@@ -58,6 +62,11 @@ namespace BBC.BSC.Tool.GUI
                 {
                     throw ex;
                 }
+            }
+            finally
+            {
+
+                ((Button)sender).IsEnabled = true;
             }
          
         }
