@@ -157,6 +157,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="GUI\BncsVncLinks.xaml.cs">
+      <DependentUpon>BncsVncLinks.xaml</DependentUpon>
+    </Compile>
     <Compile Include="GUI\Settings.xaml.cs">
       <DependentUpon>Settings.xaml</DependentUpon>
     </Compile>
@@ -169,6 +172,10 @@
     <Compile Include="Modules\PhoneBoxConfig.cs" />
     <Compile Include="SettingBindingExtension.cs" />
     <Compile Include="UiHelper.cs" />
+    <Page Include="GUI\BncsVncLinks.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="GUI\Settings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

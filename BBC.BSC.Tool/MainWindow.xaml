@@ -146,10 +146,7 @@
                 </Grid>
             </TabItem>
             <TabItem Header="BNCS VNC Links" x:Name="TabItemBncsVnc">
-                <Grid>
-                    <TreeView x:Name="TreeViewBncs"/>
-
-                </Grid>
+                <gui:BncsVncLinks/>
             </TabItem>
             <TabItem Header="PhoneBox Switcher" x:Name="PhoneBoxSwitcherTab">
                 <StackPanel Margin="10" x:Name="PhoneBoxButtons">
