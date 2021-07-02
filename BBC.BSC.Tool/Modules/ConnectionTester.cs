@@ -6,8 +6,21 @@ namespace BBC.BSC.Tool.Modules
 {
     public class ConnectionTester
     {
-        public static void TestHostConnections( DoWorkEventArgs e)
+        private static NLog.Logger logger;
+
+        private ConnectionTester()
         {
+            var logging = new Logging();
+            logger = logging.initLogger();
+        }
+
+        /// <summary>
+        /// Tests the TCP port connections to a given host - triggerd from a dowork.
+        /// </summary>
+        /// <param name="e">The <see cref="DoWorkEventArgs"/> instance containing the event data.</param>
+        public static void TestHostConnections(DoWorkEventArgs e)
+        {
+            logger.ConditionalTrace("Testing TCP connections to {0}", e.Argument.ToString());
             using (var con = new MyConnection())
             {
                 con.Host = e.Argument.ToString();
@@ -29,10 +42,20 @@ namespace BBC.BSC.Tool.Modules
                 con.DiraLogView = IsPortOpen(e.Argument.ToString(), 5100, timeout);
 
 
+                logger.ConditionalTrace("Connection results{0}", con.ToString());
                 e.Result = con;
             }
         }
 
+        /// <summary>
+        /// Determines whether [is port open] [the specified host].
+        /// </summary>
+        /// <param name="host">The host.</param>
+        /// <param name="port">The port.</param>
+        /// <param name="timeout">The timeout.</param>
+        /// <returns>
+        ///   <c>true</c> if [is port open] [the specified host]; otherwise, <c>false</c>.
+        /// </returns>
         private static bool IsPortOpen(string host, int port, TimeSpan timeout)
         {
             try
