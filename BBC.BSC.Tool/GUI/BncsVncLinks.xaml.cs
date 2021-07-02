@@ -16,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using MaterialDesignThemes.Wpf;
+using NLog;
 using Path = System.IO.Path;
 
 namespace BBC.BSC.Tool.GUI
@@ -25,13 +26,26 @@ namespace BBC.BSC.Tool.GUI
     /// </summary>
     public partial class BncsVncLinks : UserControl
     {
+
+    private readonly Logger logger;
+
         public BncsVncLinks()
         {
+            var logging = new Logging();
+            logger = logging.initLogger();
+
+            logger.Trace("Intilialisng BNCS Links View");
             InitializeComponent();
+
 
             if (Directory.Exists(BncsDir))
             {
+                logger.Trace("Building BNCS View");
                 Dispatcher.Invoke(BuildWs600View);
+            }
+            else
+            {
+                logger.Warn("BNCS path {0} not accessible, not building treeview", BncsDir);
             }
         }
         private const string BncsDir = @"\\national\bbcere\BSC\VNC\BNCS";
@@ -40,7 +54,7 @@ namespace BBC.BSC.Tool.GUI
         {
             foreach (var item in Directory.GetDirectories(BncsDir))
             {
-                // logger.ConditionalTrace("Adding directory {0} to BNCS tree", item);
+                logger.ConditionalTrace("Adding directory {0} to BNCS tree", item);
                 var treeViewItem = new TreeViewItem
                 {
                     Header = Path.GetFileNameWithoutExtension(item),
@@ -58,7 +72,7 @@ namespace BBC.BSC.Tool.GUI
             }
             foreach (var item in Directory.GetFiles(BncsDir))
             {
-               // logger.ConditionalTrace("Adding file {0} to BNCS tree", item);
+                logger.ConditionalTrace("Adding file {0} to BNCS tree", item);
                 var treeViewItem = new TreeViewItem
                 {
                     Header = Path.GetFileNameWithoutExtension(item),
@@ -103,7 +117,7 @@ namespace BBC.BSC.Tool.GUI
             }
 
             if (startInfo.FileName.Length <= 0) return;
-            // logger.Info("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
+             logger.Info("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
             Process.Start(startInfo);
 
         }
@@ -120,7 +134,7 @@ namespace BBC.BSC.Tool.GUI
 
                 foreach (string item in Directory.GetDirectories(tvSender.Tag.ToString()))
                 {
-                   // logger.ConditionalTrace("Adding directory {0} to BNCS tree", item);
+                    logger.ConditionalTrace("Adding directory {0} to BNCS tree", item);
                     var treeViewItem = new TreeViewItem
                     {
                         Header = Path.GetFileNameWithoutExtension(item),
@@ -139,7 +153,7 @@ namespace BBC.BSC.Tool.GUI
                 }
                 foreach (string item in Directory.GetFiles(tvSender.Tag.ToString()))
                 {
-                   // logger.ConditionalTrace("Adding file {0} to BNCS tree", item);
+                    logger.ConditionalTrace("Adding file {0} to BNCS tree", item);
                     var treeViewItem = new TreeViewItem
                     {
                         Header = Path.GetFileNameWithoutExtension(item),
@@ -164,10 +178,10 @@ namespace BBC.BSC.Tool.GUI
 
         public bool PrepareTool(byte[] resource, string outputPath)
         {
-           // logger.Trace("Preparing tool to path {0}", outputPath);
+            logger.Trace("Preparing tool to path {0}", outputPath);
             if (File.Exists(outputPath))
             {
-               // logger.Trace("Tool path already exists.");
+               logger.Trace("Tool path already exists.");
                 //check md5
                 byte[] existingMd5;
                 using (var md5 = MD5.Create())
@@ -188,11 +202,11 @@ namespace BBC.BSC.Tool.GUI
 
                 if (Encoding.Default.GetString(existingMd5) == Encoding.Default.GetString(resourceMd5))
                 {
-                  //  logger.Trace("Tool path exists and MD5 matches, returning true");
+                    logger.Trace("Tool path exists and MD5 matches, returning true");
                     return true;
                 }
 
-               // logger.Warn("Tool path exists, but MD5 doesn't match, remove file and retest");
+                logger.Warn("Tool path exists, but MD5 doesn't match, remove file and retest");
                 File.Delete(outputPath);
 
                 PrepareTool(resource, outputPath);
@@ -207,12 +221,12 @@ namespace BBC.BSC.Tool.GUI
                     {
                         exeFile.Write(resource, 0, resource.Length);
                     }
-                 //   logger.Debug("Tool written to {0}, returning true", outputPath);
+                    logger.Debug("Tool written to {0}, returning true", outputPath);
                     return true;
                 }
                 catch (Exception ex)
                 {
-                  //  logger.Error("Problem writing out tool. {0}", ex.Message);
+                    logger.Error("Problem writing out tool. {0}", ex.Message);
                 }
             }
             return false;
