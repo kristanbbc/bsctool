@@ -17,41 +17,18 @@ namespace BBC.BSC.Tool.Modules
                     e.Result = con;
                     return;
                 }
-                const int timeout = 200;
+                // TODO: make user config
+                TimeSpan timeout = TimeSpan.FromMilliseconds(200);
 
-                if (IsPortOpen(e.Argument.ToString(), 3389, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.Rdp = true;
-                }
+                con.Rdp = IsPortOpen(e.Argument.ToString(), 3389, timeout);
+                con.Vnc = IsPortOpen(e.Argument.ToString(), 5900, timeout);
+                con.Ssh = IsPortOpen(e.Argument.ToString(), 22, timeout);
+                con.Telnet = IsPortOpen(e.Argument.ToString(), 23, timeout);
+                con.Http = IsPortOpen(e.Argument.ToString(), 80, timeout);
+                con.Https = IsPortOpen(e.Argument.ToString(), 443, timeout);
+                con.DiraLogView = IsPortOpen(e.Argument.ToString(), 5100, timeout);
 
-                if (IsPortOpen(e.Argument.ToString(), 5900, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.Vnc = true;
-                }
 
-                if (IsPortOpen(e.Argument.ToString(), 22, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.Ssh = true;
-                }
-
-                if (IsPortOpen(e.Argument.ToString(), 23, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.Telnet = true;
-                }
-
-                if (IsPortOpen(e.Argument.ToString(), 80, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.Http = true;
-                }
-
-                if (IsPortOpen(e.Argument.ToString(), 443, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.Https = true;
-                }
-                if (IsPortOpen(e.Argument.ToString(), 5100, TimeSpan.FromMilliseconds(timeout)))
-                {
-                    con.DiraLogView = true;
-                }
                 e.Result = con;
             }
         }
