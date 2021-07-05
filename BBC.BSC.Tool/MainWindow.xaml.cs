@@ -644,8 +644,14 @@ namespace BBC.BSC.Tool
                         logger.Error(ex);
                         //// throw;
                     }
-                  
-                    ButtonVmrc.IsEnabled = null != selectedResult.Tag;
+
+                    if (null != cachedVcenter.Value.SingleOrDefault(s => s.Name.ToLower().Trim() == ((MyConnection)e.Result).Host.ToLower().Trim())) {
+                        ButtonVmrc.IsEnabled = true;
+                        }
+                    else
+                    {
+                        ButtonVmrc.IsEnabled = false;
+                    }
                 });
             }
         }
