@@ -22,5 +22,10 @@ namespace BBC.BSC.Tool
             //    this.http = null;
             //    this.telnet = null;
         }
+
+        public override string ToString()
+        {
+            return base.ToString();
+        }
     }
 }
