@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Meziantou.Framework.Win32;
 using Newtonsoft.Json;
+using NLog;
 using RestSharp;
 using RestSharp.Authenticators;
 
@@ -23,11 +24,15 @@ namespace BBC.BSC.Tool.VCenter
         private static string VCenterToken = null;
         private const string appName = "BBC.BSC.Tool.vCenter";
         public VmList.Root cachedResults = null;
+        private readonly Logger logger;
 
         public VCenter()
         {
             //initiator
 
+            logger = new Logging().initLogger();
+
+            logger.Info("Init vCenter class");
             vcenters.Add("vlrc1", new Uri("https://vcenter1.er.bbc.co.uk/rest"));
             vcenters.Add("vlrc2", new Uri("https://vcenter2.er.bbc.co.uk/rest"));
 
@@ -50,15 +55,19 @@ namespace BBC.BSC.Tool.VCenter
 
         public static VmList.Root CacheResults()
         {
+            Logger logger = new Logging().initLogger();
             RestClient restClient = new RestClient(BaseUrl);
             //TODO: test token and refresh if expired
 
             if (null == VCenterToken)
             {
+                logger.Info("No vCenter authentication token availble, will request new one.");
                 var existingCred = CredentialManager.ReadCredential(appName);
 
                 if (null == existingCred)
                 {
+
+                    logger.Info("No saved credentials, will request new ones.");
                     //prompt for creds if not found
                     var credsPrompt = CredentialManager.PromptForCredentials(captionText: "vCenter",
                                                                              messageText: "Authenticate to vCenter",
@@ -72,6 +81,7 @@ namespace BBC.BSC.Tool.VCenter
                 }
                 else
                 {
+                    logger.Info("Saved credentials found, will use existing ones.");
                     restClient.Authenticator = new HttpBasicAuthenticator(existingCred.UserName, existingCred.Password);
                 }
 
@@ -103,11 +113,17 @@ namespace BBC.BSC.Tool.VCenter
         public static void LaunchVmrc(string name, VmList.Root results)
         {
             VmList.Value vm = results.Value.SingleOrDefault(v => v.Name == name);
+            Logger logger = new Logging().initLogger();
+            logger.Info("Searching cached vCenter results for {0} in list of {1}", name, results.Value.Count());
 
             if (null != vm)
             {
+                logger.Info("");
                 var startInfo = new ProcessStartInfo();
 
+                string link = $"amrc://vcent.er.bbc.co.uk/?moid={vm.Vm}";
+                logger.Trace("will launch {0}", link);
+                startInfo.FileName = link;
 
                 startInfo.FileName = $"vmrc://vcent.er.bbc.co.uk/?moid={vm.Vm}";
 
