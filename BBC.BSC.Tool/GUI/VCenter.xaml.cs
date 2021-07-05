@@ -1,5 +1,5 @@
-﻿using System;
 ﻿using NLog;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -43,10 +43,7 @@ namespace BBC.BSC.Tool.GUI
 
             try
             {
-
-                var startInfo = new ProcessStartInfo();
-
-
+                ProcessStartInfo startInfo = new ProcessStartInfo();
                 string dir = Path.Combine(Environment.CurrentDirectory, "tools");
                 startInfo.FileName = @"\\national\bbcere\BSC\tools\VMRC\VMware-VMRC-12.0.0-17287072.exe";
                 //startInfo.FileName = Path.Combine(dir, "VMware-VMRC-12.0.0-17287072.exe");
@@ -55,7 +52,7 @@ namespace BBC.BSC.Tool.GUI
                 //startInfo.FileName = Path.Combine(@"d:\", "vmrc.exe");
                 startInfo.UseShellExecute = true;
                 startInfo.Verb = "RunAs";
-               await Task.Run(() => Process.Start(startInfo));
+                await Task.Run(() => Process.Start(startInfo));
 
                 logger.Info("VMRC installer closed cleanly");
             }
@@ -79,7 +76,7 @@ namespace BBC.BSC.Tool.GUI
                 ((Button)sender).IsEnabled = true;
                 logger.Info("Finished routine to install VMRC");
             }
-         
+
         }
     }
 }

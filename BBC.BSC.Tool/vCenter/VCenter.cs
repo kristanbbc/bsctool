@@ -48,6 +48,9 @@ namespace BBC.BSC.Tool.VCenter
 
         public class TokenClass
         {
+            [JsonProperty("type")]
+            public string Type { get; set; }
+
             [JsonProperty("value")]
             public string Value { get; set; }
         }
@@ -82,9 +85,11 @@ namespace BBC.BSC.Tool.VCenter
                 else
                 {
                     logger.Info("Saved credentials found, will use existing ones.");
+                    //TODO  - what happen if password expired - should test account is valid!
                     restClient.Authenticator = new HttpBasicAuthenticator(existingCred.UserName, existingCred.Password);
                 }
 
+                //TODO: handle error response from api (invalid login etc)
                 var tokenRequest = new RestRequest("/com/vmware/cis/session", Method.POST);
 
                 var tokenResponse = restClient.Execute(tokenRequest).Content;
@@ -112,9 +117,10 @@ namespace BBC.BSC.Tool.VCenter
 
         public static void LaunchVmrc(string name, VmList.Root results)
         {
-            VmList.Value vm = results.Value.SingleOrDefault(v => v.Name == name);
             Logger logger = new Logging().initLogger();
             logger.Info("Searching cached vCenter results for {0} in list of {1}", name, results.Value.Count());
+
+            VmList.Value vm = results.Value.SingleOrDefault(v => v.Name.ToLower().Trim() == name.ToLower().Trim());
 
             if (null != vm)
             {
@@ -125,12 +131,16 @@ namespace BBC.BSC.Tool.VCenter
                 logger.Trace("will launch {0}", link);
                 startInfo.FileName = link;
 
-                startInfo.FileName = $"vmrc://vcent.er.bbc.co.uk/?moid={vm.Vm}";
+                Process start = Process.Start(startInfo);
 
-                Process.Start(startInfo);
+                if (null == start)
+                {
+                    logger.Warn("VMRC handler failed - probably not installed");
+                }
+
+                logger.ConditionalTrace(start);
 
             }
-
 
 
 
