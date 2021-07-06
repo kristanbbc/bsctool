@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using Meziantou.Framework.Win32;
 using Newtonsoft.Json;
 using NLog;
@@ -127,7 +128,7 @@ namespace BBC.BSC.Tool.VCenter
                 logger.Info("");
                 var startInfo = new ProcessStartInfo();
 
-                string link = $"amrc://vcent.er.bbc.co.uk/?moid={vm.Vm}";
+                string link = $"vmrc://vcent.er.bbc.co.uk/?moid={vm.Vm}";
                 logger.Trace("will launch {0}", link);
                 startInfo.FileName = link;
 
@@ -136,6 +137,7 @@ namespace BBC.BSC.Tool.VCenter
                 if (null == start)
                 {
                     logger.Warn("VMRC handler failed - probably not installed");
+                    _ = MessageBox.Show("Install VMRC from the cVenter tab.", "VMRC not installed", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
 
                 logger.ConditionalTrace(start);

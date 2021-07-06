@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NLog;
+using System;
 using System.ComponentModel;
 using System.Net.Sockets;
 
@@ -6,12 +7,11 @@ namespace BBC.BSC.Tool.Modules
 {
     public class ConnectionTester
     {
-        private static NLog.Logger logger;
+        // private static NLog.Logger logger;
 
         private ConnectionTester()
         {
-            var logging = new Logging();
-            logger = logging.initLogger();
+            Logger logger = new Logging().initLogger();
         }
 
         /// <summary>
@@ -20,6 +20,7 @@ namespace BBC.BSC.Tool.Modules
         /// <param name="e">The <see cref="DoWorkEventArgs"/> instance containing the event data.</param>
         public static void TestHostConnections(DoWorkEventArgs e)
         {
+            Logger logger = new Logging().initLogger();
             logger.ConditionalTrace("Testing TCP connections to {0}", e.Argument.ToString());
             using (var con = new MyConnection())
             {
