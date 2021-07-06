@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace BBC.BSC.Tool
 {
@@ -16,16 +17,35 @@ namespace BBC.BSC.Tool
 
         public void Dispose()
         {
-            //    this.rdp = null;
-            //    this.vnc = null;
-            //    this.ssh = null;
-            //    this.http = null;
-            //    this.telnet = null;
         }
 
         public override string ToString()
         {
-            return base.ToString();
+            string output = $"Connection status of {Host} as of {Timestamp}:" + Environment.NewLine;
+            output += $"RDP:      {Rdp}" + Environment.NewLine;
+            output += $"VNC:      {Vnc}" + Environment.NewLine;
+            output += $"SSH:      {Ssh}" + Environment.NewLine;
+            output += $"HTTP:     {Http}" + Environment.NewLine;
+            output += $"HTTPS:    {Https}" + Environment.NewLine;
+            output += $"Telnet:   {Telnet}" + Environment.NewLine;
+            output += $"Dira Log: {DiraLogView}";
+
+            return output;
+        }
+
+        public Dictionary<string, bool> Status()
+        {
+            return new Dictionary<string, bool>()
+            {
+                { "RDP", Rdp },
+                { "VNC", Vnc },
+                { "SSH", Ssh },
+                { "HTTP", Http },
+                { "HTTPS", Https },
+                { "Telnet", Telnet },
+                { "DiraLog", DiraLogView },
+            };
         }
     }
+
 }
