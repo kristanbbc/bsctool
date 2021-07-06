@@ -17,11 +17,6 @@ namespace BBC.BSC.Tool
 
         public void Dispose()
         {
-            //    this.rdp = null;
-            //    this.vnc = null;
-            //    this.ssh = null;
-            //    this.http = null;
-            //    this.telnet = null;
         }
 
         public override string ToString()
@@ -38,7 +33,6 @@ namespace BBC.BSC.Tool
             return output;
         }
 
-   
         public Dictionary<string, bool> Status()
         {
             return new Dictionary<string, bool>()
