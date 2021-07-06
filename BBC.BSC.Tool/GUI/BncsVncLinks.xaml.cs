@@ -25,7 +25,7 @@ namespace BBC.BSC.Tool.GUI
         public BncsVncLinks()
         {
 
-            //Logger logger = new Logging().initLogger();
+           //Logger logger = new Logging().initLogger();
             logger.Trace("Intilialisng BNCS Links View");
             InitializeComponent();
 
