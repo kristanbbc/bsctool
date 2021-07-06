@@ -5,14 +5,8 @@ using System.Net.Sockets;
 
 namespace BBC.BSC.Tool.Modules
 {
-    public class ConnectionTester
+    public static class ConnectionTester
     {
-        // private static NLog.Logger logger;
-
-        private ConnectionTester()
-        {
-            Logger logger = new Logging().initLogger();
-        }
 
         /// <summary>
         /// Tests the TCP port connections to a given host - triggerd from a dowork.
@@ -42,7 +36,6 @@ namespace BBC.BSC.Tool.Modules
                 con.Https = IsPortOpen(e.Argument.ToString(), 443, timeout);
                 con.DiraLogView = IsPortOpen(e.Argument.ToString(), 5100, timeout);
 
-
                 logger.ConditionalTrace("Connection results{0}", con.ToString());
                 e.Result = con;
             }
@@ -59,6 +52,7 @@ namespace BBC.BSC.Tool.Modules
         /// </returns>
         private static bool IsPortOpen(string host, int port, TimeSpan timeout)
         {
+            Logger logger = new Logging().initLogger();
             try
             {
                 using (var client = new TcpClient())
@@ -72,10 +66,20 @@ namespace BBC.BSC.Tool.Modules
                     client.EndConnect(result);
                 }
             }
+            catch (SocketException ex)
+            {
+                logger.Error(ex);
+            }
+            catch (ArgumentNullException ex)
+            {
+                logger.Error(ex);
+            }
+#pragma warning disable CA1031 // Do not catch general exception types
             catch
             {
                 return false;
             }
+#pragma warning restore CA1031 // Do not catch general exception types
             return true;
         }
     }
