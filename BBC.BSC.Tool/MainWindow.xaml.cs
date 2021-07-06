@@ -368,13 +368,18 @@ namespace BBC.BSC.Tool
             }
         }
 
-        private void Connect_Button_Click(object sender, RoutedEventArgs e)
+        private async void Connect_Button_Click(object sender, RoutedEventArgs e)
         {
-            var startInfo = new ProcessStartInfo();
-            var directory = Path.Combine(Environment.CurrentDirectory, "tools");
+            await Connect_Button_ClickAsync(sender, e);
+        }
+
+        private async Task Connect_Button_ClickAsync(object sender, RoutedEventArgs e)
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            string directory = Path.Combine(Environment.CurrentDirectory, "tools");
             const string rcExeToRun = @"d:\rc.exe";
             const string rcW10ExeToRun = @"\\national\bbcere\BSC\Dump\Apps\sccm-remote\w10\cmrcviewer.exe";
-            var vncExeToRun = Path.Combine(Path.GetTempPath(), "vncx64.exe");
+            string vncExeToRun = Path.Combine(Path.GetTempPath(), "vncx64.exe");
 
 
             switch (((Button)sender).Tag)
@@ -440,12 +445,14 @@ namespace BBC.BSC.Tool
                         break;
                     }
                     break;
+                default:
+                    break;
             }
 
             if (startInfo.FileName.Length > 0)
             {
                 logger.Info("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
-                Process.Start(startInfo);
+                _ = await Task.Run(() => Process.Start(startInfo));
 
             }
             if (LvHistory.Items.Contains(TextBoxHost.Text.Trim()))
