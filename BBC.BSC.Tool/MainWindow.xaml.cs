@@ -57,8 +57,7 @@ namespace BBC.BSC.Tool
 
             Title = "BSC Tool - Version " + version;
 
-            var logging = new Logging();
-            logger = logging.initLogger();
+            logger = new Logging().initLogger();
 
             logger.Info("BSC Tool {0} starting.", FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion);
             var watcher = new Timer
