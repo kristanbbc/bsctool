@@ -73,15 +73,30 @@ namespace BBC.BSC.Tool.VCenter
 
                     logger.Info("No saved credentials, will request new ones.");
                     //prompt for creds if not found
-                    var credsPrompt = CredentialManager.PromptForCredentials(captionText: "vCenter",
-                                                                             messageText: "Authenticate to vCenter",
-                                                                             saveCredential: CredentialSaveOption.Selected,
-                                                                             userName: Properties.Settings.Default.ere);
-                    if (credsPrompt.CredentialSaved == CredentialSaveOption.Selected)
+                    try
                     {
-                        CredentialManager.WriteCredential(appName, credsPrompt.UserName, credsPrompt.Password, CredentialPersistence.Session);
+                        CredentialResult credsPrompt = CredentialManager.PromptForCredentials(captionText: "vCenter",
+                                                                                 messageText: "Authenticate to vCenter",
+                                                                                 saveCredential: CredentialSaveOption.Selected,
+                                                                                 userName: Properties.Settings.Default.ere);
+                        if (null != credsPrompt)
+                        {
+                            if (credsPrompt.CredentialSaved == CredentialSaveOption.Selected)
+                            {
+                                CredentialManager.WriteCredential(appName, credsPrompt.UserName, credsPrompt.Password, CredentialPersistence.Session);
+                            }
+                            restClient.Authenticator = new HttpBasicAuthenticator(credsPrompt.UserName, credsPrompt.Password);
+                        }
+                        else
+                        {
+                            logger.Warn("user cancelled");
+                            return new VmList.Root();
+                        }
                     }
-                    restClient.Authenticator = new HttpBasicAuthenticator(credsPrompt.UserName, credsPrompt.Password);
+                    catch
+                    {
+                        throw;
+                    }
                 }
                 else
                 {
