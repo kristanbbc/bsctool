@@ -38,10 +38,7 @@ namespace BBC.BSC.Tool.VCenter
             vcenters.Add("vlrc2", new Uri("https://vcenter2.er.bbc.co.uk/rest"));
 
 
-            foreach (var item in vcenters)
-            {
-
-            }
+            vcenters.ToList().ForEach(x => logger.Info(x.Key));
         }
 
 
@@ -117,6 +114,7 @@ namespace BBC.BSC.Tool.VCenter
 
             var output = restClient.Execute<VmList.Root>(request);
 
+            logger.Info("Returning {0} cached vCenter results", output.Data.Value.Count());
             return output.Data;
 
             //Console.WriteLine(output.Data);
@@ -140,11 +138,11 @@ namespace BBC.BSC.Tool.VCenter
 
             if (null != vm)
             {
-                logger.Info("");
+                //logger.Info("");
                 var startInfo = new ProcessStartInfo();
 
                 string link = $"vmrc://vcent.er.bbc.co.uk/?moid={vm.Vm}";
-                logger.Trace("will launch {0}", link);
+                logger.Info("will launch {0}", link);
                 startInfo.FileName = link;
 
                 Process start = Process.Start(startInfo);
