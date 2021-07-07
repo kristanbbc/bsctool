@@ -2,7 +2,7 @@
 
 namespace BBC.BSC.Tool.Modules
 {
-    public class BNCS
+    public class Bncs
     {
         public static PackIconKind GetPackIconKind(string ext)
         {

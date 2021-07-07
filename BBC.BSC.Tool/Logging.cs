@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using NLog;
+﻿using NLog;
 using NLog.Config;
 using NLog.Targets;
 using NLog.Targets.ElasticSearch;
@@ -14,13 +8,13 @@ namespace BBC.BSC.Tool
 {
     public class Logging
     {
-        public Logger logger;
+        public Logger Logger;
 
 
-        public Logger initLogger()
+        public Logger InitLogger()
         {
 
-            return logger;
+            return Logger;
         }
         public Logging()
         {
@@ -56,7 +50,7 @@ namespace BBC.BSC.Tool
 
             config.AddRule(LogLevel.Trace, LogLevel.Fatal, consoleTarget);
 
-             logger = LogManager.GetCurrentClassLogger();
+             Logger = LogManager.GetCurrentClassLogger();
             LogManager.Configuration = config;
 
         }

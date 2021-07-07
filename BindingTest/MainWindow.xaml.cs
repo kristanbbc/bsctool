@@ -23,32 +23,32 @@ namespace BindingTest
         public MainWindow()
         {
             InitializeComponent();
-            dataGrid.ItemsSource = testObjects;
+            dataGrid.ItemsSource = _testObjects;
 
-            testObjects.Add(new TestObject("1", "2"));
-            testObjects.Add(new TestObject("3", "4"));
-            testObjects.Add(new TestObject("5", "6"));
+            _testObjects.Add(new TestObject("1", "2"));
+            _testObjects.Add(new TestObject("3", "4"));
+            _testObjects.Add(new TestObject("5", "6"));
         }
         
 
-        private List<TestObject> testObjects = new List<TestObject>();
+        private List<TestObject> _testObjects = new List<TestObject>();
 
         private class TestObject
         {
-                public string a
+                public string A
             {
                 get;
                 set;
             }
-                public string b
+                public string B
             {
                 get;
                 set;
             }
             public TestObject(string a, string b)
             {
-                this.a = a;
-                this.b = b;
+                this.A = a;
+                this.B = b;
             }
         }
 
@@ -56,11 +56,11 @@ namespace BindingTest
         private void Button_Click(object sender, RoutedEventArgs e)
         {
 
-            testObjects.Add(new TestObject("7", "8"));
-            testObjects.Add(new TestObject("9", "10"));
-            testObjects.Add(new TestObject("11", "12"));
-            testObjects.Add(new TestObject("13", "14"));
-            testObjects.Add(new TestObject("15", "16"));
+            _testObjects.Add(new TestObject("7", "8"));
+            _testObjects.Add(new TestObject("9", "10"));
+            _testObjects.Add(new TestObject("11", "12"));
+            _testObjects.Add(new TestObject("13", "14"));
+            _testObjects.Add(new TestObject("15", "16"));
 
             dataGrid.Items.Refresh();
         }

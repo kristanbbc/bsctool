@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BBC.BSC.Tool.Modules
+﻿namespace BBC.BSC.Tool.Modules
 {
     public class PhoneBox
     {
@@ -12,7 +6,7 @@ namespace BBC.BSC.Tool.Modules
         public static PhoneBoxConfig GetPhoneBoxConfig(string region)
         {
 
-            var phoneBoxConfig = new Modules.PhoneBoxConfig();
+            var phoneBoxConfig = new PhoneBoxConfig();
             // TODO make configuration
             switch (region)
             {

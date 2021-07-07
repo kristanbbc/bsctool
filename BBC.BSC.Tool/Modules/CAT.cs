@@ -14,7 +14,7 @@ namespace BBC.BSC.Tool.Modules
             public string Os;
 
         }
-    public class CAT
+    public class Cat
     {
       
 

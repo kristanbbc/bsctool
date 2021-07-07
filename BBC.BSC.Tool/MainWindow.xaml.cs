@@ -32,16 +32,16 @@ namespace BBC.BSC.Tool
         //TODO make more of these configurable?
         private const string CatPath = @"http://cat.er.bbc.co.uk/catquery.php?json&query="; //DevSkim: ignore DS137138 until 2021-08-05
 
-        private readonly List<BackgroundWorker> workers = new List<BackgroundWorker>();
+        private readonly List<BackgroundWorker> _workers = new List<BackgroundWorker>();
         // ReSharper disable once CollectionNeverQueried.Local
-        private readonly List<BackgroundWorker> connectionWorkers = new List<BackgroundWorker>();
-        private DateTime lastConnectionResult = DateTime.Now;
-        private DateTime lastResultTimestamp;
+        private readonly List<BackgroundWorker> _connectionWorkers = new List<BackgroundWorker>();
+        private DateTime _lastConnectionResult = DateTime.Now;
+        private DateTime _lastResultTimestamp;
         private const string LdapPath = @"LDAP://ldap.national.core.bbc.co.uk";
-        private readonly Timer searchTimer = new Timer(400);
-        private readonly Timer hostTimer = new Timer(400);
-        private string hostText;
-        private readonly Logger logger;
+        private readonly Timer _searchTimer = new Timer(400);
+        private readonly Timer _hostTimer = new Timer(400);
+        private string _hostText;
+        private readonly Logger _logger;
 
         private const string PhoneboxIniPath = @"C:\ProgramData\Broadcast Bionics\PhoneBOX4\client.ini";
         private const string PhoneboxExePath = @"C:\Program Files (x86)\Broadcast Bionics\PhoneBOX4\Client\PhoneBOX.Client.exe";
@@ -53,9 +53,9 @@ namespace BBC.BSC.Tool
 
             Title = "BSC Tool - Version " + Assembly.GetExecutingAssembly().GetName().Version;
 
-            logger = new Logging().initLogger();
+            _logger = new Logging().InitLogger();
 
-            logger.Info("BSC Tool {0} starting.", FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion);
+            _logger.Info("BSC Tool {0} starting.", FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion);
             Timer watcher = new Timer
             {
                 Interval = 1000
@@ -65,11 +65,11 @@ namespace BBC.BSC.Tool
             ThreadPool.GetMinThreads(out int w, out int c);
 
             // Write the numbers of minimum threads
-            logger.Debug("Minumium number of threads available {0}, {1}", w, c);
+            _logger.Debug("Minumium number of threads available {0}, {1}", w, c);
 
             _ = ThreadPool.SetMinThreads(20, 10);
-            hostTimer.Elapsed += Host_Timer_Elapsed;
-            searchTimer.Elapsed += Search_Timer_Elapsed;
+            _hostTimer.Elapsed += Host_Timer_Elapsed;
+            _searchTimer.Elapsed += Search_Timer_Elapsed;
             DataContext = this;
 
             Settings.Default.history.Split(';').Where(h => h != "System.Windows.Controls.ItemCollection").ToList().ForEach(x => LvHistory.Items.Add(x));
@@ -109,30 +109,23 @@ namespace BBC.BSC.Tool
         /// <param name="e"></param>
         private void Do_Watcher(object sender, ElapsedEventArgs e)
         {
-            try
+            Dispatcher.Invoke(delegate
             {
-                Dispatcher.Invoke(delegate
+                if (_workers.Count > 0)
                 {
-                    if (workers.Count > 0)
-                    {
-                        logger.Debug("There are {0} workers", workers.Count);
-                        Status.Fill = new SolidColorBrush(Colors.Red);
-                        // this.Title = "Busy";
-                    }
-                    else
-                    {
-                        Status.Fill = new SolidColorBrush(Colors.Green);
-                        //this.Title = "Finished";
-                    }
-                });
-            }
-            catch
-            {
-                throw;
-            }
+                    _logger.Debug("There are {0} workers", _workers.Count);
+                    Status.Fill = new SolidColorBrush(Colors.Red);
+                    // this.Title = "Busy";
+                }
+                else
+                {
+                    Status.Fill = new SolidColorBrush(Colors.Green);
+                    //this.Title = "Finished";
+                }
+            });
         }
 
-        private List<Modules.CatResult> catResults = new List<Modules.CatResult>();
+        private List<Modules.CatResult> _catResults = new List<Modules.CatResult>();
 
 
         private void Do_Search(object sender, DoWorkEventArgs e)
@@ -148,7 +141,7 @@ namespace BBC.BSC.Tool
             }
             else
             {
-                logger.Info("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
+                _logger.Info("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
                 try
                 {
                     string catQuery =
@@ -158,7 +151,7 @@ namespace BBC.BSC.Tool
                         $"WHERE life_cycle_status_id = 4 AND (lower(host_name like '%{e.Argument.ToString().Replace("*", "%").ToLower()}%') OR IP = inet_aton('{e.Argument.ToString().Replace("*", "%").ToLower()}') OR lower(also_known_as) LIKE '%{e.Argument.ToString().Replace("*", "%").ToLower()}%')";
 
                     string jsonData;
-                    logger.Info("Running query against CAT with\n{0}", catQuery);
+                    _logger.Info("Running query against CAT with\n{0}", catQuery);
                     using (var w = new WebClient())
                     {
                         w.UseDefaultCredentials = true;
@@ -167,11 +160,11 @@ namespace BBC.BSC.Tool
 
                     if (!string.IsNullOrEmpty(jsonData))
                     {
-                        catResults = JsonConvert.DeserializeObject<List<Modules.CatResult>>(jsonData);
-                        logger.Info("Got {0} results from CAT", catResults?.Count);
+                        _catResults = JsonConvert.DeserializeObject<List<Modules.CatResult>>(jsonData);
+                        _logger.Info("Got {0} results from CAT", _catResults?.Count);
 
-                        if (catResults != null)
-                            foreach (var item in catResults)
+                        if (_catResults != null)
+                            foreach (var item in _catResults)
                             {
                                 results.Results.Add(new Results.MyResult
                                 {
@@ -186,7 +179,7 @@ namespace BBC.BSC.Tool
                 }
                 catch (Exception ex)
                 {
-                    logger.Warn("Error running query against CAT:\n{0}", ex.Message);
+                    _logger.Warn("Error running query against CAT:\n{0}", ex.Message);
                     Trace.TraceError(ex.Message);
                 }
 
@@ -212,10 +205,10 @@ namespace BBC.BSC.Tool
                         _ = dSearcher.PropertiesToLoad.Add("operatingsystem");
                         using (var sResults = dSearcher.FindAll())
                         {
-                            logger.Info("Found {0} results in Active Directory", sResults.Count);
+                            _logger.Info("Found {0} results in Active Directory", sResults.Count);
                             foreach (SearchResult item in sResults)
                             {
-                                logger.ConditionalTrace("AD: found: {0}", item.Properties["name"][0].ToString().ToUpper());
+                                _logger.ConditionalTrace("AD: found: {0}", item.Properties["name"][0].ToString().ToUpper());
                                 if (results.Results.All(n => n.Hostname != item.Properties["name"][0].ToString().ToUpper()))
                                 {
                                     results.AddResult(new Results.MyResult
@@ -233,15 +226,11 @@ namespace BBC.BSC.Tool
                 }
                 catch (InvalidOperationException ex)
                 {
-                    logger.Warn("Invalid Operation querying AD: ", ex);
+                    _logger.Warn("Invalid Operation querying AD: ", ex);
                 }
                 catch (NotSupportedException ex)
                 {
-                    logger.Warn("LDAP query error: {0}", ex.Message);
-                }
-                catch
-                {
-                    throw;
+                    _logger.Warn("LDAP query error: {0}", ex.Message);
                 }
             }
             results.Results.Sort((a, b) => string.Compare(a.Hostname, b.Hostname, StringComparison.Ordinal));
@@ -254,33 +243,33 @@ namespace BBC.BSC.Tool
 
         private void Text_Changed(object sender, TextChangedEventArgs e)
         {
-            logger.ConditionalTrace("search text changed: {0}", SearchIn.Text.Trim());
-            searchText = SearchIn.Text;
-            searchTimer.Stop();
-            searchTimer.Start();
+            _logger.ConditionalTrace("search text changed: {0}", SearchIn.Text.Trim());
+            _searchText = SearchIn.Text;
+            _searchTimer.Stop();
+            _searchTimer.Start();
             TextBoxHost.Text = SearchIn.Text;
         }
 
-        private Results.MyResult selectedResult = new Results.MyResult();
+        private Results.MyResult _selectedResult = new Results.MyResult();
 
         private void DisplayResults(object sender, RunWorkerCompletedEventArgs e)
         {
-            logger.Trace("Start displaying results, stopping and disposing background worker");
-            _ = workers.Remove((BackgroundWorker)sender);
+            _logger.Trace("Start displaying results, stopping and disposing background worker");
+            _ = _workers.Remove((BackgroundWorker)sender);
             ((BackgroundWorker)sender).Dispose();
             var res = (Results.MyResults)e.Result;
-            logger.Trace($"There are {res.Results.Count} results");
+            _logger.Trace($"There are {res.Results.Count} results");
             // If results returned select first in list.
-            selectedResult = res.Results.Count > 0 ? ((Results.MyResults)e.Result).Results[0] : null;
+            _selectedResult = res.Results.Count > 0 ? ((Results.MyResults)e.Result).Results[0] : null;
             try
             {
                 // If results older than currently displayed (earlier queries take longer) then drop results
-                if (res.Timestamp > lastResultTimestamp)
+                if (res.Timestamp > _lastResultTimestamp)
                 {
-                    logger.Trace("Results newer so continue processing");
+                    _logger.Trace("Results newer so continue processing");
                     Dispatcher.Invoke(delegate
                     {
-                        logger.Trace("Copying results to result collection.");
+                        _logger.Trace("Copying results to result collection.");
                         var results = new ObservableCollection<Results.MyResult>();
                         foreach (var item in res.Results)
                         {
@@ -291,17 +280,17 @@ namespace BBC.BSC.Tool
 
                         if (res.Results.Count == 1)
                         {
-                            logger.Trace("Single result so make selected");
+                            _logger.Trace("Single result so make selected");
                             TextBoxHost.Text = res.Results[0].Hostname;
                         }
                         //searchResults.Items.Refresh();
                     });
-                    lastResultTimestamp = res.Timestamp;
+                    _lastResultTimestamp = res.Timestamp;
                 }
             }
             catch
             {
-                logger.Error("Problem displaying results");
+                _logger.Error("Problem displaying results");
                 throw;
             }
         }
@@ -309,25 +298,18 @@ namespace BBC.BSC.Tool
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             Settings.Default.Save();
-            if (workers.Count > 0)
+            if (_workers.Count > 0)
             {
-                logger.Info("Unable to close as workers still running");
+                _logger.Info("Unable to close as workers still running");
                 e.Cancel = true;
             }
             else
             {
-                try
+                foreach (BackgroundWorker item in _workers)
                 {
-                    foreach (BackgroundWorker item in workers)
-                    {
-                        item.Dispose();
-                    }
-                    //latestRestults.Dispose();
+                    item.Dispose();
                 }
-                catch
-                {
-                    throw;
-                }
+                //latestRestults.Dispose();
                 //catch (Exception ex)
                 //{
                 //    logger.Error("Error disposing :\n{0}", ex.Message);
@@ -344,7 +326,7 @@ namespace BBC.BSC.Tool
             }
             catch (Exception ex)
             {
-                logger.Trace(ex);
+                _logger.Trace(ex);
 
                 Trace.TraceError(ex.Message);
                 TextBoxHost.Text = "";
@@ -359,7 +341,7 @@ namespace BBC.BSC.Tool
             }
             catch (Exception ex)
             {
-                logger.Trace(ex);
+                _logger.Trace(ex);
                 Trace.TraceError(ex.Message);
             }
         }
@@ -441,13 +423,11 @@ namespace BBC.BSC.Tool
                         break;
                     }
                     break;
-                default:
-                    break;
             }
 
             if (startInfo.FileName.Length > 0)
             {
-                logger.Info("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
+                _logger.Info("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
                 _ = await Task.Run(() => Process.Start(startInfo));
 
             }
@@ -467,10 +447,10 @@ namespace BBC.BSC.Tool
 
         public bool PrepareTool(byte[] resource, string outputPath)
         {
-            logger.Trace("Preparing tool to path {0}", outputPath);
+            _logger.Trace("Preparing tool to path {0}", outputPath);
             if (File.Exists(outputPath))
             {
-                logger.Trace("Tool path already exists.");
+                _logger.Trace("Tool path already exists.");
                 //check md5
                 byte[] existingMd5;
                 using (var md5 = SHA256.Create())
@@ -491,11 +471,11 @@ namespace BBC.BSC.Tool
 
                 if (Encoding.Default.GetString(existingMd5) == Encoding.Default.GetString(resourceMd5))
                 {
-                    logger.Trace("Tool path exists and SHA256 matches, returning true");
+                    _logger.Trace("Tool path exists and SHA256 matches, returning true");
                     return true;
                 }
 
-                logger.Warn("Tool path exists, but SHA256 doesn't match, remove file and retest");
+                _logger.Warn("Tool path exists, but SHA256 doesn't match, remove file and retest");
                 File.Delete(outputPath);
 
                 PrepareTool(resource, outputPath);
@@ -505,22 +485,18 @@ namespace BBC.BSC.Tool
             {
                 try
                 {
-                    logger.Trace("Tool doesn't exist, writing out new file");
+                    _logger.Trace("Tool doesn't exist, writing out new file");
                     using (FileStream exeFile = new FileStream(outputPath, FileMode.Create))
                     {
                         exeFile.Write(resource, 0, resource.Length);
                     }
-                    logger.Debug("Tool written to {0}, returning true", outputPath);
+                    _logger.Debug("Tool written to {0}, returning true", outputPath);
                     return true;
                 }
                 catch (IOException ex)
                 {
-                    logger.Error("Problem writing out tool. {0}", ex.Message);
+                    _logger.Error("Problem writing out tool. {0}", ex.Message);
                     _ = MessageBox.Show($"Unable to write tool to {outputPath}", "Error in preparing tool", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-                catch
-                {
-                    throw;
                 }
             }
             return false;
@@ -529,52 +505,52 @@ namespace BBC.BSC.Tool
 
         private void TextBox_host_TextChanged(object sender, TextChangedEventArgs e)
         {
-            logger.ConditionalTrace("host text changed: {0}", TextBoxHost.Text.Trim());
-            hostText = TextBoxHost.Text.Trim();
-            hostTimer.Stop();
-            hostTimer.Start();
+            _logger.ConditionalTrace("host text changed: {0}", TextBoxHost.Text.Trim());
+            _hostText = TextBoxHost.Text.Trim();
+            _hostTimer.Stop();
+            _hostTimer.Start();
         }
 
-        private string searchText;
+        private string _searchText;
 
         private void Search_Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            logger.Trace("search timer elapsed: {0}", searchText);
-            searchTimer.Stop();
+            _logger.Trace("search timer elapsed: {0}", _searchText);
+            _searchTimer.Stop();
             BackgroundWorker worker = new BackgroundWorker();
             worker.DoWork += Do_Search;
             worker.RunWorkerCompleted += DisplayResults;
-            workers.Add(worker);
-            worker.RunWorkerAsync(searchText);
+            _workers.Add(worker);
+            worker.RunWorkerAsync(_searchText);
         }
 
 
         private void Host_Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            logger.Debug("host timer elapsed: {0}", hostText);
-            hostTimer.Stop();
+            _logger.Debug("host timer elapsed: {0}", _hostText);
+            _hostTimer.Stop();
             BackgroundWorker connectionWorker = new BackgroundWorker();
             connectionWorker.DoWork += Do_Test_Connection;
             connectionWorker.RunWorkerCompleted += Complete_Test_Connection;
-            connectionWorkers.Add(connectionWorker);
-            connectionWorker.RunWorkerAsync(argument: hostText);
+            _connectionWorkers.Add(connectionWorker);
+            connectionWorker.RunWorkerAsync(argument: _hostText);
         }
 
         private void Do_Test_Connection(object sender, DoWorkEventArgs e)
         {
-            logger.Info("Testing connection to {0}", e.Argument.ToString());
+            _logger.Info("Testing connection to {0}", e.Argument.ToString());
             Modules.ConnectionTester.TestHostConnections(e);
         }
 
         private void Complete_Test_Connection(object sender, RunWorkerCompletedEventArgs e)
         {
             MyConnection con = (MyConnection)e.Result;
-            logger.Trace("Conection test to {1} completed at {0}", con.Timestamp, con.Host);
-            if (lastConnectionResult < con.Timestamp)
+            _logger.Trace("Conection test to {1} completed at {0}", con.Timestamp, con.Host);
+            if (_lastConnectionResult < con.Timestamp)
             {
                 Dispatcher.Invoke(delegate
                 {
-                    logger.Trace("setting all buttons as per results");
+                    _logger.Trace("setting all buttons as per results");
                     ButtonRdp.IsEnabled = con.Rdp;
                     ButtonRc.IsEnabled = con.Rdp;
                     ButtonRcW10.IsEnabled = con.Rdp;
@@ -585,34 +561,30 @@ namespace BBC.BSC.Tool
                     ButtonHttps.IsEnabled = con.Https;
                     ButtonTelnet.IsEnabled = con.Telnet;
                     ButtonLogView.IsEnabled = con.DiraLogView;
-                    lastConnectionResult = con.Timestamp;
+                    _lastConnectionResult = con.Timestamp;
 
                     ButtonRcW10.Style = (Style)FindResource("MaterialDesignRaisedButton");
                     ButtonRc.Style = (Style)FindResource("MaterialDesignRaisedButton");
                     ButtonRdp.Style = (Style)FindResource("MaterialDesignRaisedButton");
                     try
                     {
-                        if (selectedResult?.OperatingSystem == null) return;
-                        if (selectedResult.OperatingSystem.Contains("Windows 10"))
+                        if (_selectedResult?.OperatingSystem == null) return;
+                        if (_selectedResult.OperatingSystem.Contains("Windows 10"))
                         {
                             ButtonRcW10.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
                         }
-                        else if (selectedResult.OperatingSystem.Contains("Windows 7"))
+                        else if (_selectedResult.OperatingSystem.Contains("Windows 7"))
                         {
                             ButtonRc.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
                         }
-                        else if (selectedResult.OperatingSystem.Contains("Windows Server"))
+                        else if (_selectedResult.OperatingSystem.Contains("Windows Server"))
                         {
                             ButtonRdp.Style = (Style)FindResource("MaterialDesignRaisedAccentButton");
                         }
                     }
                     catch (ResourceReferenceKeyNotFoundException ex)
                     {
-                        logger.Error(ex);
-                    }
-                    catch
-                    {
-                        throw;
+                        _logger.Error(ex);
                     }
                 });
             }
@@ -639,10 +611,6 @@ namespace BBC.BSC.Tool
                                 {
                                     Trace.TraceError(ex.Message);
                                     TextBoxHost.Text = "";
-                                }
-                                catch
-                                {
-                                    throw;
                                 }
                             });
 
@@ -683,16 +651,16 @@ namespace BBC.BSC.Tool
 
         private void Button_Phonebox_Click(object sender, RoutedEventArgs e)
         {
-            logger.Info("Phonebox button pressed with content {0}", ((Button)sender).Content);
+            _logger.Info("Phonebox button pressed with content {0}", ((Button)sender).Content);
 
             if (!File.Exists(PhoneboxIniPath))
             {
-                logger.Error("Phonebox ini file doesn't exist at {0}. Not switching.", PhoneboxIniPath);
+                _logger.Error("Phonebox ini file doesn't exist at {0}. Not switching.", PhoneboxIniPath);
                 return;
             }
             if (Process.GetProcessesByName("PhoneBOX.Client").Count() != 0)
             {
-                logger.Warn("Phonebox running, will not continue.");
+                _logger.Warn("Phonebox running, will not continue.");
                 MessageBox.Show(messageBoxText: "Close PhoneBOX before continuing.", caption: "ERROR", button: MessageBoxButton.OK, icon: MessageBoxImage.Warning);
                 return;
             }
@@ -701,39 +669,31 @@ namespace BBC.BSC.Tool
 
             if (phoneBoxConfig == null)
             {
-                logger.Error("Unknonw phonebox site given");
+                _logger.Error("Unknonw phonebox site given");
                 return;
             }
 
-            logger.Debug("Writing config to {0}\n{1}", PhoneboxIniPath, phoneBoxConfig);
+            _logger.Debug("Writing config to {0}\n{1}", PhoneboxIniPath, phoneBoxConfig);
 
             try
             {
                 File.WriteAllLines(PhoneboxIniPath, phoneBoxConfig.ToStringArray());
-                logger.Info("Attempting to start Phonebox");
+                _logger.Info("Attempting to start Phonebox");
                 try
                 {
                     Process.Start(PhoneboxExePath);
                 }
                 catch (Win32Exception ex)
                 {
-                    logger.Error(ex, "Problem starting PhoneBOX");
+                    _logger.Error(ex, "Problem starting PhoneBOX");
                     App.SendReport(ex);
-                }
-                catch
-                {
-                    throw;
                 }
             }
             catch (UnauthorizedAccessException ex)
             {
                 MessageBox.Show($"Check file permissions for {PhoneboxIniPath}", "Problem writing configuration", MessageBoxButton.OK, MessageBoxImage.Error);
-                logger.Error(ex, "Problem writing PhoneBOX ini file - check file permission.");
+                _logger.Error(ex, "Problem writing PhoneBOX ini file - check file permission.");
                 App.SendReport(ex);
-            }
-            catch
-            {
-                throw;
             }
         }
 

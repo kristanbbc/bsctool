@@ -14,7 +14,7 @@ namespace BBC.BSC.Tool.Modules
         /// <param name="e">The <see cref="DoWorkEventArgs"/> instance containing the event data.</param>
         public static void TestHostConnections(DoWorkEventArgs e)
         {
-            Logger logger = new Logging().initLogger();
+            Logger logger = new Logging().InitLogger();
             logger.ConditionalTrace("Testing TCP connections to {0}", e.Argument.ToString());
             using (var con = new MyConnection())
             {
@@ -52,7 +52,7 @@ namespace BBC.BSC.Tool.Modules
         /// </returns>
         private static bool IsPortOpen(string host, int port, TimeSpan timeout)
         {
-            Logger logger = new Logging().initLogger();
+            Logger logger = new Logging().InitLogger();
             try
             {
                 using (var client = new TcpClient())

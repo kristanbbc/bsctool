@@ -17,7 +17,7 @@ namespace BBC.BSC.Tool.GUI
     public partial class BncsVncLinks : UserControl
     {
         private const string BncsDir = @"\\national\bbcere\BSC\VNC\BNCS";
-        private readonly Logger logger = new Logging().initLogger();
+        private readonly Logger _logger = new Logging().InitLogger();
 
         /// <summary>
         /// 
@@ -26,17 +26,17 @@ namespace BBC.BSC.Tool.GUI
         {
 
            //Logger logger = new Logging().initLogger();
-            logger.Trace("Intilialisng BNCS Links View");
+            _logger.Trace("Intilialisng BNCS Links View");
             InitializeComponent();
 
             if (Directory.Exists(BncsDir))
             {
-                logger.Trace("Building BNCS View");
+                _logger.Trace("Building BNCS View");
                 Dispatcher.Invoke(BuildWs600View);
             }
             else
             {
-                logger.Warn("BNCS path {0} not accessible, not building treeview", BncsDir);
+                _logger.Warn("BNCS path {0} not accessible, not building treeview", BncsDir);
             }
         }
 
@@ -48,7 +48,7 @@ namespace BBC.BSC.Tool.GUI
 
             foreach (var item in Directory.GetDirectories(BncsDir))
             {
-                logger.ConditionalTrace("Adding directory {0} to BNCS tree", item);
+                _logger.ConditionalTrace("Adding directory {0} to BNCS tree", item);
                 TreeViewItem treeViewItem = new TreeViewItem
                 {
                     Header = Path.GetFileNameWithoutExtension(item),
@@ -66,10 +66,10 @@ namespace BBC.BSC.Tool.GUI
             }
             foreach (var item in Directory.GetFiles(BncsDir))
             {
-                logger.ConditionalTrace("Adding file {0} to BNCS tree", item);
+                _logger.ConditionalTrace("Adding file {0} to BNCS tree", item);
                 StackPanel stack = new StackPanel { Orientation = Orientation.Horizontal };
                 string ext = Path.GetExtension(item).Substring(1).ToLower();
-                _ = stack.Children.Add(new PackIcon() { Kind = Modules.BNCS.GetPackIconKind(ext) });
+                _ = stack.Children.Add(new PackIcon() { Kind = Modules.Bncs.GetPackIconKind(ext) });
                 _ = stack.Children.Add(new Label { Content = Path.GetFileNameWithoutExtension(item) });
                 TreeViewItem treeViewItem = new TreeViewItem
                 {
@@ -114,7 +114,7 @@ namespace BBC.BSC.Tool.GUI
                 return;
             }
 
-            logger.Info("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
+            _logger.Info("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
             _ = Process.Start(startInfo);
 
         }
@@ -131,7 +131,7 @@ namespace BBC.BSC.Tool.GUI
 
                     foreach (string item in Directory.GetDirectories(tvSender.Tag.ToString()))
                     {
-                        logger.ConditionalTrace("Adding directory {0} to BNCS tree", item);
+                        _logger.ConditionalTrace("Adding directory {0} to BNCS tree", item);
                         TreeViewItem treeViewItem = new TreeViewItem
                         {
                             Header = Path.GetFileNameWithoutExtension(item),
@@ -150,10 +150,10 @@ namespace BBC.BSC.Tool.GUI
                     }
                     foreach (string item in Directory.GetFiles(tvSender.Tag.ToString()))
                     {
-                        logger.ConditionalTrace("Adding file {0} to BNCS tree", item);
+                        _logger.ConditionalTrace("Adding file {0} to BNCS tree", item);
                         StackPanel stack = new StackPanel { Orientation = Orientation.Horizontal };
                         string ext = Path.GetExtension(item).Substring(1).ToLower();
-                        _ = stack.Children.Add(new PackIcon { Kind = Modules.BNCS.GetPackIconKind(ext) });
+                        _ = stack.Children.Add(new PackIcon { Kind = Modules.Bncs.GetPackIconKind(ext) });
                         _ = stack.Children.Add(new Label { Content = Path.GetFileNameWithoutExtension(item) });
                         TreeViewItem treeViewItem = new TreeViewItem
                         {
@@ -178,10 +178,10 @@ namespace BBC.BSC.Tool.GUI
         /// <returns></returns>
         public bool PrepareTool(byte[] resource, string outputPath)
         {
-            logger.Trace("Preparing tool to path {0}", outputPath);
+            _logger.Trace("Preparing tool to path {0}", outputPath);
             if (File.Exists(outputPath))
             {
-                logger.Trace("Tool path already exists.");
+                _logger.Trace("Tool path already exists.");
                 //check md5
                 byte[] existingMd5;
                 using (var md5 = SHA256.Create())
@@ -202,11 +202,11 @@ namespace BBC.BSC.Tool.GUI
 
                 if (Encoding.Default.GetString(existingMd5) == Encoding.Default.GetString(resourceMd5))
                 {
-                    logger.Trace("Tool path exists and SHA256 matches, returning true");
+                    _logger.Trace("Tool path exists and SHA256 matches, returning true");
                     return true;
                 }
 
-                logger.Warn("Tool path exists, but SHA256 doesn't match, remove file and retest");
+                _logger.Warn("Tool path exists, but SHA256 doesn't match, remove file and retest");
                 File.Delete(outputPath);
 
                 PrepareTool(resource, outputPath);
@@ -221,17 +221,13 @@ namespace BBC.BSC.Tool.GUI
                     {
                         exeFile.Write(resource, 0, resource.Length);
                     }
-                    logger.Debug("Tool written to {0}, returning true", outputPath);
+                    _logger.Debug("Tool written to {0}, returning true", outputPath);
                     return true;
                 }
                 catch (IOException ex)
                 {
-                    logger.Error("Problem writing out tool. {0}", ex.Message);
+                    _logger.Error("Problem writing out tool. {0}", ex.Message);
                     _ = MessageBox.Show($"Unable to write tool to {outputPath}", "Error in preparing tool", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-                catch
-                {
-                    throw;
                 }
             }
             return false;
