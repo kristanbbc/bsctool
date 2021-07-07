@@ -18,6 +18,9 @@ namespace BBC.BSC.Tool.GUI
     {
         private const string BncsDir = @"\\national\bbcere\BSC\VNC\BNCS";
         private readonly Logger _logger = new Logging().InitLogger();
+        private Preparer _preparer;
+
+        public Preparer Preparer => _preparer;
 
         /// <summary>
         /// 
@@ -33,6 +36,10 @@ namespace BBC.BSC.Tool.GUI
             {
                 _logger.Trace("Building BNCS View");
                 Dispatcher.Invoke(BuildWs600View);
+
+                _preparer = new Preparer();
+
+
             }
             else
             {
@@ -92,7 +99,7 @@ namespace BBC.BSC.Tool.GUI
             {
                 case "vnc":
                     string vncExeToRun = Path.Combine(Path.GetTempPath(), "vncx64.exe");
-                    if (PrepareTool(Properties.Resources.vncx64, vncExeToRun))
+                    if (Preparer.PrepareTool(Properties.Resources.vncx64, vncExeToRun))
                     {
                         startInfo.Arguments = $"\"{tvSender.Tag}\"";
                         startInfo.FileName = vncExeToRun;
@@ -169,69 +176,6 @@ namespace BBC.BSC.Tool.GUI
             });
         }
 
-
-        /// <summary>
-        /// Prepares an external tool for use from an embedded resource.
-        /// </summary>
-        /// <param name="resource">embedded resource</param>
-        /// <param name="outputPath">where to place the tool on the system</param>
-        /// <returns></returns>
-        public bool PrepareTool(byte[] resource, string outputPath)
-        {
-            _logger.Trace("Preparing tool to path {0}", outputPath);
-            if (File.Exists(outputPath))
-            {
-                _logger.Trace("Tool path already exists.");
-                //check md5
-                byte[] existingMd5;
-                using (var md5 = SHA256.Create())
-                {
-                    using (var stream = File.OpenRead(outputPath))
-                    {
-                        existingMd5 = md5.ComputeHash(stream);
-                    }
-                }
-
-                //md5 of embedded resource
-                byte[] resourceMd5;
-                using (var md5 = SHA256.Create())
-                {
-                    md5.TransformFinalBlock(resource, 0, resource.Length);
-                    resourceMd5 = md5.Hash;
-                }
-
-                if (Encoding.Default.GetString(existingMd5) == Encoding.Default.GetString(resourceMd5))
-                {
-                    _logger.Trace("Tool path exists and SHA256 matches, returning true");
-                    return true;
-                }
-
-                _logger.Warn("Tool path exists, but SHA256 doesn't match, remove file and retest");
-                File.Delete(outputPath);
-
-                PrepareTool(resource, outputPath);
-                // return false;
-            }
-            else
-            {
-                try
-                {
-                    // logger.Trace("Tool doesn't exist, writing out new file");
-                    using (FileStream exeFile = new FileStream(outputPath, FileMode.Create))
-                    {
-                        exeFile.Write(resource, 0, resource.Length);
-                    }
-                    _logger.Debug("Tool written to {0}, returning true", outputPath);
-                    return true;
-                }
-                catch (IOException ex)
-                {
-                    _logger.Error("Problem writing out tool. {0}", ex.Message);
-                    _ = MessageBox.Show($"Unable to write tool to {outputPath}", "Error in preparing tool", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-            }
-            return false;
-        }
 
 
     }

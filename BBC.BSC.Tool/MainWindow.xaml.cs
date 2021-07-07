@@ -18,6 +18,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using BBC.BSC.Tool.Properties;
+using BBC.BSC.Tool.Results;
 using Newtonsoft.Json;
 using NLog;
 using Timer = System.Timers.Timer;
@@ -41,7 +42,7 @@ namespace BBC.BSC.Tool
         private readonly Timer _searchTimer = new Timer(400);
         private readonly Timer _hostTimer = new Timer(400);
         private string _hostText;
-        private readonly Logger _logger;
+        public readonly Logger _logger;
 
         private const string PhoneboxIniPath = @"C:\ProgramData\Broadcast Bionics\PhoneBOX4\client.ini";
         private const string PhoneboxExePath = @"C:\Program Files (x86)\Broadcast Bionics\PhoneBOX4\Client\PhoneBOX.Client.exe";
@@ -100,8 +101,10 @@ namespace BBC.BSC.Tool
 
             // Put Cursor in search box.
             _ = SearchIn.Focus();
+            Preparer = new Preparer();
         }
 
+        private Preparer Preparer { get; }
 
 
         /// <summary>Updates the status box if running searches are still happening.</summary>
@@ -134,7 +137,7 @@ namespace BBC.BSC.Tool
             {
                 Status.Fill = new SolidColorBrush(Colors.Red);
             });
-            Results.MyResults results = new Results.MyResults();
+            MyResults results = new MyResults();
             if (e.Argument.ToString().Length < 4)
             {
                 e.Result = null;
@@ -166,7 +169,7 @@ namespace BBC.BSC.Tool
                         if (_catResults != null)
                             foreach (var item in _catResults)
                             {
-                                results.Results.Add(new Results.MyResult
+                                results.Results.Add(new MyResult
                                 {
                                     Source = "CAT",
                                     Hostname = item.HostName.ToUpper(),
@@ -209,9 +212,10 @@ namespace BBC.BSC.Tool
                             foreach (SearchResult item in sResults)
                             {
                                 _logger.ConditionalTrace("AD: found: {0}", item.Properties["name"][0].ToString().ToUpper());
+
                                 if (results.Results.All(n => n.Hostname != item.Properties["name"][0].ToString().ToUpper()))
                                 {
-                                    results.AddResult(new Results.MyResult
+                                    results.AddResult(new MyResult
                                     {
                                         Hostname = item.Properties["name"][0].ToString().ToUpper(),
                                         Description = CleanResultProperty(item, "description"),
@@ -250,43 +254,39 @@ namespace BBC.BSC.Tool
             TextBoxHost.Text = SearchIn.Text;
         }
 
-        private Results.MyResult _selectedResult = new Results.MyResult();
+        private MyResult _selectedResult = new MyResult();
 
         private void DisplayResults(object sender, RunWorkerCompletedEventArgs e)
         {
             _logger.Trace("Start displaying results, stopping and disposing background worker");
             _ = _workers.Remove((BackgroundWorker)sender);
             ((BackgroundWorker)sender).Dispose();
-            var res = (Results.MyResults)e.Result;
+            var res = (MyResults)e.Result;
             _logger.Trace($"There are {res.Results.Count} results");
             // If results returned select first in list.
-            _selectedResult = res.Results.Count > 0 ? ((Results.MyResults)e.Result).Results[0] : null;
+            _selectedResult = res.Results.Count > 0 ? ((MyResults)e.Result).Results[0] : null;
             try
             {
                 // If results older than currently displayed (earlier queries take longer) then drop results
-                if (res.Timestamp > _lastResultTimestamp)
+                if (res.Timestamp <= _lastResultTimestamp) return;
+                _logger.Trace("Results newer so continue processing");
+                Dispatcher.Invoke(delegate
                 {
-                    _logger.Trace("Results newer so continue processing");
-                    Dispatcher.Invoke(delegate
+                    _logger.Trace("Copying results to result collection.");
+                    var results = new ObservableCollection<MyResult>();
+                    foreach (var item in res.Results)
                     {
-                        _logger.Trace("Copying results to result collection.");
-                        var results = new ObservableCollection<Results.MyResult>();
-                        foreach (var item in res.Results)
-                        {
-                            results.Add(item);
-                        }
-                        SearchResults.ItemsSource = null;
-                        SearchResults.ItemsSource = results;
+                        results.Add(item);
+                    }
+                    SearchResults.ItemsSource = null;
+                    SearchResults.ItemsSource = results;
 
-                        if (res.Results.Count == 1)
-                        {
-                            _logger.Trace("Single result so make selected");
-                            TextBoxHost.Text = res.Results[0].Hostname;
-                        }
-                        //searchResults.Items.Refresh();
-                    });
-                    _lastResultTimestamp = res.Timestamp;
-                }
+                    if (res.Results.Count != 1) return;
+                    _logger.Trace("Single result so make selected");
+                    TextBoxHost.Text = res.Results[0].Hostname;
+                    //searchResults.Items.Refresh();
+                });
+                _lastResultTimestamp = res.Timestamp;
             }
             catch
             {
@@ -322,7 +322,7 @@ namespace BBC.BSC.Tool
         {
             try
             {
-                TextBoxHost.Text = ((Results.MyResult)((ListBox)sender).SelectedValue).Hostname;
+                TextBoxHost.Text = ((MyResult)((ListBox)sender).SelectedValue).Hostname;
             }
             catch (Exception ex)
             {
@@ -337,7 +337,7 @@ namespace BBC.BSC.Tool
         {
             try
             {
-                TextBoxHost.Text = ((Results.MyResult)((ListBox)sender)?.SelectedValue)?.Hostname ?? string.Empty;
+                TextBoxHost.Text = ((MyResult)((ListBox)sender)?.SelectedValue)?.Hostname ?? string.Empty;
             }
             catch (Exception ex)
             {
@@ -369,7 +369,7 @@ namespace BBC.BSC.Tool
                     break;
 
                 case "RC7":
-                    if (PrepareTool(Properties.Resources.rc, rcExeToRun))
+                    if (Preparer.PrepareTool(Properties.Resources.rc, rcExeToRun))
                     {
                         startInfo.Arguments =
                             $"/c runas /user:national\\{TextBoxEre.Text} /savecred \"{rcExeToRun} 1 {TextBoxHost.Text.Trim()}\"";
@@ -396,7 +396,7 @@ namespace BBC.BSC.Tool
                     startInfo.FileName = Path.Combine(directory, "putty.exe");
                     break;
                 case "VNC":
-                    if (PrepareTool(Properties.Resources.vncx64, vncExeToRun))
+                    if (Preparer.PrepareTool(Properties.Resources.vncx64, vncExeToRun))
                     {
                         startInfo.Arguments = $"-username {TextBoxEre.Text} \"{TextBoxHost.Text.Trim()}\"";
                         startInfo.FileName = vncExeToRun;
@@ -415,7 +415,7 @@ namespace BBC.BSC.Tool
                         @"C:\Program Files\dira\diraBasics\LogView.exe",
                         @"C:\Program Files\VCS\dira\diraBasics\LogView.exe"
                     };
-                    foreach (string item in logViewPaths)
+                    foreach (var item in logViewPaths)
                     {
                         if (!File.Exists(item)) continue;
                         startInfo.FileName = item;
@@ -441,65 +441,6 @@ namespace BBC.BSC.Tool
             Settings.Default.history = string.Join(";", LvHistory.Items.OfType<string>().ToList());
             Settings.Default.Save();
 
-        }
-
-
-
-        public bool PrepareTool(byte[] resource, string outputPath)
-        {
-            _logger.Trace("Preparing tool to path {0}", outputPath);
-            if (File.Exists(outputPath))
-            {
-                _logger.Trace("Tool path already exists.");
-                //check md5
-                byte[] existingMd5;
-                using (var md5 = SHA256.Create())
-                {
-                    using (var stream = File.OpenRead(outputPath))
-                    {
-                        existingMd5 = md5.ComputeHash(stream);
-                    }
-                }
-
-                //md5 of embedded resource
-                byte[] resourceMd5;
-                using (var md5 = SHA256.Create())
-                {
-                    md5.TransformFinalBlock(resource, 0, resource.Length);
-                    resourceMd5 = md5.Hash;
-                }
-
-                if (Encoding.Default.GetString(existingMd5) == Encoding.Default.GetString(resourceMd5))
-                {
-                    _logger.Trace("Tool path exists and SHA256 matches, returning true");
-                    return true;
-                }
-
-                _logger.Warn("Tool path exists, but SHA256 doesn't match, remove file and retest");
-                File.Delete(outputPath);
-
-                PrepareTool(resource, outputPath);
-                // return false;
-            }
-            else
-            {
-                try
-                {
-                    _logger.Trace("Tool doesn't exist, writing out new file");
-                    using (FileStream exeFile = new FileStream(outputPath, FileMode.Create))
-                    {
-                        exeFile.Write(resource, 0, resource.Length);
-                    }
-                    _logger.Debug("Tool written to {0}, returning true", outputPath);
-                    return true;
-                }
-                catch (IOException ex)
-                {
-                    _logger.Error("Problem writing out tool. {0}", ex.Message);
-                    _ = MessageBox.Show($"Unable to write tool to {outputPath}", "Error in preparing tool", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-            }
-            return false;
         }
 
 

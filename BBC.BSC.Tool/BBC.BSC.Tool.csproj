@@ -169,6 +169,7 @@
     <Compile Include="Modules\ConnectionTester.cs" />
     <Compile Include="Modules\PhoneBox.cs" />
     <Compile Include="MyConnection.cs" />
+    <Compile Include="Preparer.cs" />
     <Compile Include="Results\MyResults.cs" />
     <Compile Include="Modules\PhoneBoxConfig.cs" />
     <Compile Include="SettingBindingExtension.cs" />
