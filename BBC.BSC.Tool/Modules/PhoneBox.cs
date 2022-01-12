@@ -52,6 +52,13 @@
                     phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS6002";
                     break;
 
+                case "LRTS":
+                    phoneBoxConfig.ServerAddress = "3GBV5APPBX7001"; 
+                    phoneBoxConfig.ServerBackupAddress = "3GBV5APPBX7002";
+                    phoneBoxConfig.OasisAddress = "3GBV5APOAS7001"; 
+                    phoneBoxConfig.OasisBackupAddress = "3GBV5APOAS7002";
+                    break;
+
                 default:
                     //logger.Error("Unknonw phonebox site given");
                     phoneBoxConfig = null;
