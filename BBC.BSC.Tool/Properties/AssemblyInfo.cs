@@ -10,7 +10,7 @@ using System.Windows;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("BBC")]
 [assembly: AssemblyProduct("BSC Tool")]
-[assembly: AssemblyCopyright("Copyright © BBC 2019-2021")]
+[assembly: AssemblyCopyright("Copyright © BBC 2019-2022")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -49,6 +49,6 @@ using System.Windows;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.7.3.133")]
-[assembly: AssemblyFileVersion("1.7.3.133")]
+[assembly: AssemblyVersion("1.7.4.133")]
+[assembly: AssemblyFileVersion("1.7.4.133")]
 [assembly: AssemblyInformationalVersion("1.7.73")]
