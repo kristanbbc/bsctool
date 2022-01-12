@@ -148,7 +148,7 @@
             <TabItem Header="BNCS VNC Links" x:Name="TabItemBncsVnc">
                 <gui:BncsVncLinks/>
             </TabItem>
-            <TabItem Header="PhoneBox Switcher" x:Name="PhoneBoxSwitcherTab">
+            <TabItem Header="Bionic STUDIO Switcher" x:Name="PhoneBoxSwitcherTab">
                 <StackPanel Margin="10" x:Name="PhoneBoxButtons">
                     <TextBlock Style="{DynamicResource MaterialDesignTitleTextBlock}" Margin="5">Click button to swich PhoneBox settings:</TextBlock>
                     <DockPanel LastChildFill="True" Margin="30,0">
@@ -160,7 +160,9 @@
                         <Button Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource CornerRadius}">Midlands</Button>
 
                     </DockPanel>
+                    
                     <Button Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource CornerRadius}">VTS</Button>
+                    <Button Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource CornerRadius}">LRTS</Button>
 
                 </StackPanel>
             </TabItem>
