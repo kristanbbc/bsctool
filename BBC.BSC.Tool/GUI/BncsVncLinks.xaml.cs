@@ -121,7 +121,7 @@ namespace BBC.BSC.Tool.GUI
                 return;
             }
 
-            _logger.Info("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
+            _logger.Info("Starting: {0} with arguments {1}", startInfo.FileName, startInfo.Arguments);
             _ = Process.Start(startInfo);
 
         }

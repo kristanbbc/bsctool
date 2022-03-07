@@ -427,7 +427,7 @@ namespace BBC.BSC.Tool
 
             if (startInfo.FileName.Length > 0)
             {
-                _logger.Info("Starting: {0} with argumets {1}", startInfo.FileName, startInfo.Arguments);
+                _logger.Info("Starting: {0} with arguments {1}", startInfo.FileName, startInfo.Arguments);
                 _ = await Task.Run(() => Process.Start(startInfo));
 
             }
