@@ -45,18 +45,18 @@
                     phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS1002";
                     break;
 
-                case "VTS":
-                    phoneBoxConfig.ServerAddress = "3GBV1APPBX6001"; // "10.32.13.220";
-                    phoneBoxConfig.ServerBackupAddress = "3GBV1APPBX6002";// "10.32.13.221";
-                    phoneBoxConfig.OasisAddress = "3GBV1APOAS6001"; // "10.32.13.222";
-                    phoneBoxConfig.OasisBackupAddress = "3GBV1APOAS6002";
+                case "LRTS Station S":
+                    phoneBoxConfig.ServerAddress = "3GBV5APPBX6S01"; 
+                    phoneBoxConfig.ServerBackupAddress = "3GBV6APPBX6S02";
+                    phoneBoxConfig.OasisAddress = "3GBV5APOAS6S01";
+                    phoneBoxConfig.OasisBackupAddress = "3GBV6APOAS6S02";
                     break;
 
-                case "LRTS":
-                    phoneBoxConfig.ServerAddress = "3GBV5APPBX7001"; 
-                    phoneBoxConfig.ServerBackupAddress = "3GBV5APPBX7002";
-                    phoneBoxConfig.OasisAddress = "3GBV5APOAS7001"; 
-                    phoneBoxConfig.OasisBackupAddress = "3GBV5APOAS7002";
+                case "LRTS Station T":
+                    phoneBoxConfig.ServerAddress = "3GBV5APPBX6T01"; 
+                    phoneBoxConfig.ServerBackupAddress = "3GBV6APPBX6T02";
+                    phoneBoxConfig.OasisAddress = "3GBV5APOAS6T11"; 
+                    phoneBoxConfig.OasisBackupAddress = "3GBV6APOAS6T12";
                     break;
 
                 default:
