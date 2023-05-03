@@ -160,9 +160,9 @@
                         <Button Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource CornerRadius}">Midlands</Button>
 
                     </DockPanel>
-                    
-                    <Button Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource CornerRadius}">VTS</Button>
-                    <Button Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource CornerRadius}">LRTS</Button>
+
+                    <Button Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource CornerRadius}">LRTS Station S</Button>
+                    <Button Click="Button_Phonebox_Click" Margin="10" materialDesign:ButtonAssist.CornerRadius="{DynamicResource CornerRadius}">LRTS Station T</Button>
 
                 </StackPanel>
             </TabItem>
