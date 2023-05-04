@@ -57,6 +57,14 @@ namespace BBC.BSC.Tool
             _logger = new Logging().InitLogger();
 
             _logger.Info("BSC Tool {0} starting.", FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion);
+
+            if (Properties.Settings.Default.UpgradeRequired)
+            {
+                _logger.Info("Version upgrade detected - copying previous settings.");
+                Properties.Settings.Default.Upgrade();
+                Properties.Settings.Default.UpgradeRequired = false;
+                Properties.Settings.Default.Save();
+            }
             Timer watcher = new Timer
             {
                 Interval = 1000
