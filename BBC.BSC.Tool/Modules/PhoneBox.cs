@@ -48,8 +48,8 @@
                 case "LRTS Station S":
                     phoneBoxConfig.ServerAddress = "3GBV5APPBX6S01"; 
                     phoneBoxConfig.ServerBackupAddress = "3GBV6APPBX6S02";
-                    phoneBoxConfig.OasisAddress = "3GBV5APOAS6S01";
-                    phoneBoxConfig.OasisBackupAddress = "3GBV6APOAS6S02";
+                    phoneBoxConfig.OasisAddress = "3GBV5APOAS6S11";
+                    phoneBoxConfig.OasisBackupAddress = "3GBV6APOAS6S12";
                     break;
 
                 case "LRTS Station T":
