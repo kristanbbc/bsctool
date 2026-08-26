@@ -426,7 +426,7 @@ namespace BBC.BSC.Tool
                     {
                         startInfo.FileName = "cmd";
                         startInfo.Arguments =
-                            $"/c runas /user:national\\{TextBoxEre.Text} /savecred \"mstsc.exe /v:{TextBoxHost.Text} /prompt\"";
+                            $"/c runas /user:national\\{TextBoxEre.Text} \"mstsc.exe /v:{TextBoxHost.Text} /prompt\"";
                     }
 
                     break;
@@ -435,14 +435,14 @@ namespace BBC.BSC.Tool
                     if (Preparer.PrepareTool(Properties.Resources.rc, rcExeToRun))
                     {
                         startInfo.Arguments =
-                            $"/c runas /user:national\\{TextBoxEre.Text} /savecred \"{rcExeToRun} 1 {TextBoxHost.Text.Trim()}\"";
+                            $"/c runas /user:national\\{TextBoxEre.Text} \"{rcExeToRun} 1 {TextBoxHost.Text.Trim()}\"";
                         startInfo.FileName = "cmd";
                     }
                     break;
                 case "RC10":
 
                     startInfo.Arguments =
-                        $"/c runas /user:national\\{TextBoxEre.Text} /savecred \"{rcW10ExeToRun} {TextBoxHost.Text.Trim()}\"";
+                        $"/c runas /user:national\\{TextBoxEre.Text} \"{rcW10ExeToRun} {TextBoxHost.Text.Trim()}\"";
                     startInfo.FileName = "cmd";
 
                     break;
