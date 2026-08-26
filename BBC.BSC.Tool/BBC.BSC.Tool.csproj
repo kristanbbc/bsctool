@@ -167,6 +167,7 @@
     <Compile Include="Modules\BNCS.cs" />
     <Compile Include="Modules\CAT.cs" />
     <Compile Include="Modules\ConnectionTester.cs" />
+    <Compile Include="Modules\DeviceJoinDetector.cs" />
     <Compile Include="Modules\PhoneBox.cs" />
     <Compile Include="MyConnection.cs" />
     <Compile Include="Preparer.cs" />
