@@ -7,6 +7,7 @@ using System.DirectoryServices;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -47,6 +48,8 @@ namespace BBC.BSC.Tool
 
         private const string PhoneboxIniPath = @"C:\ProgramData\Broadcast Bionics\PhoneBOX4\client.ini";
         private const string PhoneboxExePath = @"C:\Program Files (x86)\Broadcast Bionics\PhoneBOX4\Client\PhoneBOX.Client.exe";
+
+        private static readonly HttpClient CatHttpClient = new HttpClient(new HttpClientHandler { UseDefaultCredentials = true });
 
 
         public MainWindow()
@@ -165,11 +168,7 @@ namespace BBC.BSC.Tool
 
                     string jsonData;
                     _logger.Info("Running query against CAT with\n{0}", catQuery);
-                    using (var w = new WebClient())
-                    {
-                        w.UseDefaultCredentials = true;
-                        jsonData = w.DownloadString(catQuery);
-                    }
+                    jsonData = CatHttpClient.GetStringAsync(catQuery).GetAwaiter().GetResult();
 
                     if (!string.IsNullOrEmpty(jsonData))
                     {
