@@ -156,11 +156,12 @@ namespace BBC.BSC.Tool
                 _logger.Info("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
                 try
                 {
+                    string searchTerm = EscapeSqlLiteral(e.Argument.ToString().Replace("*", "%").ToLower());
                     string catQuery =
                         $"{CatPath}SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip, CONCAT(os,  \" \",os_version) as os FROM " +
                         "network INNER JOIN asset ON network.asset_id = asset.asset_id " +
                         "left join asset_os on asset.asset_id = asset_os.asset_id left join os on asset_os.os_id = os.os_id left join os_version on asset_os.os_version_id = os_version.os_version_id " +
-                        $"WHERE life_cycle_status_id = 4 AND (lower(host_name like '%{e.Argument.ToString().Replace("*", "%").ToLower()}%') OR IP = inet_aton('{e.Argument.ToString().Replace("*", "%").ToLower()}') OR lower(also_known_as) LIKE '%{e.Argument.ToString().Replace("*", "%").ToLower()}%')";
+                        $"WHERE life_cycle_status_id = 4 AND (lower(host_name like '%{searchTerm}%') OR IP = inet_aton('{searchTerm}') OR lower(also_known_as) LIKE '%{searchTerm}%')";
 
                     string jsonData;
                     _logger.Info("Running query against CAT with\n{0}", catQuery);
@@ -203,7 +204,7 @@ namespace BBC.BSC.Tool
                     {
                         // (|(cn=*334810*)(displayname=*334810*)(cn=PC-*334810*)(cn=B1-D0*334810*)(cn=B1-L0*334810*)(cn=61-D0*334810*)(cn=61-L0*334810*)(cn=71-D0*334810*)(cn=71-L0*334810*)(cn=91-D0*334810*)(cn=91-L0*334810*)(cn=F1-D0*334810*)(cn=F1-L0*334810*)(cn=MC-*334810*)(sn=*334810*)(samAccountName=*334810*)(mail=*334810*)(proxyaddresses=smtp:*334810*)(ou=*334810*)(&(objectcategory=printqueue)(printername=*334810*)))
                         //Filter = string.Format("(&(objectClass=computer)(cn={0}*))", e.Argument.ToString()),
-                        Filter = string.Format("(&(!userAccountControl:1.2.840.113556.1.4.803:=2)(objectClass=computer)(|(cn={0}*)(displayname={0}*)(cn=PC-{0}*)(cn=B1-D0{0}*)(cn=B1-L0{0}*)(cn=31-D0{0}*)(cn=31*-D0{0}*)(cn=61-D0{0}*)(cn=61-L0{0}*)(cn=71-D0{0}*)(cn=71-L0{0}*)(cn=91-D0{0}*)(cn=91-L0{0}*)(cn=F1-D0{0}*)(cn=F1-L0{0}*)(cn=MC-{0}*)(sn={0}*)(samAccountName={0}*)))", e.Argument),
+                        Filter = string.Format("(&(!userAccountControl:1.2.840.113556.1.4.803:=2)(objectClass=computer)(|(cn={0}*)(displayname={0}*)(cn=PC-{0}*)(cn=B1-D0{0}*)(cn=B1-L0{0}*)(cn=31-D0{0}*)(cn=31*-D0{0}*)(cn=61-D0{0}*)(cn=61-L0{0}*)(cn=71-D0{0}*)(cn=71-L0{0}*)(cn=91-D0{0}*)(cn=91-L0{0}*)(cn=F1-D0{0}*)(cn=F1-L0{0}*)(cn=MC-{0}*)(sn={0}*)(samAccountName={0}*)))", EscapeLdapFilter(e.Argument.ToString())),
                         //PageSize = 20,
                         //ServerTimeLimit = TimeSpan.FromSeconds(15),
                         //ServerPageTimeLimit = TimeSpan.FromSeconds(15),
@@ -253,6 +254,31 @@ namespace BBC.BSC.Tool
 
         private static string CleanResultProperty(SearchResult item,
                                                   string property) => item.Properties.Contains(property) ? item.Properties[property][0].ToString() : "";
+
+        /// <summary>
+        /// Escapes special characters in a value used inside an LDAP search filter, per RFC 4515,
+        /// to prevent LDAP injection from user-supplied search input.
+        /// </summary>
+        private static string EscapeLdapFilter(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+            return value
+                .Replace("\\", "\\5c")
+                .Replace("*", "\\2a")
+                .Replace("(", "\\28")
+                .Replace(")", "\\29")
+                .Replace("\0", "\\00");
+        }
+
+        /// <summary>
+        /// Escapes single quotes in a value embedded in a SQL string literal, to prevent SQL
+        /// injection from user-supplied search input sent to the CAT query endpoint.
+        /// </summary>
+        private static string EscapeSqlLiteral(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+            return value.Replace("'", "''");
+        }
 
         private void Text_Changed(object sender, TextChangedEventArgs e)
         {
