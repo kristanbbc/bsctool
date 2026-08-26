@@ -366,7 +366,7 @@ namespace BBC.BSC.Tool
         {
             try
             {
-                TextBoxHost.Text = ((MyResult)((ListBox)sender).SelectedValue).Hostname;
+                TextBoxHost.Text = ((MyResult)((ListBox)sender)?.SelectedValue)?.Hostname ?? string.Empty;
             }
             catch (Exception ex)
             {
