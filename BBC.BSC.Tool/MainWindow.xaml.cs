@@ -17,6 +17,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using BBC.BSC.Tool.Modules;
 using BBC.BSC.Tool.Properties;
 using BBC.BSC.Tool.Results;
 using Newtonsoft.Json;
@@ -363,9 +364,27 @@ namespace BBC.BSC.Tool
             switch (((Button)sender).Tag)
             {
                 case "RDP":
-                    startInfo.FileName = "cmd";
-                    startInfo.Arguments =
-                        $"/c runas /user:national\\{TextBoxEre.Text} /savecred \"mstsc.exe /v:{TextBoxHost.Text}\"";
+                    // Note: runas.exe depends on the Secondary Logon service, which is commonly
+                    // disabled on Intune-managed (Azure AD/hybrid joined) devices, causing the
+                    // connection to silently fail. On those devices we launch mstsc.exe directly
+                    // with /prompt so the user can enter the national\<ere> account in RDP's own
+                    // credential dialog instead, without needing Secondary Logon.
+                    DeviceJoinType joinType = DeviceJoinDetector.GetJoinType();
+                    _logger.Info("Device join type: {0}", joinType);
+
+                    if (DeviceJoinDetector.IsLikelyIntuneManaged())
+                    {
+                        startInfo.FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "mstsc.exe");
+                        startInfo.Arguments = $"/v:{TextBoxHost.Text.Trim()} /prompt";
+                        startInfo.UseShellExecute = true;
+                    }
+                    else
+                    {
+                        startInfo.FileName = "cmd";
+                        startInfo.Arguments =
+                            $"/c runas /user:national\\{TextBoxEre.Text} /savecred \"mstsc.exe /v:{TextBoxHost.Text} /prompt\"";
+                    }
+
                     break;
 
                 case "RC7":
