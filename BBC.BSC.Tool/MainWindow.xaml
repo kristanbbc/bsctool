@@ -29,6 +29,7 @@
             </ResourceDictionary.MergedDictionaries>
 
             <CornerRadius x:Key="CornerRadius">8</CornerRadius>
+            <SolidColorBrush x:Key="ConnectionButtonForeground" Color="Black"/>
 
         </ResourceDictionary>
 
@@ -190,16 +191,21 @@
 
         </Grid>
         <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.Row="2" Grid.Column="1" Margin="10,0" >
-            <Button x:Name="ButtonRdp" Tag="RDP" Content="RDP" Click="Connect_Button_Click" Margin="4" IsEnabled="False" Foreground="Black"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
-            <Button x:Name="ButtonRc" Tag="RC7" Content="RC W7"  Click="Connect_Button_Click" IsEnabled="False" Margin="4" Foreground="Black"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
-            <Button x:Name="ButtonRcW10" Tag="RC10" Content="RC W10"  Click="Connect_Button_Click" IsEnabled="False" Margin="4" Foreground="Black"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
-            <Button x:Name="ButtonVnc" Tag="VNC" Content="VNC" Click="Connect_Button_Click"  IsEnabled="False" Margin="4" Foreground="Black"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
-            <Button x:Name="ButtonSsh" Tag="SSH"  Content="SSH"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4" Foreground="Black"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
-            <Button x:Name="ButtonSshEre" Tag="SSHERE" Content="SSH ERE"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4" Foreground="Black"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
-            <Button x:Name="ButtonTelnet" Tag="TELNET" Content="TELNET"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4" Foreground="Black"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
-            <Button x:Name="ButtonHttp" Tag="HTTP" Content="HTTP"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4" Foreground="Black"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
-            <Button x:Name="ButtonHttps" Tag="HTTPS" Content="HTTPS" Click="Connect_Button_Click" IsEnabled="False" Margin="4" Foreground="Black"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
-            <Button x:Name="ButtonLogView" Tag="LOGVIEW" Content="LogView" Click="Connect_Button_Click" IsEnabled="False" Margin="4" Foreground="Black"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <WrapPanel.Resources>
+                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                    <Setter Property="Foreground" Value="{StaticResource ConnectionButtonForeground}"/>
+                </Style>
+            </WrapPanel.Resources>
+            <Button x:Name="ButtonRdp" Tag="RDP" Content="RDP" Click="Connect_Button_Click" Margin="4" IsEnabled="False"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <Button x:Name="ButtonRc" Tag="RC7" Content="RC W7"  Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <Button x:Name="ButtonRcW10" Tag="RC10" Content="RC W10"  Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <Button x:Name="ButtonVnc" Tag="VNC" Content="VNC" Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <Button x:Name="ButtonSsh" Tag="SSH"  Content="SSH"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <Button x:Name="ButtonSshEre" Tag="SSHERE" Content="SSH ERE"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <Button x:Name="ButtonTelnet" Tag="TELNET" Content="TELNET"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <Button x:Name="ButtonHttp" Tag="HTTP" Content="HTTP"  Click="Connect_Button_Click"  IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <Button x:Name="ButtonHttps" Tag="HTTPS" Content="HTTPS" Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
+            <Button x:Name="ButtonLogView" Tag="LOGVIEW" Content="LogView" Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
 
         </WrapPanel>
 
