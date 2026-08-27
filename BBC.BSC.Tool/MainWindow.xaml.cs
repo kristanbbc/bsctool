@@ -86,10 +86,6 @@ namespace BBC.BSC.Tool
             DataContext = this;
 
             Settings.Default.history.Split(';').Where(h => h != "System.Windows.Controls.ItemCollection").ToList().ForEach(x => LvHistory.Items.Add(x));
-            //foreach (string item in Settings.Default.history.Split(';').Where(h => h != "System.Windows.Controls.ItemCollection"))
-            //{
-            //    _ = LvHistory.Items.Add(item);
-            //}
 
             //If PhoneBox not installed don't enable tab
             if (!File.Exists(PhoneboxExePath))
@@ -97,19 +93,6 @@ namespace BBC.BSC.Tool
                 PhoneBoxSwitcherTab.IsEnabled = false;
                 UiHelper.FindVisualChildren<Button>(PhoneBoxButtons).ToList().ForEach(x => x.IsEnabled = false);
             }
-            //if (Directory.Exists(BncsDir))
-            //{
-            //    Dispatcher.Invoke(BuildWs600View);
-            //}
-            //else
-            //{
-            //    TabItemBncsVnc.IsEnabled = false;
-            //}
-
-            //Dispatcher.Invoke(delegate
-            //{
-            //    UpdateInfoGridAllocation();
-            //});
 
             // Put Cursor in search box.
             _ = SearchIn.Focus();
@@ -202,7 +185,6 @@ namespace BBC.BSC.Tool
                     using (DirectorySearcher dSearcher = new DirectorySearcher(dEntry)
                     {
                         // (|(cn=*334810*)(displayname=*334810*)(cn=PC-*334810*)(cn=B1-D0*334810*)(cn=B1-L0*334810*)(cn=61-D0*334810*)(cn=61-L0*334810*)(cn=71-D0*334810*)(cn=71-L0*334810*)(cn=91-D0*334810*)(cn=91-L0*334810*)(cn=F1-D0*334810*)(cn=F1-L0*334810*)(cn=MC-*334810*)(sn=*334810*)(samAccountName=*334810*)(mail=*334810*)(proxyaddresses=smtp:*334810*)(ou=*334810*)(&(objectcategory=printqueue)(printername=*334810*)))
-                        //Filter = string.Format("(&(objectClass=computer)(cn={0}*))", e.Argument.ToString()),
                         Filter = string.Format("(&(!userAccountControl:1.2.840.113556.1.4.803:=2)(objectClass=computer)(|(cn={0}*)(displayname={0}*)(cn=PC-{0}*)(cn=B1-D0{0}*)(cn=B1-L0{0}*)(cn=31-D0{0}*)(cn=31*-D0{0}*)(cn=61-D0{0}*)(cn=61-L0{0}*)(cn=71-D0{0}*)(cn=71-L0{0}*)(cn=91-D0{0}*)(cn=91-L0{0}*)(cn=F1-D0{0}*)(cn=F1-L0{0}*)(cn=MC-{0}*)(sn={0}*)(samAccountName={0}*)))", EscapeLdapFilter(e.Argument.ToString())),
                         PageSize = 50,
                         SizeLimit = 50,
@@ -316,7 +298,6 @@ namespace BBC.BSC.Tool
                     if (res.Results.Count != 1) return;
                     _logger.Trace("Single result so make selected");
                     TextBoxHost.Text = res.Results[0].Hostname;
-                    //searchResults.Items.Refresh();
                 });
                 _lastResultTimestamp = res.Timestamp;
             }
