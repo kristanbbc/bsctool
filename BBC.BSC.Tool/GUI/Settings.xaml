@@ -18,6 +18,10 @@
                     <Label Style="{StaticResource MaterialDesignLabel}">Eng Account:</Label>
                     <TextBox Width="250" Text="{local:SettingBinding ere}" VerticalAlignment="Center" TextChanged="TextBox_TextChanged" />
                 </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="10">
+                    <Label Style="{StaticResource MaterialDesignLabel}">AD search page size:</Label>
+                    <TextBox Width="80" Text="{local:SettingBinding AdPageSize}" VerticalAlignment="Center" ToolTip="Maximum number of Active Directory results to return per search." TextChanged="AdPageSize_TextChanged" />
+                </StackPanel>
 
             </StackPanel>
         </Grid>
