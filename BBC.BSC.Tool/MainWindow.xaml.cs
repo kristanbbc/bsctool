@@ -7,6 +7,7 @@ using System.DirectoryServices;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -47,6 +48,8 @@ namespace BBC.BSC.Tool
 
         private const string PhoneboxIniPath = @"C:\ProgramData\Broadcast Bionics\PhoneBOX4\client.ini";
         private const string PhoneboxExePath = @"C:\Program Files (x86)\Broadcast Bionics\PhoneBOX4\Client\PhoneBOX.Client.exe";
+
+        private static readonly HttpClient CatHttpClient = new HttpClient(new HttpClientHandler { UseDefaultCredentials = true });
 
 
         public MainWindow()
@@ -156,19 +159,16 @@ namespace BBC.BSC.Tool
                 _logger.Info("{1} DoSearch: {0}", e.Argument.ToString(), Environment.CurrentManagedThreadId);
                 try
                 {
+                    string searchTerm = EscapeSqlLiteral(e.Argument.ToString().Replace("*", "%").ToLower());
                     string catQuery =
                         $"{CatPath}SELECT host_name, also_known_as, CAST(inet_ntoa(ip) as CHAR(15)) as ip, CONCAT(os,  \" \",os_version) as os FROM " +
                         "network INNER JOIN asset ON network.asset_id = asset.asset_id " +
                         "left join asset_os on asset.asset_id = asset_os.asset_id left join os on asset_os.os_id = os.os_id left join os_version on asset_os.os_version_id = os_version.os_version_id " +
-                        $"WHERE life_cycle_status_id = 4 AND (lower(host_name like '%{e.Argument.ToString().Replace("*", "%").ToLower()}%') OR IP = inet_aton('{e.Argument.ToString().Replace("*", "%").ToLower()}') OR lower(also_known_as) LIKE '%{e.Argument.ToString().Replace("*", "%").ToLower()}%')";
+                        $"WHERE life_cycle_status_id = 4 AND (lower(host_name like '%{searchTerm}%') OR IP = inet_aton('{searchTerm}') OR lower(also_known_as) LIKE '%{searchTerm}%')";
 
                     string jsonData;
                     _logger.Info("Running query against CAT with\n{0}", catQuery);
-                    using (var w = new WebClient())
-                    {
-                        w.UseDefaultCredentials = true;
-                        jsonData = w.DownloadString(catQuery);
-                    }
+                    jsonData = CatHttpClient.GetStringAsync(catQuery).GetAwaiter().GetResult();
 
                     if (!string.IsNullOrEmpty(jsonData))
                     {
@@ -196,53 +196,62 @@ namespace BBC.BSC.Tool
                 }
 
                 // Start AD search
-                try
+                // Skip on Intune-managed (Azure AD/hybrid joined) devices, which typically don't
+                // have a direct line to the on-prem LDAP server, avoiding a guaranteed timeout
+                // delay (ClientTimeout below) on every search.
+                if (!DeviceJoinDetector.IsLikelyIntuneManaged())
                 {
-                    int adPageSize = Settings.Default.AdPageSize > 0 ? Settings.Default.AdPageSize : 50;
-                    using (DirectoryEntry dEntry = new DirectoryEntry(LdapPath))
-                    using (DirectorySearcher dSearcher = new DirectorySearcher(dEntry)
+                    try
                     {
-                        // (|(cn=*334810*)(displayname=*334810*)(cn=PC-*334810*)(cn=B1-D0*334810*)(cn=B1-L0*334810*)(cn=61-D0*334810*)(cn=61-L0*334810*)(cn=71-D0*334810*)(cn=71-L0*334810*)(cn=91-D0*334810*)(cn=91-L0*334810*)(cn=F1-D0*334810*)(cn=F1-L0*334810*)(cn=MC-*334810*)(sn=*334810*)(samAccountName=*334810*)(mail=*334810*)(proxyaddresses=smtp:*334810*)(ou=*334810*)(&(objectcategory=printqueue)(printername=*334810*)))
-                        //Filter = string.Format("(&(objectClass=computer)(cn={0}*))", e.Argument.ToString()),
-                        Filter = string.Format("(&(!userAccountControl:1.2.840.113556.1.4.803:=2)(objectClass=computer)(|(cn={0}*)(displayname={0}*)(cn=PC-{0}*)(cn=B1-D0{0}*)(cn=B1-L0{0}*)(cn=31-D0{0}*)(cn=31*-D0{0}*)(cn=61-D0{0}*)(cn=61-L0{0}*)(cn=71-D0{0}*)(cn=71-L0{0}*)(cn=91-D0{0}*)(cn=91-L0{0}*)(cn=F1-D0{0}*)(cn=F1-L0{0}*)(cn=MC-{0}*)(sn={0}*)(samAccountName={0}*)))", e.Argument),
-                        PageSize = adPageSize,
-                        SizeLimit = adPageSize,
-                        ClientTimeout = TimeSpan.FromSeconds(15)
-                    })
-                    {
-                        dSearcher.PropertiesToLoad.Clear();
-                        _ = dSearcher.PropertiesToLoad.Add("name");
-                        _ = dSearcher.PropertiesToLoad.Add("description");
-                        _ = dSearcher.PropertiesToLoad.Add("operatingsystem");
-                        using (var sResults = dSearcher.FindAll())
+                        int adPageSize = Settings.Default.AdPageSize > 0 ? Settings.Default.AdPageSize : 50;
+                        using (DirectoryEntry dEntry = new DirectoryEntry(LdapPath))
+                        using (DirectorySearcher dSearcher = new DirectorySearcher(dEntry)
                         {
-                            _logger.Info("Found {0} results in Active Directory", sResults.Count);
-                            foreach (SearchResult item in sResults)
+                            // (|(cn=*334810*)(displayname=*334810*)(cn=PC-*334810*)(cn=B1-D0*334810*)(cn=B1-L0*334810*)(cn=61-D0*334810*)(cn=61-L0*334810*)(cn=71-D0*334810*)(cn=71-L0*334810*)(cn=91-D0*334810*)(cn=91-L0*334810*)(cn=F1-D0*334810*)(cn=F1-L0*334810*)(cn=MC-*334810*)(sn=*334810*)(samAccountName=*334810*)(mail=*334810*)(proxyaddresses=smtp:*334810*)(ou=*334810*)(&(objectcategory=printqueue)(printername=*334810*)))
+                            Filter = string.Format("(&(!userAccountControl:1.2.840.113556.1.4.803:=2)(objectClass=computer)(|(cn={0}*)(displayname={0}*)(cn=PC-{0}*)(cn=B1-D0{0}*)(cn=B1-L0{0}*)(cn=31-D0{0}*)(cn=31*-D0{0}*)(cn=61-D0{0}*)(cn=61-L0{0}*)(cn=71-D0{0}*)(cn=71-L0{0}*)(cn=91-D0{0}*)(cn=91-L0{0}*)(cn=F1-D0{0}*)(cn=F1-L0{0}*)(cn=MC-{0}*)(sn={0}*)(samAccountName={0}*)))", EscapeLdapFilter(e.Argument.ToString())),
+                            PageSize = adPageSize,
+                            SizeLimit = adPageSize,
+                            ClientTimeout = TimeSpan.FromSeconds(15)
+                        })
+                        {
+                            dSearcher.PropertiesToLoad.Clear();
+                            _ = dSearcher.PropertiesToLoad.Add("name");
+                            _ = dSearcher.PropertiesToLoad.Add("description");
+                            _ = dSearcher.PropertiesToLoad.Add("operatingsystem");
+                            using (var sResults = dSearcher.FindAll())
                             {
-                                _logger.ConditionalTrace("AD: found: {0}", item.Properties["name"][0].ToString().ToUpper());
-
-                                if (results.Results.All(n => n.Hostname != item.Properties["name"][0].ToString().ToUpper()))
+                                _logger.Info("Found {0} results in Active Directory", sResults.Count);
+                                foreach (SearchResult item in sResults)
                                 {
-                                    results.AddResult(new MyResult
+                                    _logger.ConditionalTrace("AD: found: {0}", item.Properties["name"][0].ToString().ToUpper());
+
+                                    if (results.Results.All(n => n.Hostname != item.Properties["name"][0].ToString().ToUpper()))
                                     {
-                                        Hostname = item.Properties["name"][0].ToString().ToUpper(),
-                                        Description = CleanResultProperty(item, "description"),
-                                        Ip = "Load IP",
-                                        OperatingSystem = CleanResultProperty(item, "operatingSystem"),
-                                        Source = "AD"
-                                    });
+                                        results.AddResult(new MyResult
+                                        {
+                                            Hostname = item.Properties["name"][0].ToString().ToUpper(),
+                                            Description = CleanResultProperty(item, "description"),
+                                            Ip = "Load IP",
+                                            OperatingSystem = CleanResultProperty(item, "operatingSystem"),
+                                            Source = "AD"
+                                        });
+                                    }
                                 }
                             }
                         }
                     }
+                    catch (InvalidOperationException ex)
+                    {
+                        _logger.Warn("Invalid Operation querying AD: ", ex);
+                    }
+                    catch (NotSupportedException ex)
+                    {
+                        _logger.Warn("LDAP query error: {0}", ex.Message);
+                    }
                 }
-                catch (InvalidOperationException ex)
+                else
                 {
-                    _logger.Warn("Invalid Operation querying AD: ", ex);
-                }
-                catch (NotSupportedException ex)
-                {
-                    _logger.Warn("LDAP query error: {0}", ex.Message);
+                    _logger.Trace("Device is Intune-managed, skipping on-prem AD search.");
                 }
             }
             results.Results.Sort((a, b) => string.Compare(a.Hostname, b.Hostname, StringComparison.Ordinal));
@@ -252,6 +261,31 @@ namespace BBC.BSC.Tool
 
         private static string CleanResultProperty(SearchResult item,
                                                   string property) => item.Properties.Contains(property) ? item.Properties[property][0].ToString() : "";
+
+        /// <summary>
+        /// Escapes special characters in a value used inside an LDAP search filter, per RFC 4515,
+        /// to prevent LDAP injection from user-supplied search input.
+        /// </summary>
+        private static string EscapeLdapFilter(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+            return value
+                .Replace("\\", "\\5c")
+                .Replace("*", "\\2a")
+                .Replace("(", "\\28")
+                .Replace(")", "\\29")
+                .Replace("\0", "\\00");
+        }
+
+        /// <summary>
+        /// Escapes single quotes in a value embedded in a SQL string literal, to prevent SQL
+        /// injection from user-supplied search input sent to the CAT query endpoint.
+        /// </summary>
+        private static string EscapeSqlLiteral(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+            return value.Replace("'", "''");
+        }
 
         private void Text_Changed(object sender, TextChangedEventArgs e)
         {
@@ -330,7 +364,7 @@ namespace BBC.BSC.Tool
         {
             try
             {
-                TextBoxHost.Text = ((MyResult)((ListBox)sender).SelectedValue).Hostname;
+                TextBoxHost.Text = ((MyResult)((ListBox)sender)?.SelectedValue)?.Hostname ?? string.Empty;
             }
             catch (Exception ex)
             {
@@ -389,7 +423,7 @@ namespace BBC.BSC.Tool
                     {
                         startInfo.FileName = "cmd";
                         startInfo.Arguments =
-                            $"/c runas /user:national\\{TextBoxEre.Text} /savecred \"mstsc.exe /v:{TextBoxHost.Text} /prompt\"";
+                            $"/c runas /user:national\\{TextBoxEre.Text} \"mstsc.exe /v:{TextBoxHost.Text} /prompt\"";
                     }
 
                     break;
@@ -398,14 +432,14 @@ namespace BBC.BSC.Tool
                     if (Preparer.PrepareTool(Properties.Resources.rc, rcExeToRun))
                     {
                         startInfo.Arguments =
-                            $"/c runas /user:national\\{TextBoxEre.Text} /savecred \"{rcExeToRun} 1 {TextBoxHost.Text.Trim()}\"";
+                            $"/c runas /user:national\\{TextBoxEre.Text} \"{rcExeToRun} 1 {TextBoxHost.Text.Trim()}\"";
                         startInfo.FileName = "cmd";
                     }
                     break;
                 case "RC10":
 
                     startInfo.Arguments =
-                        $"/c runas /user:national\\{TextBoxEre.Text} /savecred \"{rcW10ExeToRun} {TextBoxHost.Text.Trim()}\"";
+                        $"/c runas /user:national\\{TextBoxEre.Text} \"{rcW10ExeToRun} {TextBoxHost.Text.Trim()}\"";
                     startInfo.FileName = "cmd";
 
                     break;

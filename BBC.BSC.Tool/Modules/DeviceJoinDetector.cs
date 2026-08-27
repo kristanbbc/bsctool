@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using Microsoft.Win32;
 using NLog;
 
 namespace BBC.BSC.Tool.Modules
@@ -16,7 +17,7 @@ namespace BBC.BSC.Tool.Modules
     /// <summary>
     /// Detects whether the current machine is domain-joined (typically SCCM managed)
     /// or Azure AD / hybrid joined (typically Intune managed), by parsing the output
-    /// of the built-in "dsregcmd /status" tool.
+    /// of the built-in "dsregcmd /status" tool, with a registry-based fallback.
     /// </summary>
     internal static class DeviceJoinDetector
     {
@@ -30,8 +31,8 @@ namespace BBC.BSC.Tool.Modules
                 return _cached.Value;
             }
 
-            bool domainJoined = false;
-            bool azureAdJoined = false;
+            bool? domainJoined = null;
+            bool? azureAdJoined = null;
 
             try
             {
@@ -47,27 +48,44 @@ namespace BBC.BSC.Tool.Modules
                 using (Process process = Process.Start(startInfo))
                 {
                     string output = process.StandardOutput.ReadToEnd();
-                    process.WaitForExit(5000);
+                    bool exited = process.WaitForExit(5000);
 
-                    domainJoined = ContainsYes(output, "DomainJoined");
-                    azureAdJoined = ContainsYes(output, "AzureAdJoined");
+                    Logger.Debug("dsregcmd exited: {0}, ExitCode: {1}", exited, exited ? process.ExitCode : (int?)null);
+                    Logger.Trace("dsregcmd /status raw output:\n{0}", output);
+
+                    if (exited && !string.IsNullOrWhiteSpace(output))
+                    {
+                        domainJoined = ContainsYes(output, "DomainJoined");
+                        azureAdJoined = ContainsYes(output, "AzureAdJoined");
+                    }
+                    else
+                    {
+                        Logger.Warn("dsregcmd did not exit in time or produced no output; falling back to registry check.");
+                    }
                 }
             }
             catch (Exception ex)
             {
-                Logger.Warn(ex, "Unable to determine device join type via dsregcmd.");
+                Logger.Warn(ex, "Unable to determine device join type via dsregcmd, falling back to registry check.");
+            }
+
+            // Fallback: check for the Azure AD join registry marker directly, in case dsregcmd
+            // is unavailable, blocked, or its output format couldn't be parsed.
+            if (azureAdJoined == null)
+            {
+                azureAdJoined = IsAzureAdJoinedViaRegistry();
             }
 
             DeviceJoinType result;
-            if (domainJoined && azureAdJoined)
+            if (domainJoined == true && azureAdJoined == true)
             {
                 result = DeviceJoinType.HybridAzureAdJoined;
             }
-            else if (azureAdJoined)
+            else if (azureAdJoined == true)
             {
                 result = DeviceJoinType.AzureAdJoined;
             }
-            else if (domainJoined)
+            else if (domainJoined == true)
             {
                 result = DeviceJoinType.DomainJoined;
             }
@@ -77,19 +95,40 @@ namespace BBC.BSC.Tool.Modules
             }
 
             _cached = result;
-            Logger.Info("Detected device join type: {0}", result);
+            Logger.Info("Detected device join type: {0} (domainJoined={1}, azureAdJoined={2})", result, domainJoined, azureAdJoined);
             return result;
         }
 
         /// <summary>
-        /// True when the device is Intune-managed (Azure AD joined or hybrid joined),
-        /// meaning tools relying on classic AD-only features (e.g. Secondary Logon/runas
-        /// against an on-prem domain account) may not be reliable.
+        /// True when the device is likely Intune-managed (Azure AD joined, hybrid joined, or
+        /// undetermined), meaning tools relying on classic AD-only features (e.g. Secondary
+        /// Logon/runas against an on-prem domain account) may not be reliable. When detection
+        /// is inconclusive we default to true, since the mstsc /prompt fallback works fine on
+        /// domain-joined machines too, whereas runas silently failing on an Intune machine is
+        /// the more disruptive failure mode.
         /// </summary>
         public static bool IsLikelyIntuneManaged()
         {
             DeviceJoinType type = GetJoinType();
-            return type == DeviceJoinType.AzureAdJoined || type == DeviceJoinType.HybridAzureAdJoined;
+            return type != DeviceJoinType.DomainJoined;
+        }
+
+        private static bool IsAzureAdJoinedViaRegistry()
+        {
+            try
+            {
+                using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\CloudDomainJoin\JoinInfo"))
+                {
+                    bool found = key?.GetSubKeyNames().Length > 0;
+                    Logger.Debug("Registry fallback AzureAdJoined check: {0}", found);
+                    return found;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Warn(ex, "Unable to determine Azure AD join state via registry fallback.");
+                return false;
+            }
         }
 
         private static bool ContainsYes(string output, string key)
