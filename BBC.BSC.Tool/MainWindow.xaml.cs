@@ -196,64 +196,54 @@ namespace BBC.BSC.Tool
                 }
 
                 // Start AD search
-                // Skip on Intune-managed (Azure AD/hybrid joined) devices, which typically don't
-                // have a direct line to the on-prem LDAP server, avoiding a guaranteed timeout
-                // delay (ClientTimeout below) on every search.
-                if (!DeviceJoinDetector.IsLikelyIntuneManaged())
+                try
                 {
-                    try
+                    using (DirectoryEntry dEntry = new DirectoryEntry(LdapPath))
+                    using (DirectorySearcher dSearcher = new DirectorySearcher(dEntry)
                     {
-                        using (DirectoryEntry dEntry = new DirectoryEntry(LdapPath))
-                        using (DirectorySearcher dSearcher = new DirectorySearcher(dEntry)
+                        // (|(cn=*334810*)(displayname=*334810*)(cn=PC-*334810*)(cn=B1-D0*334810*)(cn=B1-L0*334810*)(cn=61-D0*334810*)(cn=61-L0*334810*)(cn=71-D0*334810*)(cn=71-L0*334810*)(cn=91-D0*334810*)(cn=91-L0*334810*)(cn=F1-D0*334810*)(cn=F1-L0*334810*)(cn=MC-*334810*)(sn=*334810*)(samAccountName=*334810*)(mail=*334810*)(proxyaddresses=smtp:*334810*)(ou=*334810*)(&(objectcategory=printqueue)(printername=*334810*)))
+                        //Filter = string.Format("(&(objectClass=computer)(cn={0}*))", e.Argument.ToString()),
+                        Filter = string.Format("(&(!userAccountControl:1.2.840.113556.1.4.803:=2)(objectClass=computer)(|(cn={0}*)(displayname={0}*)(cn=PC-{0}*)(cn=B1-D0{0}*)(cn=B1-L0{0}*)(cn=31-D0{0}*)(cn=31*-D0{0}*)(cn=61-D0{0}*)(cn=61-L0{0}*)(cn=71-D0{0}*)(cn=71-L0{0}*)(cn=91-D0{0}*)(cn=91-L0{0}*)(cn=F1-D0{0}*)(cn=F1-L0{0}*)(cn=MC-{0}*)(sn={0}*)(samAccountName={0}*)))", EscapeLdapFilter(e.Argument.ToString())),
+                        //PageSize = 20,
+                        //ServerTimeLimit = TimeSpan.FromSeconds(15),
+                        //ServerPageTimeLimit = TimeSpan.FromSeconds(15),
+                        //SizeLimit = 20,
+                        ClientTimeout = TimeSpan.FromSeconds(15)
+                    })
+                    {
+                        dSearcher.PropertiesToLoad.Clear();
+                        _ = dSearcher.PropertiesToLoad.Add("name");
+                        _ = dSearcher.PropertiesToLoad.Add("description");
+                        _ = dSearcher.PropertiesToLoad.Add("operatingsystem");
+                        using (var sResults = dSearcher.FindAll())
                         {
-                            // (|(cn=*334810*)(displayname=*334810*)(cn=PC-*334810*)(cn=B1-D0*334810*)(cn=B1-L0*334810*)(cn=61-D0*334810*)(cn=61-L0*334810*)(cn=71-D0*334810*)(cn=71-L0*334810*)(cn=91-D0*334810*)(cn=91-L0*334810*)(cn=F1-D0*334810*)(cn=F1-L0*334810*)(cn=MC-*334810*)(sn=*334810*)(samAccountName=*334810*)(mail=*334810*)(proxyaddresses=smtp:*334810*)(ou=*334810*)(&(objectcategory=printqueue)(printername=*334810*)))
-                            //Filter = string.Format("(&(objectClass=computer)(cn={0}*))", e.Argument.ToString()),
-                            Filter = string.Format("(&(!userAccountControl:1.2.840.113556.1.4.803:=2)(objectClass=computer)(|(cn={0}*)(displayname={0}*)(cn=PC-{0}*)(cn=B1-D0{0}*)(cn=B1-L0{0}*)(cn=31-D0{0}*)(cn=31*-D0{0}*)(cn=61-D0{0}*)(cn=61-L0{0}*)(cn=71-D0{0}*)(cn=71-L0{0}*)(cn=91-D0{0}*)(cn=91-L0{0}*)(cn=F1-D0{0}*)(cn=F1-L0{0}*)(cn=MC-{0}*)(sn={0}*)(samAccountName={0}*)))", EscapeLdapFilter(e.Argument.ToString())),
-                            //PageSize = 20,
-                            //ServerTimeLimit = TimeSpan.FromSeconds(15),
-                            //ServerPageTimeLimit = TimeSpan.FromSeconds(15),
-                            //SizeLimit = 20,
-                            ClientTimeout = TimeSpan.FromSeconds(15)
-                        })
-                        {
-                            dSearcher.PropertiesToLoad.Clear();
-                            _ = dSearcher.PropertiesToLoad.Add("name");
-                            _ = dSearcher.PropertiesToLoad.Add("description");
-                            _ = dSearcher.PropertiesToLoad.Add("operatingsystem");
-                            using (var sResults = dSearcher.FindAll())
+                            _logger.Info("Found {0} results in Active Directory", sResults.Count);
+                            foreach (SearchResult item in sResults)
                             {
-                                _logger.Info("Found {0} results in Active Directory", sResults.Count);
-                                foreach (SearchResult item in sResults)
-                                {
-                                    _logger.ConditionalTrace("AD: found: {0}", item.Properties["name"][0].ToString().ToUpper());
+                                _logger.ConditionalTrace("AD: found: {0}", item.Properties["name"][0].ToString().ToUpper());
 
-                                    if (results.Results.All(n => n.Hostname != item.Properties["name"][0].ToString().ToUpper()))
+                                if (results.Results.All(n => n.Hostname != item.Properties["name"][0].ToString().ToUpper()))
+                                {
+                                    results.AddResult(new MyResult
                                     {
-                                        results.AddResult(new MyResult
-                                        {
-                                            Hostname = item.Properties["name"][0].ToString().ToUpper(),
-                                            Description = CleanResultProperty(item, "description"),
-                                            Ip = "Load IP",
-                                            OperatingSystem = CleanResultProperty(item, "operatingSystem"),
-                                            Source = "AD"
-                                        });
-                                    }
+                                        Hostname = item.Properties["name"][0].ToString().ToUpper(),
+                                        Description = CleanResultProperty(item, "description"),
+                                        Ip = "Load IP",
+                                        OperatingSystem = CleanResultProperty(item, "operatingSystem"),
+                                        Source = "AD"
+                                    });
                                 }
                             }
                         }
                     }
-                    catch (InvalidOperationException ex)
-                    {
-                        _logger.Warn("Invalid Operation querying AD: ", ex);
-                    }
-                    catch (NotSupportedException ex)
-                    {
-                        _logger.Warn("LDAP query error: {0}", ex.Message);
-                    }
                 }
-                else
+                catch (InvalidOperationException ex)
                 {
-                    _logger.Trace("Device is Intune-managed, skipping on-prem AD search.");
+                    _logger.Warn("Invalid Operation querying AD: ", ex);
+                }
+                catch (NotSupportedException ex)
+                {
+                    _logger.Warn("LDAP query error: {0}", ex.Message);
                 }
             }
             results.Results.Sort((a, b) => string.Compare(a.Hostname, b.Hostname, StringComparison.Ordinal));
