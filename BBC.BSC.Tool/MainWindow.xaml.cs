@@ -198,16 +198,15 @@ namespace BBC.BSC.Tool
                 // Start AD search
                 try
                 {
+                    int adPageSize = Settings.Default.AdPageSize > 0 ? Settings.Default.AdPageSize : 50;
                     using (DirectoryEntry dEntry = new DirectoryEntry(LdapPath))
                     using (DirectorySearcher dSearcher = new DirectorySearcher(dEntry)
                     {
                         // (|(cn=*334810*)(displayname=*334810*)(cn=PC-*334810*)(cn=B1-D0*334810*)(cn=B1-L0*334810*)(cn=61-D0*334810*)(cn=61-L0*334810*)(cn=71-D0*334810*)(cn=71-L0*334810*)(cn=91-D0*334810*)(cn=91-L0*334810*)(cn=F1-D0*334810*)(cn=F1-L0*334810*)(cn=MC-*334810*)(sn=*334810*)(samAccountName=*334810*)(mail=*334810*)(proxyaddresses=smtp:*334810*)(ou=*334810*)(&(objectcategory=printqueue)(printername=*334810*)))
                         //Filter = string.Format("(&(objectClass=computer)(cn={0}*))", e.Argument.ToString()),
                         Filter = string.Format("(&(!userAccountControl:1.2.840.113556.1.4.803:=2)(objectClass=computer)(|(cn={0}*)(displayname={0}*)(cn=PC-{0}*)(cn=B1-D0{0}*)(cn=B1-L0{0}*)(cn=31-D0{0}*)(cn=31*-D0{0}*)(cn=61-D0{0}*)(cn=61-L0{0}*)(cn=71-D0{0}*)(cn=71-L0{0}*)(cn=91-D0{0}*)(cn=91-L0{0}*)(cn=F1-D0{0}*)(cn=F1-L0{0}*)(cn=MC-{0}*)(sn={0}*)(samAccountName={0}*)))", e.Argument),
-                        //PageSize = 20,
-                        //ServerTimeLimit = TimeSpan.FromSeconds(15),
-                        //ServerPageTimeLimit = TimeSpan.FromSeconds(15),
-                        //SizeLimit = 20,
+                        PageSize = adPageSize,
+                        SizeLimit = adPageSize,
                         ClientTimeout = TimeSpan.FromSeconds(15)
                     })
                     {

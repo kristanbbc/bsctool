@@ -19,5 +19,14 @@ namespace BBC.BSC.Tool.GUI
             Properties.Settings.Default.Save();
 
         }
+
+        private void AdPageSize_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (int.TryParse(((TextBox)sender).Text, out int pageSize) && pageSize > 0)
+            {
+                Properties.Settings.Default.AdPageSize = pageSize;
+                Properties.Settings.Default.Save();
+            }
+        }
     }
 }

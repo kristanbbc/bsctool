@@ -58,5 +58,17 @@ namespace BBC.BSC.Tool.Properties {
                 this["UpgradeRequired"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("50")]
+        public int AdPageSize {
+            get {
+                return ((int)(this["AdPageSize"]));
+            }
+            set {
+                this["AdPageSize"] = value;
+            }
+        }
     }
 }
