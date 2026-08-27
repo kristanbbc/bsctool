@@ -1,6 +1,6 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using System.Windows;
 using NLog;
 
@@ -38,7 +38,7 @@ namespace BBC.BSC.Tool
                     resourceMd5 = md5.Hash;
                 }
 
-                if (Encoding.Default.GetString(existingMd5) == Encoding.Default.GetString(resourceMd5))
+                if (existingMd5.SequenceEqual(resourceMd5))
                 {
                     _logger.Trace("Tool path exists and SHA256 matches, returning true");
                     return true;
@@ -47,8 +47,7 @@ namespace BBC.BSC.Tool
                 _logger.Warn("Tool path exists, but SHA256 doesn't match, remove file and retest");
                 File.Delete(outputPath);
 
-                PrepareTool(resource, outputPath);
-                // return false;
+                return PrepareTool(resource, outputPath);
             }
             else
             {
