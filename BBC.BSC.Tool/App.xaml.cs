@@ -45,7 +45,8 @@ namespace BBC.BSC.Tool
                 EmailRequired =false,
                  
                 FromEmail = Environment.UserName + "-bsctool@bbc.co.uk",
-                SmtpHost = "smtp.national.core.bbc.co.uk"
+                SmtpHost = "smtpin.national.core.bbc.co.uk",
+                EnableSSL = true
             };
             reportCrash.Silent = silent;
             reportCrash.Send(exception);
