@@ -43,6 +43,7 @@ namespace BBC.BSC.Tool
         private const string LdapPath = @"LDAP://ldap.national.core.bbc.co.uk";
         private readonly Timer _searchTimer = new Timer(400);
         private readonly Timer _hostTimer = new Timer(400);
+        private readonly Timer _watcher = new Timer { Interval = 1000 };
         private string _hostText;
         public readonly Logger _logger;
 
@@ -69,10 +70,7 @@ namespace BBC.BSC.Tool
                 Properties.Settings.Default.UpgradeRequired = false;
                 Properties.Settings.Default.Save();
             }
-            Timer watcher = new Timer
-            {
-                Interval = 1000
-            };
+            Timer watcher = _watcher;
             watcher.Elapsed += Do_Watcher;
             watcher.Enabled = true;
             ThreadPool.GetMinThreads(out int w, out int c);
@@ -124,20 +122,35 @@ namespace BBC.BSC.Tool
         /// <param name="e"></param>
         private void Do_Watcher(object sender, ElapsedEventArgs e)
         {
-            Dispatcher.Invoke(delegate
+            System.Windows.Threading.Dispatcher dispatcher = Dispatcher;
+            if (dispatcher == null || dispatcher.HasShutdownStarted || dispatcher.HasShutdownFinished)
             {
-                if (_workers.Count > 0)
+                return;
+            }
+
+            try
+            {
+                dispatcher.Invoke(delegate
                 {
-                    _logger.Debug("There are {0} workers", _workers.Count);
-                    Status.Fill = new SolidColorBrush(Colors.Red);
-                    // this.Title = "Busy";
-                }
-                else
-                {
-                    Status.Fill = new SolidColorBrush(Colors.Green);
-                    //this.Title = "Finished";
-                }
-            });
+                    if (_workers.Count > 0)
+                    {
+                        _logger.Debug("There are {0} workers", _workers.Count);
+                        Status.Fill = new SolidColorBrush(Colors.Red);
+                        // this.Title = "Busy";
+                    }
+                    else
+                    {
+                        Status.Fill = new SolidColorBrush(Colors.Green);
+                        //this.Title = "Finished";
+                    }
+                });
+            }
+            catch (TaskCanceledException)
+            {
+                // The dispatcher started shutting down between the check above and the
+                // Invoke call - this is expected during application close and can be ignored.
+                _logger.Trace("Do_Watcher: dispatcher invoke was cancelled during shutdown.");
+            }
         }
 
         private List<Modules.CatResult> _catResults = new List<Modules.CatResult>();
@@ -347,6 +360,13 @@ namespace BBC.BSC.Tool
             }
             else
             {
+                // Stop all recurring timers before the window/dispatcher shuts down, otherwise
+                // a timer tick can race with dispatcher shutdown and throw TaskCanceledException
+                // from Dispatcher.Invoke (e.g. Do_Watcher).
+                _watcher.Stop();
+                _searchTimer.Stop();
+                _hostTimer.Stop();
+
                 foreach (BackgroundWorker item in _workers)
                 {
                     item.Dispose();
