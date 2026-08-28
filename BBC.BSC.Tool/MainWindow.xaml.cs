@@ -84,10 +84,6 @@ namespace BBC.BSC.Tool
             DataContext = this;
 
             Settings.Default.history.Split(';').Where(h => h != "System.Windows.Controls.ItemCollection").ToList().ForEach(x => LvHistory.Items.Add(x));
-            //foreach (string item in Settings.Default.history.Split(';').Where(h => h != "System.Windows.Controls.ItemCollection"))
-            //{
-            //    _ = LvHistory.Items.Add(item);
-            //}
 
             //If PhoneBox not installed don't enable tab
             if (!File.Exists(PhoneboxExePath))
@@ -95,19 +91,6 @@ namespace BBC.BSC.Tool
                 PhoneBoxSwitcherTab.IsEnabled = false;
                 UiHelper.FindVisualChildren<Button>(PhoneBoxButtons).ToList().ForEach(x => x.IsEnabled = false);
             }
-            //if (Directory.Exists(BncsDir))
-            //{
-            //    Dispatcher.Invoke(BuildWs600View);
-            //}
-            //else
-            //{
-            //    TabItemBncsVnc.IsEnabled = false;
-            //}
-
-            //Dispatcher.Invoke(delegate
-            //{
-            //    UpdateInfoGridAllocation();
-            //});
 
             // Put Cursor in search box.
             _ = SearchIn.Focus();
@@ -194,7 +177,7 @@ namespace BBC.BSC.Tool
                                 results.Results.Add(new MyResult
                                 {
                                     Source = "CAT",
-                                    Hostname = item.HostName.ToUpper(),
+                                    Hostname = item.HostName.ToUpperInvariant(),
                                     Description = item.AlsoKnownAs,
                                     OperatingSystem = item.Os,
                                     Ip = item.Ip
@@ -236,13 +219,13 @@ namespace BBC.BSC.Tool
                                 _logger.Info("Found {0} results in Active Directory", sResults.Count);
                                 foreach (SearchResult item in sResults)
                                 {
-                                    _logger.ConditionalTrace("AD: found: {0}", item.Properties["name"][0].ToString().ToUpper());
+                                    _logger.ConditionalTrace("AD: found: {0}", item.Properties["name"][0].ToString().ToUpperInvariant());
 
-                                    if (results.Results.All(n => n.Hostname != item.Properties["name"][0].ToString().ToUpper()))
+                                    if (results.Results.All(n => n.Hostname != item.Properties["name"][0].ToString().ToUpperInvariant()))
                                     {
                                         results.AddResult(new MyResult
                                         {
-                                            Hostname = item.Properties["name"][0].ToString().ToUpper(),
+                                            Hostname = item.Properties["name"][0].ToString().ToUpperInvariant(),
                                             Description = CleanResultProperty(item, "description"),
                                             Ip = "Load IP",
                                             OperatingSystem = CleanResultProperty(item, "operatingSystem"),
@@ -261,10 +244,6 @@ namespace BBC.BSC.Tool
                     {
                         _logger.Warn("LDAP query error: {0}", ex.Message);
                     }
-                }
-                else
-                {
-                    _logger.Trace("Device is Intune-managed, skipping on-prem AD search.");
                 }
             }
             results.Results.Sort((a, b) => string.Compare(a.Hostname, b.Hostname, StringComparison.Ordinal));
@@ -339,7 +318,6 @@ namespace BBC.BSC.Tool
                     if (res.Results.Count != 1) return;
                     _logger.Trace("Single result so make selected");
                     TextBoxHost.Text = res.Results[0].Hostname;
-                    //searchResults.Items.Refresh();
                 });
                 _lastResultTimestamp = res.Timestamp;
             }

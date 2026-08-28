@@ -24,11 +24,12 @@
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignExtensions;component/Themes/Generic.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignExtensions;component/Themes/MaterialDesignLightTheme.xaml" />
                 <!--<ResourceDictionary Source="pack://application:,,,/MaterialDesignExtensions;component/Themes/MaterialDesignDarkTheme.xaml" />-->
-                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Red" SecondaryColor="Yellow"  />
+                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Blue" SecondaryColor="Amber"  />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <CornerRadius x:Key="CornerRadius">8</CornerRadius>
+            <SolidColorBrush x:Key="ConnectionButtonForeground" Color="Black"/>
 
         </ResourceDictionary>
 
@@ -190,6 +191,11 @@
 
         </Grid>
         <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.Row="2" Grid.Column="1" Margin="10,0" >
+            <WrapPanel.Resources>
+                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                    <Setter Property="Foreground" Value="{StaticResource ConnectionButtonForeground}"/>
+                </Style>
+            </WrapPanel.Resources>
             <Button x:Name="ButtonRdp" Tag="RDP" Content="RDP" Click="Connect_Button_Click" Margin="4" IsEnabled="False"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
             <Button x:Name="ButtonRc" Tag="RC7" Content="RC W7"  Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
             <Button x:Name="ButtonRcW10" Tag="RC10" Content="RC W10"  Click="Connect_Button_Click" IsEnabled="False" Margin="4"  materialDesign:ButtonAssist.CornerRadius="{StaticResource CornerRadius}"/>
