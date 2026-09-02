@@ -15,7 +15,7 @@
         
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:gui="clr-namespace:BBC.BSC.Tool.GUI"
-        Title="BSC Tool" Height="600" Width="800" Topmost="False" Closing="Window_Closing" Icon="bsctoolicon.ico"
+        Title="BSC Tool" Height="727" Width="800" Topmost="False" Closing="Window_Closing" Icon="bsctoolicon.ico"
         >
 
     <Window.Resources>
@@ -149,7 +149,7 @@
             <TabItem Header="BNCS VNC Links" x:Name="TabItemBncsVnc">
                 <gui:BncsVncLinks/>
             </TabItem>
-            <TabItem Header="DIRA Launcher" x:Name="TabItemDiraLauncher">
+            <TabItem Header="DIRA" x:Name="TabItemDiraLauncher">
                 <gui:DiraLauncher/>
             </TabItem>
             <TabItem Header="Bionic STUDIO Switcher" x:Name="PhoneBoxSwitcherTab">
