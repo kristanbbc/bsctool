@@ -22,6 +22,10 @@
                     <Label Style="{StaticResource MaterialDesignLabel}">AD search page size:</Label>
                     <TextBox Width="80" Text="{local:SettingBinding AdPageSize}" VerticalAlignment="Center" ToolTip="Maximum number of Active Directory results to return per search." TextChanged="AdPageSize_TextChanged" />
                 </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="10">
+                    <Label Style="{StaticResource MaterialDesignLabel}">Domain:</Label>
+                    <TextBox Width="150" Text="{local:SettingBinding Domain}" VerticalAlignment="Center" ToolTip="Domain used for remote connections (e.g. national)." TextChanged="Domain_TextChanged" />
+                </StackPanel>
 
             </StackPanel>
         </Grid>

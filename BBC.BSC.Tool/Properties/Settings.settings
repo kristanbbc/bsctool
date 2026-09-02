@@ -14,5 +14,8 @@
     <Setting Name="AdPageSize" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">50</Value>
     </Setting>
+    <Setting Name="Domain" Type="System.String" Scope="User">
+      <Value Profile="(Default)">national</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

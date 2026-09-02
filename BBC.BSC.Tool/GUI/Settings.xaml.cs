@@ -14,10 +14,8 @@ namespace BBC.BSC.Tool.GUI
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-
             Properties.Settings.Default.ere = ((TextBox)sender).Text;
             Properties.Settings.Default.Save();
-
         }
 
         private void AdPageSize_TextChanged(object sender, TextChangedEventArgs e)
@@ -27,6 +25,12 @@ namespace BBC.BSC.Tool.GUI
                 Properties.Settings.Default.AdPageSize = pageSize;
                 Properties.Settings.Default.Save();
             }
+        }
+
+        private void Domain_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            Properties.Settings.Default.Domain = ((TextBox)sender).Text.Trim();
+            Properties.Settings.Default.Save();
         }
     }
 }
