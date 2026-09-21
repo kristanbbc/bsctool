@@ -44,8 +44,10 @@ namespace BBC.BSC.Tool
         private readonly Timer _searchTimer = new Timer(400);
         private readonly Timer _hostTimer = new Timer(400);
         private readonly Timer _watcher = new Timer { Interval = 1000 };
+        private readonly bool _isIpLookupEnabled;
         private string _hostText;
         public readonly Logger _logger;
+        public bool IsIpLookupEnabled => _isIpLookupEnabled;
 
         private const string PhoneboxIniPath = @"C:\ProgramData\Broadcast Bionics\PhoneBOX4\client.ini";
         private const string PhoneboxExePath = @"C:\Program Files (x86)\Broadcast Bionics\PhoneBOX4\Client\PhoneBOX.Client.exe";
@@ -62,6 +64,9 @@ namespace BBC.BSC.Tool
             _logger = new Logging().InitLogger();
 
             _logger.Info("BSC Tool {0} starting.", FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion);
+
+            _isIpLookupEnabled = !DeviceJoinDetector.IsLikelyIntuneManaged();
+            _logger.Info("IP lookup button enabled: {0}", _isIpLookupEnabled);
 
             if (Properties.Settings.Default.UpgradeRequired)
             {
@@ -591,6 +596,11 @@ namespace BBC.BSC.Tool
             {
                 if (((Button)sender).Content.ToString() == "Load IP")
                 {
+                    if (!_isIpLookupEnabled)
+                    {
+                        return;
+                    }
+
                     var tempBw = new BackgroundWorker();
                     tempBw.DoWork += delegate
                         {

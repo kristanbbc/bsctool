@@ -120,7 +120,9 @@
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <Viewbox Height="25">
-                                                <Button Content="{Binding Ip}" Tag="{Binding Hostname}"  Click="Load_Result_Button_Click" />
+                                                <Button Content="{Binding Ip}" Tag="{Binding Hostname}" Click="Load_Result_Button_Click"
+                                                        IsEnabled="{Binding DataContext.IsIpLookupEnabled, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        ToolTip="Disabled on Intune-managed devices." />
                                             </Viewbox>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
