@@ -80,47 +80,78 @@
         >
             <TabItem Header="SEARCH">
                 <Grid Background="#FFE5E5E5">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition/>
-                    </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition/>
+                        <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <Rectangle x:Name="Status" Fill="AliceBlue" HorizontalAlignment="Center" Margin="10" Height="24" Grid.Row="2" Stroke="Black" VerticalAlignment="Top" Width="25"/>
-                    <TextBox x:Name="SearchIn" HorizontalAlignment="Stretch"  Margin="10" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" TextChanged="Text_Changed" Grid.Row="0" Grid.Column="1" />
-                    <Label Grid.Row="0" Grid.Column="0" Content="Search term:" HorizontalAlignment="Right" Margin="8" VerticalAlignment="Center" />
-                    <Label Content="Search results:" HorizontalAlignment="Right" Margin="8" Grid.Row="1"
-                           Grid.Column="0" VerticalAlignment="Top"/>
 
-                    <ListView x:Name="SearchResults" 
-                              HorizontalAlignment="Stretch" 
-                              Margin="10" 
-                              VerticalAlignment="Stretch" 
-                              Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" 
-                              SelectionChanged="SearchResults_SelectionChanged" 
-                              GotFocus="SearchResults_GotFocus" AlternationCount="1">
+                    <TextBox x:Name="SearchIn"
+                             Grid.Row="0"
+                             Margin="10,10,10,6"
+                             Height="28"
+                             VerticalAlignment="Center"
+                             TextWrapping="NoWrap"
+                             Text=""
+                             TextChanged="Text_Changed"
+                             materialDesign:HintAssist.Hint="start typing to search...." />
+
+                    <Border Grid.Row="1"
+                            Margin="10,6,10,6"
+                            Padding="10,8"
+                            CornerRadius="4"
+                            BorderBrush="DarkGray"
+                            BorderThickness="1"
+                            Background="WhiteSmoke">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Overall" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="TextBlockSearchStatus" Text="Idle" Margin="0,2,0,0"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                <TextBlock Text="CAT" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="TextBlockCatStatus" Text="Waiting" Margin="0,2,0,0"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Margin="12,0,0,0">
+                                <TextBlock Text="AD" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="TextBlockAdStatus" Text="Waiting" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <ListView x:Name="SearchResults"
+                              Grid.Row="2"
+                              Margin="10,6,10,10"
+                              SelectionChanged="SearchResults_SelectionChanged"
+                              GotFocus="SearchResults_GotFocus"
+                              AlternationCount="1">
                         <ListView.View>
                             <GridView>
-
-                                <GridViewColumn Header="Hostname" DisplayMemberBinding="{Binding Hostname}" Width="0"  />
-                                <!--<GridViewColumn Header="IP" DisplayMemberBinding="{Binding ip}" Width="100"/>-->
-                                <GridViewColumn Header="Load Hostname" >
+                                <GridViewColumn Header="Hostname" DisplayMemberBinding="{Binding Hostname}" Width="0" />
+                                <GridViewColumn Header="Load Hostname">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <Viewbox Height="25">
-                                                <Button Content="{Binding Hostname}"  Click="Load_Result_Button_Click" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                                                <Button Content="{Binding Hostname}" Click="Load_Result_Button_Click" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                                             </Viewbox>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Header="Load IP" >
+                                <GridViewColumn Header="Load IP">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <Viewbox Height="25">
-                                                <Button Content="{Binding Ip}" Tag="{Binding Hostname}" Click="Load_Result_Button_Click"
+                                                <Button Content="{Binding Ip}"
+                                                        Tag="{Binding Hostname}"
+                                                        Click="Load_Result_Button_Click"
                                                         IsEnabled="{Binding DataContext.IsIpLookupEnabled, RelativeSource={RelativeSource AncestorType=Window}}"
                                                         ToolTip="Disabled on Intune-managed devices." />
                                             </Viewbox>
@@ -128,15 +159,9 @@
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
                                 <GridViewColumn Header="Description" DisplayMemberBinding="{Binding Description}"/>
-
-
                             </GridView>
-
                         </ListView.View>
-
                     </ListView>
-
-
                 </Grid>
             </TabItem>
             <TabItem Header="History">

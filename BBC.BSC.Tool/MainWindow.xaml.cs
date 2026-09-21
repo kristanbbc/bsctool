@@ -105,7 +105,7 @@ namespace BBC.BSC.Tool
         private Preparer Preparer { get; }
 
 
-        /// <summary>Updates the status box if running searches are still happening.</summary>
+        /// <summary>Updates the search status if running searches are still happening.</summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void Do_Watcher(object sender, ElapsedEventArgs e)
@@ -123,22 +123,28 @@ namespace BBC.BSC.Tool
                     if (_workers.Count > 0)
                     {
                         _logger.Debug("There are {0} workers", _workers.Count);
-                        Status.Fill = new SolidColorBrush(Colors.Red);
-                        // this.Title = "Busy";
+                        TextBlockSearchStatus.Text = "Searching...";
                     }
-                    else
+                    else if (TextBlockSearchStatus.Text == "Searching...")
                     {
-                        Status.Fill = new SolidColorBrush(Colors.Green);
-                        //this.Title = "Finished";
+                        TextBlockSearchStatus.Text = "Idle";
                     }
                 });
             }
             catch (TaskCanceledException)
             {
-                // The dispatcher started shutting down between the check above and the
-                // Invoke call - this is expected during application close and can be ignored.
                 _logger.Trace("Do_Watcher: dispatcher invoke was cancelled during shutdown.");
             }
+        }
+
+        private void SetSearchStatus(string overall, string cat, string ad)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                TextBlockSearchStatus.Text = overall;
+                TextBlockCatStatus.Text = cat;
+                TextBlockAdStatus.Text = ad;
+            });
         }
 
         private List<Modules.CatResult> _catResults = new List<Modules.CatResult>();
@@ -146,13 +152,14 @@ namespace BBC.BSC.Tool
 
         private void Do_Search(object sender, DoWorkEventArgs e)
         {
-            Dispatcher.Invoke(delegate
-            {
-                Status.Fill = new SolidColorBrush(Colors.Red);
-            });
+            string catStatus = "Searching...";
+            string adStatus = "Waiting...";
+            SetSearchStatus("Searching...", catStatus, adStatus);
+
             MyResults results = new MyResults();
             if (e.Argument.ToString().Length < 4)
             {
+                SetSearchStatus("Enter at least 4 characters", "Waiting", "Waiting");
                 e.Result = null;
             }
             else
@@ -171,9 +178,11 @@ namespace BBC.BSC.Tool
                     _logger.Info("Running query against CAT with\n{0}", catQuery);
                     jsonData = CatHttpClient.GetStringAsync(catQuery).GetAwaiter().GetResult();
 
+                    int catResultCount = 0;
                     if (!string.IsNullOrEmpty(jsonData))
                     {
                         _catResults = JsonConvert.DeserializeObject<List<Modules.CatResult>>(jsonData);
+                        catResultCount = _catResults?.Count ?? 0;
                         _logger.Info("Got {0} results from CAT", _catResults?.Count);
 
                         if (_catResults != null)
@@ -189,11 +198,18 @@ namespace BBC.BSC.Tool
                                 });
                             }
                     }
+
+                    catStatus = $"Complete ({catResultCount} results)";
+                    adStatus = "Searching...";
+                    SetSearchStatus("Searching...", catStatus, adStatus);
                 }
                 catch (Exception ex)
                 {
                     _logger.Warn("Error running query against CAT:\n{0}", ex.Message);
                     Trace.TraceError(ex.Message);
+                    catStatus = "Error";
+                    adStatus = "Waiting...";
+                    SetSearchStatus("Searching...", catStatus, adStatus);
                 }
 
                 // Start AD search
@@ -203,7 +219,6 @@ namespace BBC.BSC.Tool
                     using (DirectoryEntry dEntry = new DirectoryEntry(LdapPath))
                     using (DirectorySearcher dSearcher = new DirectorySearcher(dEntry)
                     {
-                        // (|(cn=*334810*)(displayname=*334810*)(cn=PC-*334810*)(cn=B1-D0*334810*)(cn=B1-L0*334810*)(cn=61-D0*334810*)(cn=61-L0*334810*)(cn=71-D0*334810*)(cn=71-L0*334810*)(cn=91-D0*334810*)(cn=91-L0*334810*)(cn=F1-D0*334810*)(cn=F1-L0*334810*)(cn=MC-*334810*)(sn=*334810*)(samAccountName=*334810*)(mail=*334810*)(proxyaddresses=smtp:*334810*)(ou=*334810*)(&(objectcategory=printqueue)(printername=*334810*)))
                         Filter = string.Format("(&(!userAccountControl:1.2.840.113556.1.4.803:=2)(objectClass=computer)(|(cn={0}*)(displayname={0}*)(cn=PC-{0}*)(cn=B1-D0{0}*)(cn=B1-L0{0}*)(cn=31-D0{0}*)(cn=31*-D0{0}*)(cn=61-D0{0}*)(cn=61-L0{0}*)(cn=71-D0{0}*)(cn=71-L0{0}*)(cn=91-D0{0}*)(cn=91-L0{0}*)(cn=F1-D0{0}*)(cn=F1-L0{0}*)(cn=MC-{0}*)(sn={0}*)(samAccountName={0}*)))", EscapeLdapFilter(e.Argument.ToString())),
                         PageSize = adPageSize,
                         SizeLimit = adPageSize,
@@ -233,16 +248,23 @@ namespace BBC.BSC.Tool
                                     });
                                 }
                             }
+
+                            adStatus = $"Complete ({sResults.Count} results)";
+                            SetSearchStatus("Complete", catStatus, adStatus);
                         }
                     }
                 }
                 catch (InvalidOperationException ex)
                 {
                     _logger.Warn("Invalid Operation querying AD: ", ex);
+                    adStatus = "Error";
+                    SetSearchStatus("Complete with AD error", catStatus, adStatus);
                 }
                 catch (NotSupportedException ex)
                 {
                     _logger.Warn("LDAP query error: {0}", ex.Message);
+                    adStatus = "Error";
+                    SetSearchStatus("Complete with AD error", catStatus, adStatus);
                 }
             }
             results.Results.Sort((a, b) => string.Compare(a.Hostname, b.Hostname, StringComparison.Ordinal));
@@ -294,6 +316,11 @@ namespace BBC.BSC.Tool
             _logger.Trace("Start displaying results, stopping and disposing background worker");
             _ = _workers.Remove((BackgroundWorker)sender);
             ((BackgroundWorker)sender).Dispose();
+            if (e.Result == null)
+            {
+                SearchResults.ItemsSource = null;
+                return;
+            }
             var res = (MyResults)e.Result;
             _logger.Trace($"There are {res.Results.Count} results");
             // If results returned select first in list.
