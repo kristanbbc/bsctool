@@ -504,6 +504,9 @@ namespace BBC.BSC.Tool
                         if (!File.Exists(item)) continue;
                         startInfo.FileName = item;
                         startInfo.Arguments = $"/ho:{TextBoxHost.Text.Trim()}";
+                        startInfo.UseShellExecute = false;
+                        startInfo.WorkingDirectory = Path.GetDirectoryName(item) ?? string.Empty;
+                        startInfo.EnvironmentVariables["__COMPAT_LAYER"] = "RunAsInvoker";
                         break;
                     }
                     break;
@@ -512,7 +515,14 @@ namespace BBC.BSC.Tool
             if (startInfo.FileName.Length > 0)
             {
                 _logger.Info("Starting: {0} with arguments {1}", startInfo.FileName, startInfo.Arguments);
-                _ = await Task.Run(() => Process.Start(startInfo));
+                try
+                {
+                    _ = await Task.Run(() => Process.Start(startInfo));
+                }
+                catch (Win32Exception ex) when (ex.NativeErrorCode == 1223)
+                {
+                    _logger.Info("Process launch cancelled by user for {0}", startInfo.FileName);
+                }
 
             }
             if (LvHistory.Items.Contains(TextBoxHost.Text.Trim()))
